@@ -1,5 +1,3 @@
-"use client";
-
 import PropTypes from "prop-types";
 import {
   Table,
@@ -10,9 +8,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import StatusChip from "./ui/StatusChip";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns"; // Ensure date consistency
+import { format } from "date-fns";
 
 function createData(
   id: string,
@@ -24,7 +21,7 @@ function createData(
   attendant: string,
   paymentid: string,
   startTime: string,
-  EndTime: string,
+  endTime: string,
   paymentStatus: string,
   specialRequirements: string
 ) {
@@ -38,7 +35,7 @@ function createData(
     attendant,
     paymentid,
     startTime,
-    EndTime,
+    endTime,
     paymentStatus,
     specialRequirements,
   };
@@ -47,11 +44,9 @@ function createData(
 function processData(data: any) {
   const rows: any = [];
 
-  const formatTime = (time: string) => format(new Date(time), "p"); // Use a consistent format for time
+  // const formatTime = (time: string) => format(new Date(time), "p");
+  // const formatDate = (date: string) => format(new Date(date), "dd/MM/yyyy");
 
-  const formatDate = (date: string) => format(new Date(date), "dd/MM/yyyy"); // Consistent date formatting
-
-  // Process hotel rooms
   if (data.hotel?.rooms) {
     data.hotel.rooms.forEach((room: any) => {
       if (room.bookingDetails.status !== "available") {
@@ -65,8 +60,8 @@ function processData(data: any) {
             room.bookingDetails.status,
             room.bookingDetails.attendant || "",
             room.bookingDetails.payment?.paymentId || "",
-            formatDate(room.bookingDetails.checkIn), // Use consistent date format
-            formatDate(room.bookingDetails.checkOut), // Use consistent date format
+            room.bookingDetails.checkIn,
+            room.bookingDetails.checkOut,
             room.bookingDetails.payment?.paymentStatus || "",
             room.bookingDetails.specialRequirements
           )
@@ -75,7 +70,6 @@ function processData(data: any) {
     });
   }
 
-  // Process restaurant tables
   if (data.restaurant?.tables) {
     data.restaurant.tables.forEach((table: any) => {
       if (table.diningDetails.status !== "available") {
@@ -89,7 +83,7 @@ function processData(data: any) {
             table.diningDetails.status,
             table.diningDetails?.attendant || "",
             table.diningDetails?.payment?.paymentId || "",
-            formatTime(table.diningDetails?.timeSeated), // Consistent time format
+            table.diningDetails?.timeSeated,
             "",
             table.diningDetails?.payment?.paymentStatus || "",
             table.diningDetails?.specialRequirements
@@ -99,7 +93,6 @@ function processData(data: any) {
     });
   }
 
-  // Process hotel services
   if (data.hotel?.rooms) {
     data.hotel.rooms.forEach((room: any) => {
       if (room.servicesUsed) {
@@ -115,8 +108,8 @@ function processData(data: any) {
                 service.status,
                 service.attendant,
                 service.payment?.paymentId || "",
-                formatTime(service.startTime), // Consistent time format
-                formatTime(service.endTime), // Consistent time format
+                service.startTime,
+                service.endTime,
                 service.payment?.paymentStatus || "",
                 service.specialRequirement || ""
               )
@@ -127,7 +120,6 @@ function processData(data: any) {
     });
   }
 
-  // Process issues reported
   const processIssues = (issues: any, locationUnit: any, people: any) => {
     if (issues) {
       Object.values(issues).forEach((issue: any) => {
@@ -142,7 +134,7 @@ function processData(data: any) {
               issue.status,
               issue.attendant,
               "",
-              formatTime(issue.reportTime), // Consistent time format
+              issue.reportTime,
               "",
               "",
               issue.description
@@ -173,6 +165,22 @@ function processData(data: any) {
     });
   }
 
+  // Sort rows by startTime in descending order
+  rows.sort(
+    (a: any, b: any) =>
+      new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+  );
+
+  // Format start and end times in HR:MIN DD:MM format
+  rows.forEach((row: any) => {
+    if (row.startTime) {
+      row.startTime = format(new Date(row.startTime), "HH:mm dd:MM");
+    }
+    if (row.endTime) {
+      row.endTime = format(new Date(row.endTime), "HH:mm dd:MM");
+    }
+  });
+
   return rows;
 }
 
@@ -186,7 +194,7 @@ const headCells = [
   { id: "attendant", label: "Attendant" },
   { id: "paymentid", label: "Payment ID" },
   { id: "startTime", label: "Start Time" },
-  { id: "EndTime", label: "End Time" },
+  { id: "endTime", label: "End Time" },
   { id: "paymentStatus", label: "Payment Status" },
   { id: "specialRequirements", label: "Sp. Req." },
 ];
@@ -200,9 +208,9 @@ export default function OrderTable({ data }: { data: any }) {
         <CardTitle>Orders</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="max-h-[600px]">
+        <div className="w-full overflow-x-auto">
           {" "}
-          {/* Adjust max height as needed */}
+          {/* Enable horizontal scrolling */}
           <Table>
             <TableHeader>
               <TableRow>
@@ -238,7 +246,7 @@ export default function OrderTable({ data }: { data: any }) {
                   <TableCell>{row.attendant}</TableCell>
                   <TableCell>{row.paymentid}</TableCell>
                   <TableCell>{row.startTime}</TableCell>
-                  <TableCell>{row.EndTime}</TableCell>
+                  <TableCell>{row.endTime}</TableCell>
                   <TableCell>
                     {row.paymentStatus && (
                       <StatusChip status={row.paymentStatus} />
@@ -249,7 +257,7 @@ export default function OrderTable({ data }: { data: any }) {
               ))}
             </TableBody>
           </Table>
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );

@@ -27,6 +27,7 @@ const baseNavItems = [
   { href: "/staff", label: "Staff" },
   { href: "/hotel", label: "Hotel" },
   { href: "/restaurant", label: "Restaurant" },
+  { href: "/request", label: "Requests" },
   { href: "/account", label: "Account" },
 ];
 
@@ -34,6 +35,7 @@ const staffNavItems = [
   { href: "/staff", label: "Staff" },
   { href: "/hotel", label: "Hotel" },
   { href: "/restaurant", label: "Restaurant" },
+  { href: "/request", label: "Requests" },
 ];
 
 export function Header({ staff }: HeaderProps) {

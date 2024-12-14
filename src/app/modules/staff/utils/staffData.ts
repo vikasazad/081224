@@ -3,101 +3,6 @@ import { auth } from "@/auth";
 import { db } from "@/config/db/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 
-export async function handleRoomStaffInformation() {
-  const session = await auth();
-  const user = session?.user?.email;
-
-  if (!user) {
-    console.error("User email is undefined");
-    return false;
-  }
-
-  try {
-    const docRefHotel = doc(db, user, "hotel");
-    const docRefRestaurant = doc(db, user, "restaurant");
-
-    const [docSnapHotel, docSnapRestaurant] = await Promise.all([
-      getDoc(docRefHotel),
-      getDoc(docRefRestaurant),
-    ]);
-
-    const result: any = {
-      hotelOverview: {
-        todayCheckIn: [],
-        ongoing: [],
-        todayCheckOut: [],
-        vacant: [],
-        maintenance: [],
-        status: {},
-      },
-      restaurantOverview: {
-        occupied: [],
-        reserved: [],
-        available: [],
-        cleaning: [],
-        status: {},
-      },
-    };
-
-    if (docSnapHotel.exists()) {
-      const reservation = docSnapHotel.data().reservation;
-      const live = docSnapHotel.data().live;
-      result.hotelOverview.todayCheckIn = reservation;
-      result.hotelOverview.ongoing = live.rooms;
-      result.hotelOverview.status = live.roomsData.status;
-      live.rooms.forEach((item: any) => {
-        if (item.checkOut) {
-          const checkOutTime = new Date(item.checkOut);
-          if (checkOutTime.toDateString() === new Date().toDateString()) {
-            result.hotelOverview.todayCheckOut.push(item);
-          }
-        }
-      });
-      live.roomsData.roomDetail.forEach((item: any) => {
-        if (item.status === "available") {
-          result.hotelOverview.vacant.push(item);
-        }
-        if (item.status === "fixing required") {
-          result.hotelOverview.maintenance.push(item);
-        }
-      });
-    }
-
-    if (docSnapRestaurant.exists()) {
-      const reservation = docSnapRestaurant.data().reservation;
-      const live = docSnapRestaurant.data().live;
-      result.restaurantOverview.reserved = reservation;
-      result.restaurantOverview.status = live.tablesData.status;
-      live.tables.forEach((item: any) => {
-        if (item.diningDetails.status === "occupied") {
-          result.restaurantOverview.occupied.push(item);
-        }
-      });
-      live.tablesData.tableDetails.forEach((item: any) => {
-        if (item.status === "available") {
-          result.restaurantOverview.available.push(item);
-        }
-        if (item.status === "cleaning") {
-          result.restaurantOverview.cleaning.push(item);
-        }
-      });
-    }
-
-    if (
-      Object.keys(result).length === 0 ||
-      (result.hotelOverview === null && result.restaurantOverview === null)
-    ) {
-      console.log("HERE1", result);
-      return false;
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error fetching Firestore data:", error);
-    return false;
-  }
-}
-
 export async function getRoomData() {
   const session = await auth();
   const user = session?.user?.email;
@@ -287,4 +192,56 @@ export async function saveToken(token: string) {
       console.error("Error updating notification token:", error);
     }
   }
+}
+
+export async function setOfflineItem(tableData: any) {
+  const session = await auth();
+  const user = session?.user?.email;
+
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  try {
+    const docRef = doc(db, user, "restaurant");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data().live.tables;
+
+      const tablePhone = tableData?.diningDetails?.customer?.phone;
+      // console.log("YYYYYYY", tablePhone);
+
+      if (!tablePhone) {
+        console.error("Phone number is missing in tableData");
+        return false;
+      }
+
+      const updatedData = data.map((item: any) => {
+        if (item.diningDetails?.customer?.phone === tablePhone) {
+          return {
+            ...item,
+            ...tableData,
+          };
+        }
+        return item;
+      });
+
+      // return updatedData;
+
+      await updateDoc(docRef, {
+        "live.tables": updatedData,
+      });
+
+      console.log("Data successfully updated and saved to Firestore.");
+      return true;
+    } else {
+      console.error("Document does not exist.");
+    }
+  } catch (error) {
+    console.error("ERROR setting offline data:", error);
+  }
+
+  return false;
 }

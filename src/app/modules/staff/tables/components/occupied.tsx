@@ -32,17 +32,9 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { Separator } from "@/components/ui/separator";
 
-import {
-  PlusCircle,
-  MoreVertical,
-  User,
-  Send,
-  DollarSign,
-  ClipboardCheck,
-} from "lucide-react";
+import { PlusCircle, MoreVertical, User, IndianRupee } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
-import { getTableData } from "../../utils/staffData";
-import ChecklistDialog from "@/components/staff-checkout-checklist";
+import { getTableData, setOfflineItem } from "../../utils/staffData";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -51,7 +43,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { sendNotification } from "@/lib/sendNotification";
-
 export default function Occupied({ data, status }: { data: any; status: any }) {
   const [tableData, setTableData] = useState<any>([]);
   const [addItems, setAddItems] = useState<any>([]);
@@ -62,9 +53,11 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
   const [selectedCategoryItems, setSelectedCategoryItems] = useState<any[]>([]);
   const [openPaymentConfirmation, setOpenPaymentConfirmation] = useState(false);
   const [currentStatusChange, setCurrentStatusChange] = useState<any>(null);
-  const [checklistOpen, setChecklistOpen] = useState(false);
+  const [addedType, setAddedType] = useState<"food" | "issue" | null>(null);
+  const gstPercentage = "";
 
   useEffect(() => {
+    console.log(data);
     setTableData(data);
   }, [data]);
 
@@ -83,7 +76,22 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
         categorySelect === "Food"
           ? addItems.foodMenuItems
           : categorySelect === "Issue"
-          ? addItems.hotelRoomIssues
+          ? [
+              { name: "General Cleanliness" },
+              { name: "Bathroom" },
+              { name: "Floors and Carpets" },
+              { name: "Wi-Fi" },
+              { name: "External Noise" },
+              { name: "Internal Noise" },
+              { name: "Odors" },
+              { name: "Insects or Pests" },
+              { name: "Personal Items" },
+              { name: "Service" },
+              { name: "Chairs" },
+              { name: "Staff" },
+              { name: "Food" },
+              { name: "Payment" },
+            ]
           : [];
 
       const filtered = arr.filter((item: any) =>
@@ -94,70 +102,100 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
       setCategoryItems([]);
     }
   };
-
   const handleCategoryItemSelect = (item: any) => {
     setSelectedCategoryItems((prev) =>
       prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
   };
 
-  const handleAdd = (items: any[], index: number) => {
-    // console.log("AAAAAAAAAAAAAAAAAAAAAAA", items);
+  const handleAdd = async (items: any[], index: number) => {
+    console.log("AAAAAAAA", items);
     const updatedTableData: any = [...tableData];
 
-    items.forEach((item) => {
-      if (item.quantity) {
-        // Food item
-        const newOrder = {
-          itemId: item.id,
-          itemName: item.name,
-          portionSize: item.quantity,
-          price: parseFloat(item.price),
-        };
-
-        updatedTableData[index] = {
-          ...updatedTableData[index],
-          diningDetails: {
-            ...updatedTableData[index].diningDetails,
-            orders: [
-              ...(updatedTableData[index].diningDetails?.orders || []),
-              {
-                orderId: `OR:${new Date().toLocaleTimeString()}`,
-                items: [newOrder],
-                attendant: "Attendant Name",
-                status: "open",
-                timeOfRequest: new Date(),
-                timeOfFullfilment: "",
-                payment: {},
+    if (items[0].quantity) {
+      setAddedType("food");
+      updatedTableData[index] = {
+        ...updatedTableData[index],
+        diningDetails: {
+          ...updatedTableData[index].diningDetails,
+          orders: [
+            ...(updatedTableData[index].diningDetails?.orders || []),
+            {
+              orderId: `OR:${new Date().toLocaleTimeString()}`,
+              items: items,
+              attendant: updatedTableData[index].diningDetails.attendant,
+              status: "order placed",
+              timeOfRequest: new Date().toISOString(),
+              timeOfFullfilment: "",
+              specialRequirement: "",
+              payment: {
+                discount: {
+                  type: "none",
+                  amount: 0,
+                  code: "",
+                },
+                gst: {
+                  gstAmount: gstPercentage
+                    ? calculateTax(items, gstPercentage)
+                    : "",
+                  gstPercentage: gstPercentage || "",
+                  cgstAmount: "",
+                  cgstPercentage: "",
+                  sgstAmount: "",
+                  sgstPercentage: "",
+                },
+                subtotal: calculateOrderTotal(items),
+                mode: "",
+                paymentId: "",
+                paymentStatus: "pending",
+                price: gstPercentage
+                  ? calculateOrderTotal(items) +
+                    calculateTax(items, gstPercentage)
+                  : calculateOrderTotal(items),
+                priceAfterDiscount: "",
+                timeOfTransaction: "",
+                transctionId: "",
               },
-            ],
-          },
-        };
-      } else if (item.issueSubtype) {
-        // Issue item
-        const newIssue = {
-          issueId: `IS:${new Date().getTime()}`,
-          name: item.name,
-          issueSubtype: item.issueSubtype,
-          description: issueDescription
-            ? issueDescription
-            : "No description provided",
-          reportTime: new Date(),
-          status: "Assigned",
-          attendant: "Attendant Name",
-        };
-
-        updatedTableData[index] = {
-          ...updatedTableData[index],
-          issuesReported: {
-            ...updatedTableData[index].issuesReported,
-            [item.name.toLowerCase().replace(/\s+/g, "_")]: newIssue,
-          },
-        };
+            },
+          ],
+        },
+      };
+      if (tableData[index]) {
+        const token =
+          tableData[index]?.diningDetails.customer.notificationToken;
+        sendNotification(
+          token,
+          "Item Added to Order!",
+          "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
+        );
+        // const data = await setOfflineItem(updatedTableData);
+        console.log("UODATED", updatedTableData[index]);
+        setOfflineItem(updatedTableData[index]);
       }
-    });
+    } else if (items[0].issueSubtype) {
+      // Issue item
+      setAddedType("issue");
+      const newIssue = {
+        issueId: `IS:${new Date().getTime()}`,
+        name: items[0].name,
+        issueSubtype: items[0].issueSubtype,
+        description: issueDescription
+          ? issueDescription
+          : "No description provided",
+        reportTime: new Date(),
+        status: "Assigned",
+        attendant: "Attendant Name",
+      };
 
-    // Update the state with the modified array
+      updatedTableData[index] = {
+        ...updatedTableData[index],
+        issuesReported: {
+          ...updatedTableData[index].issuesReported,
+          [items[0].name.toLowerCase().replace(/\s+/g, "_")]: newIssue,
+        },
+      };
+    }
+
     setTableData(updatedTableData);
     setSelectedCategoryItems([]);
     setCategorySearchTerm("");
@@ -169,6 +207,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     orderId: string,
     index: number
   ) => {
+    console.log(status, orderId, index);
     if (status === "Paid" || status === "Completed") {
       setCurrentStatusChange({ status, orderId, index });
       setOpenPaymentConfirmation(true);
@@ -178,28 +217,11 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
           tableData[index]?.diningDetails.customer.notificationToken;
         console.log(token);
         updateStatus(status, orderId, index);
-        const data = await sendNotification(
-          "eUt2ciZlaoB2SfYsmhWjzr:APA91bE99YWRNChjJPWiyicW-CeWRMKmCaaLZJHyC877hTDzLqRoPc6GZrmnk5s7sy0Rxdt14e-Vk_7P24zFU28IQtlzcmAqFedsd_kYrB1whI6dICMP8UQ",
+        sendNotification(
+          token,
           "Your Food is Ready!",
           "your food is prepared and will be served to your table shortly. Sit back, relax, and Bon appétit!"
         );
-        console.log("RESULT", data);
-        // const response = await fetch("api/send-notification", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify({
-        //     token:
-        //       "f5WtuYAa4fi-Gbg8VSCVub:APA91bEh6W51Od84BARGVCh6Dc475Hqw3nefZncWNFPoT92yaJ4ouaorlliinGnaJu3v202sYHmegcSxURwxOpbbHyaWouYOUuDyLaZ5wlpPSDBl02me5Hs",
-        //     title: "Hotel",
-        //     message: "Sameple title for the notification",
-        //     link: "/staff",
-        //   }),
-        // });
-
-        // const data = await response.json();
-        // console.log(data);
       }
     } else {
       updateStatus(status, orderId, index);
@@ -210,7 +232,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     setTableData((prevTableData: any) => {
       const updatedTableData: any = [...prevTableData];
 
-      if (orderId.startsWith("OR")) {
+      if (orderId.startsWith("OR") || orderId.startsWith("ABS")) {
         const orderIndex = updatedTableData[
           index
         ].diningDetails.orders.findIndex(
@@ -243,10 +265,38 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
   };
 
   const calculateOrderTotal = (order: any) => {
-    return order.items.reduce(
-      (total: any, item: any) => total + parseFloat(item.price),
+    const itemsTotal = order.reduce(
+      (total: number, item: any) => total + parseFloat(item.price),
       0
     );
+
+    return itemsTotal;
+  };
+
+  const calculateTax = (order: any, tax: string) => {
+    const total = calculateOrderTotal(order);
+    const rounded = Math.round((total * Number(tax)) / 100);
+    return rounded;
+  };
+
+  const calculateFinalAmount = (item: any) => {
+    const final = item.diningDetails.orders.map((data: any) => {
+      if (data.payment.paymentStatus === "pending") {
+        const total = data.items.reduce((total: number, order: any) => {
+          return total + parseFloat(order.price || "0");
+        }, 0);
+        const gstAmount = parseFloat(data.payment?.gst?.gstAmount || "0");
+
+        return total + gstAmount;
+      }
+      return undefined; // Explicitly return undefined for clarity
+    });
+
+    // Filter out undefined values and calculate the sum
+    const validValues = final.filter((value: any) => value !== undefined);
+    const sum = validValues.reduce((acc: any, value: any) => acc + value, 0);
+
+    return sum || 0; // Return 0 if no valid values
   };
 
   return (
@@ -257,7 +307,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
             <Card key={main}>
               <CardContent className="px-4 py-0">
                 <Accordion type="single" collapsible>
-                  <AccordionItem value="item-1">
+                  <AccordionItem value={String(main)}>
                     <AccordionTrigger>
                       <div className="flex justify-between items-center w-full">
                         <div className="flex items-center gap-3">
@@ -299,17 +349,40 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                     onValueChange={(value) =>
                                       setCategorySelect(value)
                                     }
+                                    disabled={addedType !== null}
                                   >
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="Food">Food</SelectItem>
-                                      <SelectItem value="Issue">
+                                      <SelectItem
+                                        value="Food"
+                                        disabled={addedType === "issue"}
+                                      >
+                                        Food
+                                      </SelectItem>
+                                      <SelectItem
+                                        value="Issue"
+                                        disabled={addedType === "food"}
+                                      >
                                         Issue
                                       </SelectItem>
                                     </SelectContent>
                                   </Select>
+                                  {addedType && (
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => {
+                                        setAddedType(null);
+                                        setCategorySelect("Food");
+                                        setSelectedCategoryItems([]);
+                                        setCategorySearchTerm("");
+                                        setIssueDescription("");
+                                      }}
+                                    >
+                                      Reset Selection
+                                    </Button>
+                                  )}
                                   <Input
                                     placeholder={`Search ${categorySelect} items`}
                                     value={categorySearchTerm}
@@ -368,6 +441,9 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                     onClick={() =>
                                       handleAdd(selectedCategoryItems, main)
                                     }
+                                    disabled={
+                                      selectedCategoryItems.length === 0
+                                    }
                                   >
                                     Add
                                   </Button>
@@ -381,94 +457,127 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="space-y-4">
-                        {item.diningDetails.orders.map((order: any, i: any) => (
-                          <div key={i} className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline">{order.orderId}</Badge>
-                                <StatusChip status={order.status} />
-                              </div>
+                        {item.diningDetails.orders.map((order: any, i: any) => {
+                          console.log("ORDER", order);
+                          return (
+                            <div key={i} className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline">
+                                    {order.orderId}
+                                  </Badge>
+                                  <StatusChip status={order.status} />
+                                </div>
 
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-8 p-0"
-                                  >
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  {status.dining.map((stat: any, id: any) => (
-                                    <DropdownMenuItem
-                                      key={id}
-                                      onClick={() =>
-                                        handleStatusChange(
-                                          stat,
-                                          order.orderId,
-                                          main
-                                        )
-                                      }
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-8 p-0"
                                     >
-                                      {stat}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                            <Separator />
-                            <div className="bg-slate-50 rounded-lg p-4 space-y-3">
-                              <div className="">
-                                {order.items.map((itm: any, id: number) => (
-                                  <div
-                                    key={id}
-                                    className="flex items-center justify-between"
-                                  >
-                                    <div className="flex items-center justify-between py-2">
-                                      <span className="font-medium">
-                                        {itm.itemName}
-                                      </span>
-                                      <span className="font-medium mx-2">
-                                        -
-                                      </span>
-                                      <span className="font-medium">
-                                        {itm.portionSize}
-                                      </span>
-                                    </div>
-                                    <span className="text-green-600 font-medium">
-                                      ${itm.price}
-                                    </span>
-                                  </div>
-                                ))}
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    {status.dining.map((stat: any, id: any) => (
+                                      <DropdownMenuItem
+                                        key={id}
+                                        onClick={() =>
+                                          handleStatusChange(
+                                            stat,
+                                            order.orderId,
+                                            main
+                                          )
+                                        }
+                                      >
+                                        {stat}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
                               <Separator />
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <span className="font-medium">Subtotal</span>
-                                  <Badge variant="outline" className="mx-2">
-                                    Paid
-                                  </Badge>
+                              <div className="bg-slate-50 rounded-lg p-4 space-y-3">
+                                <div className="">
+                                  {order.items.map((itm: any, id: number) => (
+                                    <div
+                                      key={id}
+                                      className="flex items-center justify-between"
+                                    >
+                                      <div className="flex items-center justify-between py-2">
+                                        <span className="font-medium">
+                                          {itm.name}
+                                        </span>
+                                        <span className="font-medium mx-2">
+                                          -
+                                        </span>
+                                        <span className="font-medium">
+                                          {itm.quantity}
+                                        </span>
+                                      </div>
+                                      <span className="text-green-600 font-medium">
+                                        ₹{itm.price}
+                                      </span>
+                                    </div>
+                                  ))}
                                 </div>
-                                <span className="text-green-600 font-semibold">
-                                  ${calculateOrderTotal(order)}
-                                </span>
-                              </div>
-                            </div>
+                                <Separator />
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <span className="font-medium">
+                                      Subtotal
+                                    </span>
+                                  </div>
+                                  <span className="text-green-600 font-semibold">
+                                    ₹{order.payment.subtotal}
+                                  </span>
+                                </div>
+                                {order.payment.gst.gstPercentage && (
+                                  <div className="flex justify-between items-center">
+                                    <div>
+                                      <span className="font-medium">{`Tax (${order.payment.gst.gstPercentage}%)`}</span>
+                                    </div>
+                                    <span className="text-green-600 font-semibold">
+                                      ₹{order.payment.gst.gstAmount}
+                                    </span>
+                                  </div>
+                                )}
 
-                            <Separator />
-                            {/* {order.status !== "Paid" &&
-                            order.status !== "Completed" ? (
-                              <p className="font-bold">
-                                Pending Amount: ${calculateOrderTotal(order)}
-                              </p>
-                            ) : (
-                              <p className="font-bold">
-                                Payment: Cash - ${order.payment.amount}
-                              </p>
-                            )} */}
-                          </div>
-                        ))}
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <span className="font-medium">Total</span>
+                                    {order.payment.paymentStatus === "paid" ? (
+                                      <>
+                                        <Badge
+                                          variant="outline"
+                                          className="mx-2"
+                                        >
+                                          Paid
+                                        </Badge>
+                                        <Badge
+                                          variant="outline"
+                                          className="mx-2"
+                                        >
+                                          {order.payment.mode}
+                                        </Badge>
+                                      </>
+                                    ) : (
+                                      <Badge variant="outline" className="mx-2">
+                                        Pending
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <span className="text-green-600 font-semibold">
+                                    ₹{order.payment.price}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <Separator />
+                            </div>
+                          );
+                        })}
 
                         {Object.values(item.issuesReported).map(
                           (issue: any, i) => (
@@ -557,48 +666,43 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
 
                         <div className="flex justify-between items-center pt-2">
                           <div className="flex items-center gap-2">
-                            <DollarSign className="text-green-600" size={20} />
-                            <span className="text-lg font-semibold">
-                              Total:{" "}
-                              {item.diningDetails.orders
-                                .reduce(
-                                  (total: any, order: any) =>
-                                    order.status !== "Paid" &&
-                                    order.status !== "Completed"
-                                      ? total + calculateOrderTotal(order)
-                                      : total,
-                                  0
-                                )
-                                .toFixed(2)}
-                            </span>
+                            <div>
+                              {(() => {
+                                const total = calculateFinalAmount(item);
+                                return (
+                                  <>
+                                    {total ? (
+                                      <div className="flex items-center">
+                                        <IndianRupee
+                                          className="text-green-600"
+                                          size={20}
+                                        />
+                                        <span className="text-xl font-semibold mx-2">
+                                          {total}
+                                        </span>
+                                        <Badge>Pending</Badge>
+                                      </div>
+                                    ) : (
+                                      ""
+                                    )}
+                                  </>
+                                );
+                              })()}
+                            </div>
+                            {/* <span className="text-xl font-semibold">
+                              {calculateFinalAmount(item) || "0"}
+                            </span> */}
                           </div>
                           <div className="flex gap-3">
                             <Button
-                              variant="outline"
                               className="flex items-center gap-2"
                               size="sm"
-                              onClick={() => setChecklistOpen(true)}
+                              onClick={() => console.log("clicked")}
                             >
-                              <ClipboardCheck size={16} />
-                              Checkout
-                            </Button>
-                            <Button
-                              className="flex items-center gap-2"
-                              size="sm"
-                              onClick={() => setChecklistOpen(true)}
-                            >
-                              <Send size={16} />
                               Submit
                             </Button>
                           </div>
                         </div>
-
-                        <ChecklistDialog
-                          data={addItems}
-                          open={checklistOpen}
-                          onClose={() => setChecklistOpen(false)}
-                          roomNumber={item.diningDetails.location}
-                        />
                       </div>
                     </AccordionContent>
                   </AccordionItem>
