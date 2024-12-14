@@ -517,7 +517,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                         </span>
                                       </div>
                                       <span className="text-green-600 font-medium">
-                                        ₹{itm.price}
+                                        ₹{Number(itm.price)}
                                       </span>
                                     </div>
                                   ))}
