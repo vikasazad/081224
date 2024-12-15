@@ -73,22 +73,24 @@ function processData(data: any) {
   if (data.restaurant?.tables) {
     data.restaurant.tables.forEach((table: any) => {
       if (table.diningDetails.status !== "available") {
-        rows.push(
-          createData(
-            table.diningDetails.orders[0].orderId,
-            table.diningDetails.customer?.name || "",
-            table.diningDetails.location,
-            table.diningDetails.capacity,
-            table.diningDetails?.payment?.priceAfterDiscount || 0,
-            table.diningDetails.status,
-            table.diningDetails?.attendant || "",
-            table.diningDetails?.payment?.paymentId || "",
-            table.diningDetails?.timeSeated,
-            "",
-            table.diningDetails?.payment?.paymentStatus || "",
-            table.diningDetails?.specialRequirements
-          )
-        );
+        table.diningDetails.orders.forEach((item: any) => {
+          rows.push(
+            createData(
+              item.orderId,
+              table.diningDetails.customer?.name || "",
+              table.diningDetails.location,
+              table.diningDetails.noOfGuests,
+              item.payment.price || 0,
+              table.diningDetails.status,
+              item?.attendant || "",
+              item?.payment?.paymentId || "",
+              item?.timeOfRequest,
+              item?.timeOfFullfilment,
+              item.payment.paymentStatus || "",
+              item?.specialRequirements
+            )
+          );
+        });
       }
     });
   }
@@ -174,13 +176,12 @@ function processData(data: any) {
   // Format start and end times in HR:MIN DD:MM format
   rows.forEach((row: any) => {
     if (row.startTime) {
-      row.startTime = format(new Date(row.startTime), "HH:mm dd:MM");
+      row.startTime = format(new Date(row.startTime), "HH:mm (d MMM)");
     }
     if (row.endTime) {
-      row.endTime = format(new Date(row.endTime), "HH:mm dd:MM");
+      row.endTime = format(new Date(row.endTime), "HH:mm (d MMM)");
     }
   });
-
   return rows;
 }
 
@@ -209,8 +210,6 @@ export default function OrderTable({ data }: { data: any }) {
       </CardHeader>
       <CardContent>
         <div className="w-full overflow-x-auto">
-          {" "}
-          {/* Enable horizontal scrolling */}
           <Table>
             <TableHeader>
               <TableRow>
@@ -233,7 +232,7 @@ export default function OrderTable({ data }: { data: any }) {
                   <TableCell>
                     {row.price && (
                       <>
-                        ₹{" "}
+                        ₹
                         {new Intl.NumberFormat("en-IN").format(
                           Number(row.price)
                         )}
