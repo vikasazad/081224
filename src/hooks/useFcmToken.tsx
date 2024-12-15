@@ -17,6 +17,8 @@ import { useNotificationPopup } from "./useNotificationPopup";
 interface NotificationContextType {
   token: string | null;
   notificationPermissionStatus: NotificationPermission | null;
+  notificationPayload: Record<string, any> | null; // Add payload here
+  setNotificationPayload: (payload: Record<string, any> | null) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -65,8 +67,11 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const retryLoadToken = useRef(0);
   const isLoading = useRef(false);
   const { showPopup, openPopup, closePopup } = useNotificationPopup();
-
-  const loadToken = async () => {
+  const [notificationPayload, setNotificationPayload] = useState<Record<
+    string,
+    any
+  > | null>(null);
+  const loadToken = async (isInitialLoad = false) => {
     if (isLoading.current) return;
 
     isLoading.current = true;
@@ -104,12 +109,22 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     setNotificationPermissionStatus(Notification.permission);
     setToken(fetchedToken);
     console.log("token", fetchedToken);
+
+    // Save token on initial page load
+    if (isInitialLoad) {
+      await saveToken(fetchedToken);
+      console.log("saveToken function executed on page load.");
+    }
+
     callCounter += 1;
     console.log("---->>", callCounter);
-    if (callCounter % 10 === 0) {
+
+    // Save token every 5th call
+    if (callCounter % 5 === 0) {
       await saveToken(fetchedToken);
       console.log("saveToken function executed on the 5th call.");
     }
+
     isLoading.current = false;
   };
 
@@ -117,12 +132,12 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     const m = await messaging();
     if (!m) return;
 
-    const unsubscribe = onMessage(m, (payload) => {
+    const unsubscribe = onMessage(m, (payload: any) => {
       if (Notification.permission !== "granted") return;
 
       console.log("Foreground push notification received:", payload);
       const link = payload.fcmOptions?.link || payload.data?.link;
-
+      setNotificationPayload(payload.notification);
       toast.info(
         `${payload.notification?.title}: ${payload.notification?.body}`,
         {
@@ -193,7 +208,12 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <NotificationContext.Provider
-      value={{ token, notificationPermissionStatus }}
+      value={{
+        token,
+        notificationPermissionStatus,
+        notificationPayload,
+        setNotificationPayload,
+      }}
     >
       {children}
       {showPopup && <NotificationPopup onProceedAnyway={closePopup} />}

@@ -23,6 +23,16 @@ messaging.onBackgroundMessage((payload) => {
     payload
   );
 
+  self.clients
+    .matchAll({ type: "window", includeUncontrolled: true })
+    .then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: "BACKGROUND_MESSAGE",
+          payload,
+        });
+      });
+    });
   // payload.fcmOptions?.link comes from our backend API route handle
   // payload.data.link comes from the Firebase Console where link is the 'key'
   const link = payload.fcmOptions?.link || payload.data?.link;

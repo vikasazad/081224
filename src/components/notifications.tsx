@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import { Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useNotification } from "@/hooks/useFcmToken";
+
+import { v4 as uuidv4 } from "uuid"; // Add this for generating unique IDs
 
 type NotificationType = "Hotel" | "Restaurant" | "Issues" | "Payments";
 
@@ -23,32 +26,7 @@ interface Notification {
 }
 
 export function Notifications() {
-  const [notifications, setNotifications] = React.useState<Notification[]>([
-    {
-      id: "1",
-      type: "Hotel",
-      message: "New hotel booking received",
-      timestamp: "2 mins ago",
-    },
-    {
-      id: "2",
-      type: "Restaurant",
-      message: "Restaurant reservation confirmed",
-      timestamp: "5 mins ago",
-    },
-    {
-      id: "3",
-      type: "Issues",
-      message: "Maintenance request in Room 301",
-      timestamp: "10 mins ago",
-    },
-    {
-      id: "4",
-      type: "Payments",
-      message: "Payment overdue for Invoice #1234",
-      timestamp: "15 mins ago",
-    },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const removeNotification = (id: string) => {
     setNotifications((prev) => prev.filter((notif) => notif.id !== id));
@@ -74,6 +52,48 @@ export function Notifications() {
       </span>
     );
   };
+
+  const { notificationPayload } = useNotification();
+
+  useEffect(() => {
+    if (notificationPayload) {
+      const newNotification: Notification = {
+        id: uuidv4(), // Generate a unique ID
+        type: notificationPayload.title as NotificationType, // Map title to type
+        message: notificationPayload.body, // Use body as the message
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      setNotifications((prev) => [newNotification, ...prev]);
+    }
+  }, [notificationPayload]);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data && event.data.type === "BACKGROUND_MESSAGE") {
+          const { title, body } = event.data.payload.notification;
+
+          const newNotification: Notification = {
+            id: uuidv4(), // Generate a unique ID
+            type: title as NotificationType, // Map title to type
+            message: body, // Use body as the message
+            timestamp: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          };
+
+          // console.log("first", newNotification);
+
+          setNotifications((prev) => [newNotification, ...prev]);
+        }
+      });
+    }
+  }, []);
 
   return (
     <DropdownMenu>
