@@ -43,6 +43,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { sendNotification } from "@/lib/sendNotification";
+import {
+  calculateFinalAmount,
+  calculateOrderTotal,
+  calculateTax,
+  getOnlineStaffFromFirestore,
+} from "../utils/tableApi";
 export default function Occupied({ data, status }: { data: any; status: any }) {
   const [tableData, setTableData] = useState<any>([]);
   const [addItems, setAddItems] = useState<any>([]);
@@ -54,10 +60,10 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
   const [openPaymentConfirmation, setOpenPaymentConfirmation] = useState(false);
   const [currentStatusChange, setCurrentStatusChange] = useState<any>(null);
   const [addedType, setAddedType] = useState<"food" | "issue" | null>(null);
+  const [availableAttendent, setavailableAttendent] = useState<any>([]);
   const gstPercentage = "";
 
   useEffect(() => {
-    console.log(data);
     setTableData(data);
   }, [data]);
 
@@ -65,6 +71,16 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     getTableData().then((data) => {
       setAddItems(data);
     });
+  }, []);
+  useEffect(() => {
+    const unsubscribe = getOnlineStaffFromFirestore((result: any) => {
+      if (result) {
+        setavailableAttendent(result);
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const handleCategorySearchChange = (e: any) => {
@@ -108,6 +124,46 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     );
   };
 
+  const handleAttendentChange = (
+    orderId: string,
+    attendant: string,
+    index: number
+  ) => {
+    setTableData((prevTableData: any) => {
+      const updatedTableData = [...prevTableData];
+
+      // Find the order and update its attendant
+      const orderIndex = updatedTableData[index].diningDetails.orders.findIndex(
+        (order: any) => order.orderId === orderId
+      );
+
+      const token = availableAttendent.find(
+        (data: any) => data.name === attendant
+      );
+
+      if (orderIndex !== -1) {
+        updatedTableData[index].diningDetails.attendantToken = attendant;
+        updatedTableData[index].diningDetails.orders[
+          orderIndex
+        ].attendantToken = attendant;
+        updatedTableData[index].diningDetails.attendant =
+          token.notificationToken;
+        updatedTableData[index].diningDetails.orders[orderIndex].attendant =
+          attendant;
+        if (
+          updatedTableData[index].diningDetails.orders[orderIndex].payment
+            .paymentStatus === "paid"
+        ) {
+          updatedTableData[index].transctions[orderIndex].attendant = attendant;
+          updatedTableData[index].transctions[orderIndex].attendantToken =
+            token.notificationToken;
+        }
+      }
+
+      return updatedTableData;
+    });
+  };
+  console.log(tableData);
   const handleAdd = async (items: any[], index: number) => {
     console.log("AAAAAAAA", items);
     const updatedTableData: any = [...tableData];
@@ -262,41 +318,6 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
 
       return updatedTableData;
     });
-  };
-
-  const calculateOrderTotal = (order: any) => {
-    const itemsTotal = order.reduce(
-      (total: number, item: any) => total + parseFloat(item.price),
-      0
-    );
-
-    return itemsTotal;
-  };
-
-  const calculateTax = (order: any, tax: string) => {
-    const total = calculateOrderTotal(order);
-    const rounded = Math.round((total * Number(tax)) / 100);
-    return rounded;
-  };
-
-  const calculateFinalAmount = (item: any) => {
-    const final = item.diningDetails.orders.map((data: any) => {
-      if (data.payment.paymentStatus === "pending") {
-        const total = data.items.reduce((total: number, order: any) => {
-          return total + parseFloat(order.price || "0");
-        }, 0);
-        const gstAmount = parseFloat(data.payment?.gst?.gstAmount || "0");
-
-        return total + gstAmount;
-      }
-      return undefined; // Explicitly return undefined for clarity
-    });
-
-    // Filter out undefined values and calculate the sum
-    const validValues = final.filter((value: any) => value !== undefined);
-    const sum = validValues.reduce((acc: any, value: any) => acc + value, 0);
-
-    return sum || 0; // Return 0 if no valid values
   };
 
   return (
@@ -461,11 +482,40 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                           console.log("ORDER", order);
                           return (
                             <div key={i} className="space-y-2">
-                              <div className="flex justify-between items-center">
+                              <div className="flex justify-between items-center mt-2">
                                 <div className="flex items-center gap-2">
                                   <Badge variant="outline">
                                     {order.orderId}
                                   </Badge>
+
+                                  <Select
+                                    onValueChange={(value) =>
+                                      handleAttendentChange(
+                                        order.orderId,
+                                        value,
+                                        main
+                                      )
+                                    }
+                                  >
+                                    <SelectTrigger className="w-[140px] py-0 h-6">
+                                      <SelectValue
+                                        placeholder={order.attendant}
+                                      />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {availableAttendent.map(
+                                        (attendant: any) => (
+                                          <SelectItem
+                                            key={attendant.name}
+                                            value={attendant.name}
+                                          >
+                                            {attendant.name}
+                                          </SelectItem>
+                                        )
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+
                                   <StatusChip status={order.status} />
                                 </div>
 
@@ -505,16 +555,18 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                       key={id}
                                       className="flex items-center justify-between"
                                     >
-                                      <div className="flex items-center justify-between py-2">
+                                      <div className="flex flex-col py-2">
                                         <span className="font-medium">
                                           {itm.name}
                                         </span>
-                                        <span className="font-medium mx-2">
-                                          -
-                                        </span>
-                                        <span className="font-medium">
-                                          {itm.quantity}
-                                        </span>
+                                        <div className="flex items-center text-muted-foreground">
+                                          <span className="font-normal mr-2">
+                                            -
+                                          </span>
+                                          <span className="font-normal">
+                                            {itm.quantity}
+                                          </span>
+                                        </div>
                                       </div>
                                       <span className="text-green-600 font-medium">
                                         ₹{Number(itm.price)}

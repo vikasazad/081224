@@ -2679,6 +2679,7 @@ const restaurantData = {
                 },
               ],
               attendant: "Alice Smith",
+              attendantToken: "",
               status: "open",
               timeOfRequest: "2024-10-03T10:10:00.000Z",
               timeOfFullfilment: "2024-10-03T10:25:00.000Z",
@@ -2709,6 +2710,7 @@ const restaurantData = {
           ],
           location: "T13",
           attendant: "Sarah Johnson",
+          attendantToken: "",
           timeSeated: "2024-09-21T15:47:00.000Z",
           timeLeft: "2024-09-26T04:47:00.000Z",
           aggregator: "makeMyTrip",
@@ -2757,6 +2759,7 @@ const restaurantData = {
             location: "104",
             against: "SE:7889",
             attendant: "Mishra",
+            attendantToken: "",
             bookingId: "BO:123",
             payment: {
               paymentStatus: "complete",
