@@ -1,5 +1,5 @@
 "use server";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/config/db/firebase";
 import { NewUser } from "@/types/auth/typesAuth";
 // import { auth } from "@/auth";
@@ -26,6 +26,18 @@ export async function add(email: string, newUser: any, field: string) {
     return "User registered Successfully";
   } catch (error) {
     console.log("eror");
+    console.log(error);
+    return false;
+  }
+}
+export async function update(email: string, newUser: any, field: string) {
+  try {
+    const docRef = doc(db, email, field);
+    await updateDoc(docRef, {
+      staff: newUser,
+    });
+    return "User registered Successfully";
+  } catch (error) {
     console.log(error);
     return false;
   }

@@ -44,10 +44,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { sendNotification } from "@/lib/sendNotification";
 import {
+  assignAttendantSequentially,
   calculateFinalAmount,
   calculateOrderTotal,
   calculateTax,
   getOnlineStaffFromFirestore,
+  setAttendent,
+  setTables,
+  updateOrdersForAttendant,
 } from "../utils/tableApi";
 export default function Occupied({ data, status }: { data: any; status: any }) {
   const [tableData, setTableData] = useState<any>([]);
@@ -60,7 +64,10 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
   const [openPaymentConfirmation, setOpenPaymentConfirmation] = useState(false);
   const [currentStatusChange, setCurrentStatusChange] = useState<any>(null);
   const [addedType, setAddedType] = useState<"food" | "issue" | null>(null);
-  const [availableAttendent, setavailableAttendent] = useState<any>([]);
+  const [availableAttendant, setavailableAttendant] = useState<any>([]);
+  const [openFinalSubmitConfirmation, setOpenFinalSubmitConfirmation] =
+    useState(false);
+  const [finalSubmitData, setFinalSubmitData] = useState<any>(null);
   const gstPercentage = "";
 
   useEffect(() => {
@@ -75,7 +82,8 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
   useEffect(() => {
     const unsubscribe = getOnlineStaffFromFirestore((result: any) => {
       if (result) {
-        setavailableAttendent(result);
+        console.log("EHERHERHEHREHREHRHERH", result);
+        setavailableAttendant(result);
       }
     });
     return () => {
@@ -124,7 +132,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     );
   };
 
-  const handleAttendentChange = (
+  const handleAttendantChange = (
     orderId: string,
     attendant: string,
     index: number
@@ -137,19 +145,19 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
         (order: any) => order.orderId === orderId
       );
 
-      const token = availableAttendent.find(
+      const token = availableAttendant.find(
         (data: any) => data.name === attendant
       );
 
       if (orderIndex !== -1) {
-        updatedTableData[index].diningDetails.attendantToken = attendant;
-        updatedTableData[index].diningDetails.orders[
-          orderIndex
-        ].attendantToken = attendant;
-        updatedTableData[index].diningDetails.attendant =
+        updatedTableData[index].diningDetails.attendant = attendant;
+        updatedTableData[index].diningDetails.attendantToken =
           token.notificationToken;
         updatedTableData[index].diningDetails.orders[orderIndex].attendant =
           attendant;
+        updatedTableData[index].diningDetails.orders[
+          orderIndex
+        ].attendantToken = attendant;
         if (
           updatedTableData[index].diningDetails.orders[orderIndex].payment
             .paymentStatus === "paid"
@@ -158,28 +166,47 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
           updatedTableData[index].transctions[orderIndex].attendantToken =
             token.notificationToken;
         }
+        updateOrdersForAttendant(attendant, orderId);
+        setAttendent(updatedTableData);
       }
+
+      console.log("updatedTableData", updatedTableData);
 
       return updatedTableData;
     });
   };
+
   console.log(tableData);
+
   const handleAdd = async (items: any[], index: number) => {
     console.log("AAAAAAAA", items);
     const updatedTableData: any = [...tableData];
 
     if (items[0].quantity) {
+      const assignedAttendant: any =
+        assignAttendantSequentially(availableAttendant);
+      const newOrderId = `OR:${
+        tableData[index].diningDetails.location
+      }:${new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })}`;
       setAddedType("food");
       updatedTableData[index] = {
         ...updatedTableData[index],
         diningDetails: {
           ...updatedTableData[index].diningDetails,
+          attendant: assignedAttendant ? assignedAttendant.name : "Unassigned",
           orders: [
             ...(updatedTableData[index].diningDetails?.orders || []),
             {
-              orderId: `OR:${new Date().toLocaleTimeString()}`,
+              orderId: newOrderId,
               items: items,
-              attendant: updatedTableData[index].diningDetails.attendant,
+              attendant: assignedAttendant
+                ? assignedAttendant.name
+                : "Unassigned",
+              attendantToken: assignedAttendant ? assignedAttendant.token : "",
               status: "order placed",
               timeOfRequest: new Date().toISOString(),
               timeOfFullfilment: "",
@@ -216,17 +243,31 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
           ],
         },
       };
+
+      if (availableAttendant) {
+        const updatedAttendants = availableAttendant.map((staff: any) =>
+          staff.name === assignedAttendant.name
+            ? { ...staff, orders: [...staff.orders, newOrderId] }
+            : staff
+        );
+        setavailableAttendant(updatedAttendants);
+      }
       if (tableData[index]) {
         const token =
           tableData[index]?.diningDetails.customer.notificationToken;
-        sendNotification(
-          token,
-          "Item Added to Order!",
-          "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
-        );
+        if (token) {
+          console.log("token", token);
+          sendNotification(
+            token,
+            "Item Added to Order!",
+            "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
+          );
+        }
+
         // const data = await setOfflineItem(updatedTableData);
-        console.log("UODATED", updatedTableData[index]);
+        console.log("UPDATED", updatedTableData[index]);
         setOfflineItem(updatedTableData[index]);
+        updateOrdersForAttendant(assignedAttendant.name, newOrderId);
       }
     } else if (items[0].issueSubtype) {
       // Issue item
@@ -258,16 +299,18 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     setIssueDescription("");
   };
 
+  // console.log("first", availableAttendant);
+
   const handleStatusChange = async (
     status: string,
     orderId: string,
     index: number
   ) => {
     console.log(status, orderId, index);
-    if (status === "Paid" || status === "Completed") {
+    if (status.toLocaleLowerCase() === "paid") {
       setCurrentStatusChange({ status, orderId, index });
       setOpenPaymentConfirmation(true);
-    } else if (status === "Served") {
+    } else if (status.toLocaleLowerCase() === "served") {
       if (tableData[index]) {
         const token =
           tableData[index]?.diningDetails.customer.notificationToken;
@@ -297,12 +340,25 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
         if (orderIndex !== -1) {
           updatedTableData[index].diningDetails.orders[orderIndex].status =
             status;
-          if (status === "paid" || status === "completed") {
+          if (status.toLocaleLowerCase() === "served") {
+            if (
+              updatedTableData[index].diningDetails.orders[orderIndex].payment
+                .paymentStatus === "paid"
+            ) {
+              updateStatus("paid", orderId, index);
+            } else {
+              updateStatus("Pending", orderId, index);
+            }
+          }
+          if (status.toLocaleLowerCase() === "paid") {
             updatedTableData[index].diningDetails.orders[orderIndex].payment = {
-              method: "cash",
-              amount: calculateOrderTotal(
-                updatedTableData[index].diningDetails.orders[orderIndex]
-              ),
+              ...updatedTableData[index].diningDetails.orders[orderIndex]
+                .payment, // Preserve existing fields
+              mode: "cash",
+              paymentId: "cash",
+              paymentStatus: "paid",
+              timeOfTransaction: new Date().toISOString(),
+              transctionId: "cash",
             };
           }
         }
@@ -318,6 +374,28 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
 
       return updatedTableData;
     });
+
+    console.log("tableData", tableData);
+    if (status.toLocaleLowerCase() === "served") setTables(tableData);
+    if (status.toLocaleLowerCase() === "paid") setTables(tableData);
+  };
+
+  const handleFinalSubmit = (item: any, main: number) => {
+    console.log("clicked", item, main);
+
+    const remaining = item.diningDetails.orders.find(
+      (data: any) => data.payment.paymentStatus === "pending"
+    )?.orderId;
+
+    if (remaining) {
+      // If there are pending payments, show a payment required dialog
+      setOpenFinalSubmitConfirmation(true);
+      setFinalSubmitData({ item, main, type: "payment_pending" });
+    } else {
+      // If no pending payments, ask for table closure confirmation
+      setOpenFinalSubmitConfirmation(true);
+      setFinalSubmitData({ item, main, type: "close_table" });
+    }
   };
 
   return (
@@ -343,7 +421,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                             {item.diningDetails.noOfGuests}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 ">
                           <div>
                             <Dialog>
                               <DialogTrigger asChild>
@@ -357,7 +435,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                   Add
                                 </div>
                               </DialogTrigger>
-                              <DialogContent>
+                              <DialogContent className="">
                                 <DialogHeader>
                                   <DialogTitle>
                                     {item.diningDetails.location}
@@ -410,41 +488,45 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                     onChange={handleCategorySearchChange}
                                   />
                                   {categoryItems.length > 0 && (
-                                    <Table>
-                                      <TableBody>
-                                        {categoryItems.map((item: any, i) => (
-                                          <TableRow key={i}>
-                                            <TableCell>{i + 1}.</TableCell>
-                                            <TableCell>{item.name}</TableCell>
-                                            {categorySelect === "Food" && (
+                                    <div className="max-h-[300px] overflow-y-auto border rounded px-2">
+                                      <Table>
+                                        <TableBody>
+                                          {categoryItems.map((item: any, i) => (
+                                            <TableRow key={i}>
+                                              <TableCell>{i + 1}.</TableCell>
+                                              <TableCell>{item.name}</TableCell>
+                                              {categorySelect === "Food" && (
+                                                <TableCell>
+                                                  {item.quantity}
+                                                </TableCell>
+                                              )}
+                                              {categorySelect === "Food" && (
+                                                <TableCell>
+                                                  {Number(item.price)}
+                                                </TableCell>
+                                              )}
+                                              {categorySelect === "Issue" && (
+                                                <TableCell>
+                                                  {item.issueSubtype}
+                                                </TableCell>
+                                              )}
                                               <TableCell>
-                                                {item.quantity}
+                                                <Checkbox
+                                                  checked={selectedCategoryItems.includes(
+                                                    item
+                                                  )}
+                                                  onCheckedChange={() =>
+                                                    handleCategoryItemSelect(
+                                                      item
+                                                    )
+                                                  }
+                                                />
                                               </TableCell>
-                                            )}
-                                            {categorySelect === "Food" && (
-                                              <TableCell>
-                                                {item.price}
-                                              </TableCell>
-                                            )}
-                                            {categorySelect === "Issue" && (
-                                              <TableCell>
-                                                {item.issueSubtype}
-                                              </TableCell>
-                                            )}
-                                            <TableCell>
-                                              <Checkbox
-                                                checked={selectedCategoryItems.includes(
-                                                  item
-                                                )}
-                                                onCheckedChange={() =>
-                                                  handleCategoryItemSelect(item)
-                                                }
-                                              />
-                                            </TableCell>
-                                          </TableRow>
-                                        ))}
-                                      </TableBody>
-                                    </Table>
+                                            </TableRow>
+                                          ))}
+                                        </TableBody>
+                                      </Table>
+                                    </div>
                                   )}
                                   {categorySelect === "Issue" && (
                                     <Textarea
@@ -479,7 +561,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                     <AccordionContent>
                       <div className="space-y-4">
                         {item.diningDetails.orders.map((order: any, i: any) => {
-                          console.log("ORDER", order);
+                          // console.log("ORDER", order);
                           return (
                             <div key={i} className="space-y-2">
                               <div className="flex justify-between items-center mt-2">
@@ -490,7 +572,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
 
                                   <Select
                                     onValueChange={(value) =>
-                                      handleAttendentChange(
+                                      handleAttendantChange(
                                         order.orderId,
                                         value,
                                         main
@@ -503,7 +585,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                       />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {availableAttendent.map(
+                                      {availableAttendant.map(
                                         (attendant: any) => (
                                           <SelectItem
                                             key={attendant.name}
@@ -749,7 +831,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                             <Button
                               className="flex items-center gap-2"
                               size="sm"
-                              onClick={() => console.log("clicked")}
+                              onClick={() => handleFinalSubmit(item, main)}
                             >
                               Submit
                             </Button>
@@ -780,6 +862,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
             <Button
               variant="outline"
               onClick={() => setOpenPaymentConfirmation(false)}
+              className="mt-4"
             >
               Cancel
             </Button>
@@ -797,6 +880,54 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
             >
               Confirm
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={openFinalSubmitConfirmation}
+        onOpenChange={setOpenFinalSubmitConfirmation}
+      >
+        <DialogContent>
+          <DialogHeader>
+            {finalSubmitData?.type === "payment_pending" ? (
+              <>
+                <DialogTitle>Payment Pending</DialogTitle>
+                <DialogDescription>
+                  This order cannot be submitted because there are pending
+                  payments. Please complete all payments before closing the
+                  table.
+                </DialogDescription>
+              </>
+            ) : (
+              <>
+                <DialogTitle>Close Table Confirmation</DialogTitle>
+                <DialogDescription>
+                  This action cannot be undone. Are you sure you want to close
+                  the table?
+                </DialogDescription>
+              </>
+            )}
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setOpenFinalSubmitConfirmation(false)}
+            >
+              Cancel
+            </Button>
+            {finalSubmitData?.type === "close_table" && (
+              <Button
+                onClick={() => {
+                  // Logic to close the table
+                  // You might want to implement a method to remove the table or mark it as closed
+                  console.log("tableClosed");
+                  setOpenFinalSubmitConfirmation(false);
+                }}
+              >
+                Confirm Close
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

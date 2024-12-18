@@ -49,8 +49,8 @@ const TwoSeat = ({ data }: { data: any }) => {
   const [selectedAmenities, setSelectedAmenities] = useState<any[]>([]);
   const [errors, setErrors] = useState<any>({});
   const [tableNumbers, setTableNumbers] = useState<string[]>([]);
-  const [newRoomNumber, setNewRoomNumber] = useState("");
-  const [roomNumberError, setRoomNumberError] = useState("");
+  const [newTableNumber, setNewTableNumber] = useState("");
+  const [tableNumberError, setTableNumberError] = useState("");
   const [formData, setFormData] = useState({
     tableNumber: "",
     reservationPrice: "",
@@ -330,36 +330,36 @@ const TwoSeat = ({ data }: { data: any }) => {
     });
   };
 
-  const handleAddRoom = () => {
-    setRoomNumberError("");
+  const handleAddTable = () => {
+    setTableNumberError("");
 
-    if (!newRoomNumber) {
-      setRoomNumberError("Room number is required");
+    if (!newTableNumber) {
+      setTableNumberError("Room number is required");
       toast.error("Room number is required");
       return;
     }
 
-    const roomNum = newRoomNumber;
+    const roomNum = newTableNumber;
     if (!roomNum.trim()) {
-      setRoomNumberError("Please enter a valid room number");
+      setTableNumberError("Please enter a valid room number");
       toast.error("Invalid room number");
       return;
     }
 
     if (tableNumbers.includes(roomNum)) {
-      setRoomNumberError("Room number already exists");
+      setTableNumberError("Room number already exists");
       toast.error("Room number already exists");
       return;
     }
 
     setTableNumbers([...tableNumbers, roomNum]);
-    setNewRoomNumber("");
+    setNewTableNumber("");
     toast.success("Room Added", {
       description: `Room ${roomNum} has been added successfully.`,
     });
   };
 
-  const handleDeleteRoom = (roomToDelete: any) => {
+  const handleDeleteTable = (roomToDelete: any) => {
     setTableNumbers(tableNumbers.filter((room) => room !== roomToDelete));
     toast.success("Room Removed", {
       description: `Room ${roomToDelete} has been removed.`,
@@ -496,48 +496,48 @@ const TwoSeat = ({ data }: { data: any }) => {
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Room
+                Add Table
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Room Number</DialogTitle>
+                <DialogTitle>Add New Table Number</DialogTitle>
               </DialogHeader>
               <DialogDescription></DialogDescription>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="roomNumber">Room Number</Label>
+                  <Label htmlFor="tableNumber">Table Number</Label>
                   <Input
-                    id="roomNumber"
-                    placeholder="Enter room number"
-                    value={newRoomNumber}
+                    id="tableNumber"
+                    placeholder="Enter table number"
+                    value={newTableNumber}
                     onChange={(e) => {
-                      setNewRoomNumber(e.target.value);
-                      setRoomNumberError("");
+                      setNewTableNumber(e.target.value);
+                      setTableNumberError("");
                     }}
-                    className={roomNumberError ? "border-red-500" : ""}
+                    className={tableNumberError ? "border-red-500" : ""}
                   />
-                  {roomNumberError && (
-                    <p className="text-sm text-red-500">{roomNumberError}</p>
+                  {tableNumberError && (
+                    <p className="text-sm text-red-500">{tableNumberError}</p>
                   )}
                 </div>
                 <DialogClose asChild>
-                  <Button onClick={handleAddRoom}>Add Room</Button>
+                  <Button onClick={handleAddTable}>Add Table</Button>
                 </DialogClose>
               </div>
             </DialogContent>
           </Dialog>
         </div>
         <div className="flex flex-wrap gap-2">
-          {tableNumbers.map((room) => (
+          {tableNumbers.map((table) => (
             <Badge
-              key={room}
+              key={table}
               variant="secondary"
               className="text-sm flex items-center gap-1"
             >
-              Room {room}
+              Table {table}
               <button
-                onClick={() => handleDeleteRoom(room)}
+                onClick={() => handleDeleteTable(table)}
                 className="ml-1 hover:text-destructive"
               >
                 <X className="h-3 w-3" />

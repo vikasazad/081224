@@ -13,8 +13,8 @@ export default function Tables({ data }: { data: any }) {
   console.log("Table", table);
 
   return (
-    <Card className="mx-8">
-      <CardContent className="p-4">
+    <Card className="mx-4 md:mx-8">
+      <CardContent className="p-1">
         <div className="w-full bg-white rounded-lg">
           <div className="">
             <Tabs defaultValue="occupied" className=" pt-2">

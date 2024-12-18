@@ -1,5 +1,10 @@
 import { db } from "@/config/db/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+interface StaffMember {
+  name: string;
+  token: string;
+  orders: string[];
+}
 
 export const calculateOrderTotal = (order: any) => {
   const itemsTotal = order.reduce(
@@ -56,10 +61,14 @@ export function getOnlineStaffFromFirestore(callback: any) {
       }
 
       const onlineStaff = info
-        .filter((staffMember: any) => staffMember.status === "online")
+        .filter(
+          (staffMember: any) =>
+            staffMember.status === "online" && staffMember.role === "attendant"
+        )
         .map((staffMember: any) => ({
           name: staffMember.name,
           notificationToken: staffMember.notificationToken,
+          orders: staffMember.orders,
         }));
 
       callback(onlineStaff);
@@ -72,6 +81,152 @@ export function getOnlineStaffFromFirestore(callback: any) {
     throw error;
   }
 }
+
+export async function updateOrdersForAttendant(
+  attendantName: string,
+  orderId: string
+) {
+  try {
+    // Reference to the Firestore document containing staff info
+    const docRef = doc(db, "vikumar.azad@gmail.com", "info");
+
+    // Fetch the document to get the current staff data
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      console.error("Document not found");
+      return;
+    }
+
+    const staff = docSnap.data().staff;
+
+    if (!staff) {
+      console.error("Invalid staff data");
+      return;
+    }
+
+    // Find the new attendant by name
+    const newAttendantIndex = staff.findIndex(
+      (staffMember: any) =>
+        staffMember.name === attendantName && staffMember.role === "attendant"
+    );
+
+    if (newAttendantIndex === -1) {
+      console.error("New Attendant not found");
+      return;
+    }
+
+    // Find the previous attendant who had this order
+    const previousAttendantIndex = staff.findIndex(
+      (staffMember: any) =>
+        staffMember.role === "attendant" &&
+        staffMember.orders?.includes(orderId)
+    );
+
+    // Modify the staff array
+    if (newAttendantIndex !== -1) {
+      // Add the orderId to the new attendant's orders
+      staff[newAttendantIndex].orders = staff[newAttendantIndex].orders || [];
+      staff[newAttendantIndex].orders.push(orderId);
+    }
+
+    // Remove the orderId from the previous attendant's orders if found
+    if (
+      previousAttendantIndex !== -1 &&
+      previousAttendantIndex !== newAttendantIndex
+    ) {
+      staff[previousAttendantIndex].orders = staff[
+        previousAttendantIndex
+      ].orders.filter((id: string) => id !== orderId);
+    }
+
+    // Update the document with the modified staff array
+    // console.log("staff", staff);
+    await updateDoc(docRef, {
+      staff: staff,
+    });
+
+    console.log("Order attendant updated successfully");
+  } catch (error) {
+    console.error("Error updating orders: ", error);
+  }
+}
+
+export async function setAttendent(tableData: any) {
+  console.log("tableData", tableData);
+  try {
+    const docRef = doc(db, "vikumar.azad@gmail.com", "restaurant");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      // Get the existing live tables data
+      const existingTables = docSnap.data().live.tables;
+
+      // Find the index of the table with matching location
+      const tableIndex = existingTables.findIndex(
+        (table: any) =>
+          table.diningDetails.location === tableData[0].diningDetails.location
+      );
+
+      // If a matching table is found, replace it with the new table data
+      if (tableIndex !== -1) {
+        existingTables[tableIndex] = tableData[0];
+
+        // Update the document with the modified tables array
+        // console.log("existingTables", existingTables);
+        await updateDoc(docRef, {
+          "live.tables": existingTables,
+        });
+
+        console.log("Table data successfully updated in Firestore.");
+        return true;
+      } else {
+        // If no matching table is found, you might want to add the new table
+        // or handle this case differently
+        console.warn("No matching table location found.");
+        return false;
+      }
+    } else {
+      console.error("Document does not exist.");
+      return false;
+    }
+  } catch (error) {
+    console.error("ERROR updating table data:", error);
+    return false;
+  }
+}
+
+export function assignAttendantSequentially(
+  availableStaff: StaffMember[]
+): StaffMember | null {
+  if (availableStaff.length === 0) return null;
+
+  // Sort staff by number of current orders (ascending)
+  const sortedStaff = [...availableStaff].sort(
+    (a, b) => a.orders.length - b.orders.length
+  );
+
+  // Return the staff with the least number of orders
+  return sortedStaff[0];
+}
+
+export async function setTables(tableData: any) {
+  try {
+    const docRef = doc(db, "vikumar.azad@gmail.com", "restaurant");
+
+    await updateDoc(docRef, {
+      "live.tables": tableData,
+    });
+
+    console.log("Data successfully updated and saved to Firestore.");
+    return true;
+  } catch (error) {
+    console.error("ERROR setting offline data:", error);
+  }
+
+  return false;
+}
+
 // export async function getOnlineStaffFromFirestore() {
 //   const docRef = doc(db, "vikumar.azad@gmail.com", "info");
 
