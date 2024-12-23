@@ -75,13 +75,15 @@ export function handleRoomStaffInformation(
                 }
               });
 
-              live.tablesData.tableDetails.forEach((item: any) => {
-                if (item.status === "available") {
-                  result.restaurantOverview.available.push(item);
-                }
-                if (item.status === "cleaning") {
-                  result.restaurantOverview.cleaning.push(item);
-                }
+              Object.keys(live.tablesData.tableDetails).forEach((tableType) => {
+                live.tablesData.tableDetails[tableType].forEach((item: any) => {
+                  if (item.status === "available") {
+                    result.restaurantOverview.available.push(item);
+                  }
+                  if (item.status === "cleaning") {
+                    result.restaurantOverview.cleaning.push(item);
+                  }
+                });
               });
             }
 

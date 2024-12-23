@@ -12,44 +12,10 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-
-const HotelRestaurantTransctions = () => {
+import { format } from "date-fns";
+const HotelRestaurantTransctions = ({ data }: any) => {
+  console.log("data", data);
   // Sample transactions data
-  const transactions = [
-    {
-      date: "9/29/2024",
-      room: "104",
-      against: "SE:7889",
-      attendant: "Mishra",
-      orderId: "BO:123",
-      mode: "online",
-      paymentId: "TXN123456",
-      txnTime: "3:30:00 PM",
-      discCoupon: "SAVE10",
-      discPercentage: 3,
-      discount: 30,
-      amount: 30,
-      finalAmount: 27,
-      status: "complete",
-    },
-    // Add more sample transactions as needed
-    {
-      date: "9/29/2024",
-      room: "105",
-      against: "SE:7890",
-      attendant: "Singh",
-      orderId: "BO:124",
-      mode: "cash",
-      paymentId: "TXN123457",
-      txnTime: "4:15:00 PM",
-      discCoupon: "SAVE15",
-      discPercentage: 5,
-      discount: 45,
-      amount: 90,
-      finalAmount: 85,
-      status: "pending",
-    },
-  ];
 
   return (
     <div className="space-y-4">
@@ -84,54 +50,79 @@ const HotelRestaurantTransctions = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map((transaction, idx) => (
-                  <TableRow key={idx} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">
-                      {transaction.date}
-                    </TableCell>
-                    <TableCell>{transaction.room}</TableCell>
-                    <TableCell>{transaction.against}</TableCell>
-                    <TableCell>{transaction.attendant}</TableCell>
-                    <TableCell>{transaction.orderId}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm">{transaction.paymentId}</span>
-                        <span className="text-xs text-gray-500">
-                          {transaction.mode}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{transaction.txnTime}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm">
-                          {transaction.discCoupon}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {transaction.discPercentage}% off
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      ₹{transaction.amount}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      ₹{transaction.finalAmount}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          transaction.status === "complete"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className="capitalize"
-                      >
-                        {transaction.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {data.data.length > 0 &&
+                  data.data
+                    .filter(
+                      (table: any) =>
+                        table.diningDetails.location === data.table
+                    )
+                    .map((item: any) => {
+                      return item.transctions.map(
+                        (transaction: any, idx: number) => (
+                          <TableRow key={idx} className="hover:bg-gray-50">
+                            <TableCell className="font-medium">
+                              {format(
+                                new Date(transaction.payment.timeOfTransaction),
+                                "HH:mm (d MMM)"
+                              )}
+                            </TableCell>
+                            <TableCell>{transaction.location}</TableCell>
+                            <TableCell>{transaction.against}</TableCell>
+                            <TableCell>{transaction.attendant}</TableCell>
+                            <TableCell>{transaction.orderId}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="text-sm">
+                                  {transaction.payment.paymentId}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {transaction.payment.mode}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {transaction.payment.timeOfTransaction.toLocaleString(
+                                "en-US",
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                }
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className="text-sm">
+                                  {transaction.payment.discount.code}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {transaction.payment.discount.amount}% off
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              ₹{transaction.payment.price}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              ₹{transaction.payment.priceAfterDiscount}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  transaction.payment.paymentStatus ===
+                                  "complete"
+                                    ? "default"
+                                    : "secondary"
+                                }
+                                className="capitalize"
+                              >
+                                {transaction.payment.paymentStatus}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      );
+                    })}
               </TableBody>
             </Table>
           </div>

@@ -43,53 +43,49 @@ import { GiVacuumCleaner } from "react-icons/gi";
 import { TbFireExtinguisher } from "react-icons/tb";
 import { GrStepsOption } from "react-icons/gr";
 import { GiPowerGenerator } from "react-icons/gi";
+import { saveTableInfo } from "../utils/tableInfoApi";
 
 const FourSeat = ({ data }: { data: any }) => {
-  console.log(data);
+  console.log("here", data);
   const [selectedAmenities, setSelectedAmenities] = useState<any[]>([]);
   const [errors, setErrors] = useState<any>({});
   const [tableNumbers, setTableNumbers] = useState<string[]>([]);
-  const [newRoomNumber, setNewRoomNumber] = useState("");
-  const [roomNumberError, setRoomNumberError] = useState("");
+  const [newTableNumber, setNewTableNumber] = useState("");
+  const [tableNumberError, setTableNumberError] = useState("");
   const [formData, setFormData] = useState({
-    tableNumber: "",
+    tableNumber: [],
     reservationPrice: "",
     minReservation: "",
     maxReservation: "",
     location: "indoor",
     isAccessible: false,
-    weekdayReservation: {
+    weekday: {
       start: "09:00",
       end: "17:00",
     },
-    weekendReservation: {
+    weekend: {
       start: "10:00",
       end: "18:00",
     },
+    amenities: [],
   });
 
   useEffect(() => {
     setFormData({
-      tableNumber: "",
-      reservationPrice: data[0].minimum_reservation_time,
-      minReservation: data[0].maximum_reservation_time,
-      maxReservation: data[0].reservation_price,
+      tableNumber: data[0].tableNumber,
+      reservationPrice: data[0].reservationPrice,
+      minReservation: data[0].minReservation,
+      maxReservation: data[0].maxReservation,
       location: data[0].location,
-      isAccessible: data[0].accessibility,
-      weekdayReservation: {
-        start: data[0].reservation_timings.weekday[0],
-        end: data[0].reservation_timings.weekday[0],
-      },
-      weekendReservation: {
-        start: data[0].reservation_timings.weekend[0],
-        end: data[0].reservation_timings.weekend[0],
-      },
+      isAccessible: data[0].isAccessible,
+      weekday: data[0].weekday,
+      weekend: data[0].weekend,
+      amenities: data[0].amenities,
     });
+    setTableNumbers(data[0].tableNumber);
     setInitialAmenities(data[0].amenities);
   }, [data]);
-
   const setInitialAmenities = (amenities: string[]) => {
-    console.log("here");
     const availableAmenities = [
       { id: 1, name: "wifi", icon: <Wifi className="h-4 w-4" /> },
       { id: 2, name: "TV", icon: <Tv className="h-4 w-4" /> },
@@ -256,22 +252,12 @@ const FourSeat = ({ data }: { data: any }) => {
       return endTime > startTime;
     };
 
-    if (
-      !validateTimeRange(
-        formData.weekdayReservation.start,
-        formData.weekdayReservation.end
-      )
-    ) {
-      newErrors.weekdayReservation = "End time must be after start time";
+    if (!validateTimeRange(formData.weekday.start, formData.weekday.end)) {
+      newErrors.weekday = "End time must be after start time";
     }
 
-    if (
-      !validateTimeRange(
-        formData.weekendReservation.start,
-        formData.weekendReservation.end
-      )
-    ) {
-      newErrors.weekendReservation = "End time must be after start time";
+    if (!validateTimeRange(formData.weekend.start, formData.weekend.end)) {
+      newErrors.weekend = "End time must be after start time";
     }
 
     setErrors(newErrors);
@@ -293,18 +279,29 @@ const FourSeat = ({ data }: { data: any }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
       console.log("Form submitted:", {
         ...formData,
-        tableNumbers,
-        amenities: selectedAmenities,
       });
+      const info: any = await saveTableInfo(formData, "fourseater");
+      console.log(info);
+      if (!info.success) {
+        toast.error(info.error);
+        // setTableNumberError(info.error);
+        setErrors((prev: any) => ({
+          ...prev,
+          tableNumbers: info.error,
+        }));
+        return;
+      }
       toast.success("Table information saved successfully!");
     } else {
       toast.error("Please fix the errors before submitting");
     }
   };
+
+  console.log("tableNumbers", errors);
 
   const handleAddAmenity = (amenityId: any) => {
     const amenityToAdd = availableAmenities.find(
@@ -315,6 +312,13 @@ const FourSeat = ({ data }: { data: any }) => {
       !selectedAmenities.find((a) => a.id === amenityToAdd.id)
     ) {
       setSelectedAmenities([...selectedAmenities, amenityToAdd]);
+      const ami = selectedAmenities.map((data) => {
+        return data.name;
+      });
+      setFormData((prev: any) => ({
+        ...prev,
+        amenities: [...ami, amenityToAdd],
+      }));
       toast.success("Amenity Added", {
         description: `${amenityToAdd.name} has been added to amenities.`,
       });
@@ -324,43 +328,57 @@ const FourSeat = ({ data }: { data: any }) => {
     setSelectedAmenities(
       selectedAmenities.filter((amenity) => amenity.id !== amenityId)
     );
+    setFormData((prev: any) => ({
+      ...prev,
+      amenities: selectedAmenities.filter(
+        (amenity) => amenity.id !== amenityId
+      ),
+    }));
     const amenity: any = availableAmenities.find((a) => a.id === amenityId);
     toast.success("Amenity Removed", {
       description: `${amenity.name} has been removed from amenities.`,
     });
   };
 
-  const handleAddRoom = () => {
-    setRoomNumberError("");
+  const handleAddTable = () => {
+    setTableNumberError("");
 
-    if (!newRoomNumber) {
-      setRoomNumberError("Room number is required");
+    if (!newTableNumber) {
+      setTableNumberError("Room number is required");
       toast.error("Room number is required");
       return;
     }
 
-    const roomNum = newRoomNumber;
+    const roomNum = newTableNumber;
     if (!roomNum.trim()) {
-      setRoomNumberError("Please enter a valid room number");
+      setTableNumberError("Please enter a valid room number");
       toast.error("Invalid room number");
       return;
     }
 
     if (tableNumbers.includes(roomNum)) {
-      setRoomNumberError("Room number already exists");
+      setTableNumberError("Room number already exists");
       toast.error("Room number already exists");
       return;
     }
 
     setTableNumbers([...tableNumbers, roomNum]);
-    setNewRoomNumber("");
+    setFormData((prev: any) => ({
+      ...prev,
+      tableNumber: [...tableNumbers, roomNum],
+    }));
+    setNewTableNumber("");
     toast.success("Room Added", {
       description: `Room ${roomNum} has been added successfully.`,
     });
   };
 
-  const handleDeleteRoom = (roomToDelete: any) => {
+  const handleDeleteTable = (roomToDelete: any) => {
     setTableNumbers(tableNumbers.filter((room) => room !== roomToDelete));
+    setFormData((prev: any) => ({
+      ...prev,
+      tableNumber: tableNumbers.filter((room) => room !== roomToDelete),
+    }));
     toast.success("Room Removed", {
       description: `Room ${roomToDelete} has been removed.`,
     });
@@ -371,10 +389,11 @@ const FourSeat = ({ data }: { data: any }) => {
     type: "start" | "end",
     value: string
   ) => {
+    console.log(period, type, value);
     setFormData((prev) => ({
       ...prev,
-      [`${period}Reservation`]: {
-        ...prev[`${period}Reservation`],
+      [`${period}`]: {
+        ...prev[`${period}`],
         [type]: value,
       },
     }));
@@ -452,8 +471,8 @@ const FourSeat = ({ data }: { data: any }) => {
         </div>
       </div>
       {/* Location & Accessibility */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg py-4">
-        <div className="flex gap-4">
+      <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg py-4">
+        <div className="flex">
           <Button
             variant={formData.location === "indoor" ? "outline" : "ghost"}
             className={formData.location === "indoor" ? "bg-white" : ""}
@@ -488,76 +507,76 @@ const FourSeat = ({ data }: { data: any }) => {
         <div className="flex justify-between items-center">
           <div>
             <Label>Table Numbers</Label>
-            {errors.tableNumbers && (
-              <p className="text-sm text-red-500 mt-1">{errors.tableNumbers}</p>
-            )}
           </div>
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
-                Add Room
+                Add Table
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Room Number</DialogTitle>
+                <DialogTitle>Add New Table Number</DialogTitle>
               </DialogHeader>
               <DialogDescription></DialogDescription>
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="roomNumber">Room Number</Label>
+                  <Label htmlFor="tableNumber">Table Number</Label>
                   <Input
-                    id="roomNumber"
-                    placeholder="Enter room number"
-                    value={newRoomNumber}
+                    id="tableNumber"
+                    placeholder="Enter table number"
+                    value={newTableNumber}
                     onChange={(e) => {
-                      setNewRoomNumber(e.target.value);
-                      setRoomNumberError("");
+                      setNewTableNumber(e.target.value);
+                      setTableNumberError("");
                     }}
-                    className={roomNumberError ? "border-red-500" : ""}
+                    className={tableNumberError ? "border-red-500" : ""}
                   />
-                  {roomNumberError && (
-                    <p className="text-sm text-red-500">{roomNumberError}</p>
+                  {tableNumberError && (
+                    <p className="text-sm text-red-500">{tableNumberError}</p>
                   )}
                 </div>
                 <DialogClose asChild>
-                  <Button onClick={handleAddRoom}>Add Room</Button>
+                  <Button onClick={handleAddTable}>Add Table</Button>
                 </DialogClose>
               </div>
             </DialogContent>
           </Dialog>
         </div>
         <div className="flex flex-wrap gap-2">
-          {tableNumbers.map((room) => (
+          {tableNumbers.map((table) => (
             <Badge
-              key={room}
+              key={table}
               variant="secondary"
               className="text-sm flex items-center gap-1"
             >
-              Room {room}
+              Table {table}
               <button
-                onClick={() => handleDeleteRoom(room)}
+                onClick={() => handleDeleteTable(table)}
                 className="ml-1 hover:text-destructive"
               >
                 <X className="h-3 w-3" />
               </button>
             </Badge>
           ))}
+          {errors.tableNumbers && (
+            <p className="text-sm text-red-500 mt-1">{errors.tableNumbers}</p>
+          )}
         </div>
       </div>
       {/* Updated Reservation Timings Section */}
       <div className="space-y-4 py-4">
         <h3 className="font-medium">Reservation Timings</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-4">
+        <div className="">
+          <div className="space-y-2 mb-2">
             <label className="text-sm font-medium">Weekday Hours</label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <label className="text-sm text-gray-600">Start Time</label>
                 <Input
                   type="time"
-                  value={formData.weekdayReservation.start}
+                  value={formData.weekday.start}
                   onChange={(e) =>
                     handleTimeChange("weekday", "start", e.target.value)
                   }
@@ -568,7 +587,7 @@ const FourSeat = ({ data }: { data: any }) => {
                 <label className="text-sm text-gray-600">End Time</label>
                 <Input
                   type="time"
-                  value={formData.weekdayReservation.end}
+                  value={formData.weekday.end}
                   onChange={(e) =>
                     handleTimeChange("weekday", "end", e.target.value)
                   }
@@ -576,21 +595,19 @@ const FourSeat = ({ data }: { data: any }) => {
                 />
               </div>
             </div>
-            {errors.weekdayReservation && (
-              <p className="text-sm text-red-500">
-                {errors.weekdayReservation}
-              </p>
+            {errors.weekday && (
+              <p className="text-sm text-red-500">{errors.weekday}</p>
             )}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-2">
             <label className="text-sm font-medium">Weekend Hours</label>
             <div className="flex gap-2">
               <div className="flex-1">
                 <label className="text-sm text-gray-600">Start Time</label>
                 <Input
                   type="time"
-                  value={formData.weekendReservation.start}
+                  value={formData.weekend.start}
                   onChange={(e) =>
                     handleTimeChange("weekend", "start", e.target.value)
                   }
@@ -601,7 +618,7 @@ const FourSeat = ({ data }: { data: any }) => {
                 <label className="text-sm text-gray-600">End Time</label>
                 <Input
                   type="time"
-                  value={formData.weekendReservation.end}
+                  value={formData.weekend.end}
                   onChange={(e) =>
                     handleTimeChange("weekend", "end", e.target.value)
                   }
@@ -609,10 +626,8 @@ const FourSeat = ({ data }: { data: any }) => {
                 />
               </div>
             </div>
-            {errors.weekendReservation && (
-              <p className="text-sm text-red-500">
-                {errors.weekendReservation}
-              </p>
+            {errors.weekend && (
+              <p className="text-sm text-red-500">{errors.weekend}</p>
             )}
           </div>
         </div>

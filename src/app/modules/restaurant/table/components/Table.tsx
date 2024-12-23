@@ -14,8 +14,8 @@ const Table = ({ data }: { data: any }) => {
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:px-8 py-4">
       <Card className="w-full max-w-2xl">
         <Tabs defaultValue="2" className="space-y-4 ">
-          <div className=" flex items-center justify-between p-4">
-            <div className="text-xl font-semibold ">Table Information</div>
+          <div className="flex flex-col md:flex items-center justify-between p-4">
+            <div className="text-xl font-semibold mb-2">Table Information</div>
             <TabsList className="mx-4 md:mx-8">
               <TabsTrigger value="2">2 Seater</TabsTrigger>
               <TabsTrigger value="4">4 Seater</TabsTrigger>
@@ -28,10 +28,10 @@ const Table = ({ data }: { data: any }) => {
               <TwoSeat data={data[0].twoseater} />
             </TabsContent>
             <TabsContent value="4" className="space-y-4">
-              <FourSeat data={data[0].four_seater} />
+              <FourSeat data={data[0].fourseater} />
             </TabsContent>
             <TabsContent value="6" className="space-y-4">
-              <SixSeat data={data[0].six_seater} />
+              <SixSeat data={data[0].sixseater} />
             </TabsContent>
           </>
         </Tabs>

@@ -6,15 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Occupied from "./occupied";
 import Reserved from "./reserved";
 import Available from "./available";
-import Cleaning from "./cleaning";
+// import Cleaning from "./cleaning";
 
 export default function Tables({ data }: { data: any }) {
   const table = data;
   console.log("Table", table);
 
   return (
-    <Card className="mx-4 md:mx-8">
-      <CardContent className="p-1">
+    <Card className="mx-4 md:mx-8 ">
+      <CardContent className="p-1 md:p-4">
         <div className="w-full bg-white rounded-lg">
           <div className="">
             <Tabs defaultValue="occupied" className=" pt-2">
@@ -22,7 +22,7 @@ export default function Tables({ data }: { data: any }) {
                 <TabsTrigger value="occupied">Occupied</TabsTrigger>
                 <TabsTrigger value="reserved">Reserved</TabsTrigger>
                 <TabsTrigger value="available">Available</TabsTrigger>
-                <TabsTrigger value="cleaning">Cleaning</TabsTrigger>
+                {/* <TabsTrigger value="cleaning">Cleaning</TabsTrigger> */}
               </TabsList>
 
               {!data ? (
@@ -38,9 +38,9 @@ export default function Tables({ data }: { data: any }) {
                   <TabsContent value="available" className="space-y-4 py-4">
                     <Available data={table.available} status={table.status} />
                   </TabsContent>
-                  <TabsContent value="cleaning" className="space-y-4 py-4">
+                  {/* <TabsContent value="cleaning" className="space-y-4 py-4">
                     <Cleaning data={table.cleaning} status={table.status} />
-                  </TabsContent>
+                  </TabsContent> */}
                 </>
               )}
             </Tabs>

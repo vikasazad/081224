@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Clock, User } from "lucide-react";
+// import { Clock, User } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
 import { Badge } from "@/components/ui/badge";
 
@@ -16,6 +16,8 @@ const Available = ({ data }: { data: any; status: any }) => {
   useEffect(() => {
     setTableData(data);
   }, [data]);
+
+  console.log("tableData", tableData);
 
   return (
     <div className="space-y-4">
@@ -30,7 +32,7 @@ const Available = ({ data }: { data: any; status: any }) => {
                       <div className="flex justify-between items-center w-full">
                         <div className="flex items-center gap-3">
                           <span className="text-xl font-bold">
-                            {item.location}
+                            {`T-${item.location}`}
                           </span>
                           <Badge variant="outline">{item.capacity}</Badge>
                         </div>
@@ -40,7 +42,7 @@ const Available = ({ data }: { data: any; status: any }) => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="flex items-baseline justify-between">
+                      {/* <div className="flex items-baseline justify-between">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock size={16} />
@@ -69,7 +71,7 @@ const Available = ({ data }: { data: any; status: any }) => {
                             {item.cleaning.cleanedBy}
                           </p>
                         </div>
-                      </div>
+                      </div> */}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
