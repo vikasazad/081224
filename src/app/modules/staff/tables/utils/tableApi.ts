@@ -1,5 +1,11 @@
 import { db } from "@/config/db/firebase";
-import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import {
+  arrayUnion,
+  doc,
+  getDoc,
+  onSnapshot,
+  updateDoc,
+} from "firebase/firestore";
 interface StaffMember {
   name: string;
   token: string;
@@ -222,6 +228,91 @@ export async function setTables(tableData: any) {
     return true;
   } catch (error) {
     console.error("ERROR setting offline data:", error);
+  }
+
+  return false;
+}
+
+export async function setHistory(tableData: any, tableType: string) {
+  console.log(tableType);
+  try {
+    const docRef = doc(db, "vikumar.azad@gmail.com", "restaurant");
+    const customerPhone = tableData.diningDetails.customer.phone;
+
+    if (!customerPhone) {
+      console.error("Customer phone number is missing in tableData.");
+      return false;
+    }
+
+    const table = {
+      location: tableData.diningDetails.location,
+      status: "available",
+      capacity:
+        tableType === "twoseater" ? 2 : tableType === "fourseater" ? 4 : 6,
+      cleaning: {
+        lastCleaned: "",
+        cleanedBy: "",
+        startTime: "",
+        endTime: "",
+      },
+      maintenance: {
+        issue: "",
+        description: "",
+        startTime: "",
+        endTime: "",
+        fixedBy: "",
+      },
+    };
+
+    // Use arrayUnion to push the new data into the specific history array
+    await updateDoc(docRef, {
+      [`history.${tableType}`]: arrayUnion(tableData),
+    });
+    await updateDoc(docRef, {
+      [`customers.${customerPhone}`]: arrayUnion(tableData),
+    });
+    await updateDoc(docRef, {
+      [`live.tablesData.tableDetails.${tableType}`]: arrayUnion(table),
+    });
+
+    console.log("Data successfully updated and saved to Firestore.");
+    removeTableData(tableData.diningDetails.location);
+    return true;
+  } catch (error) {
+    console.error("ERROR setting offline data:", error);
+  }
+
+  return false;
+}
+
+export async function removeTableData(tableId: string) {
+  try {
+    const docRef = doc(db, "vikumar.azad@gmail.com", "restaurant");
+
+    // Fetch the current live.tables data
+    const docSnapshot = await getDoc(docRef);
+    if (!docSnapshot.exists()) {
+      console.error("Document not found!");
+      return false;
+    }
+
+    const data = docSnapshot.data();
+    const liveTables = data?.live?.tables || [];
+
+    // Filter out the tableData to remove the specified table by its ID (e.g., location or unique identifier)
+    const updatedTables = liveTables.filter(
+      (table: any) => table.diningDetails?.location !== tableId
+    );
+
+    // Update Firestore with the remaining data
+    await updateDoc(docRef, {
+      "live.tables": updatedTables,
+    });
+
+    console.log(`Table with ID '${tableId}' removed successfully.`);
+    return true;
+  } catch (error) {
+    console.error("ERROR removing table data:", error);
   }
 
   return false;

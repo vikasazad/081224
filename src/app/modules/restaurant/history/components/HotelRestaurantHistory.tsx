@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, Users, Settings } from "lucide-react";
 
 const HotelRestaurantHistory = ({ data }: any) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState<Set<string>>(new Set());
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   console.log("data", data);
 
@@ -22,14 +22,17 @@ const HotelRestaurantHistory = ({ data }: any) => {
             </tr>
           </thead>
           <tbody>
-            {items.map((item: any) => (
-              <tr key={item.itemId}>
-                <td className="py-2">{item.itemId}</td>
-                <td className="py-2">{item.itemName}</td>
-                <td className="py-2">{item.portionSize}</td>
-                <td className="py-2 text-right">₹{item.price}</td>
-              </tr>
-            ))}
+            {items.map((item: any) => {
+              console.log("item", item);
+              return (
+                <tr key={item.itemId}>
+                  <td className="py-2">{item.id}</td>
+                  <td className="py-2">{item.name}</td>
+                  <td className="py-2">{item.quantity}</td>
+                  <td className="py-2 text-right">₹{Number(item.price)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -131,23 +134,36 @@ const HotelRestaurantHistory = ({ data }: any) => {
       return newExpandedOrders;
     });
   };
+  const toggleDataExpansion = (orderId: string) => {
+    setIsExpanded((prevExpandedOrders) => {
+      const newExpandedOrders = new Set(prevExpandedOrders);
+      if (newExpandedOrders.has(orderId)) {
+        newExpandedOrders.delete(orderId);
+      } else {
+        newExpandedOrders.add(orderId);
+      }
+      return newExpandedOrders;
+    });
+  };
   return (
     <>
-      {data.data.length > 0 &&
-        data.data
-          .filter((table: any) => table.diningDetails.location === data.table)
-          .map((item: any, i: number) => (
-            <Card className="w-full max-w-4xl shadow-lg" key={i}>
-              <CardHeader className="bg-gray-50">
-                <CardTitle className="text-xl font-semibold flex items-center justify-between">
-                  Table History
-                  <Badge className="ml-2">Table {data.table}</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
+      <Card className="w-full max-w-4xl shadow-lg">
+        <CardHeader className="bg-gray-50">
+          <CardTitle className="text-xl font-semibold flex items-center justify-between">
+            Table History
+            <Badge className="ml-2">Table {data.table}</Badge>
+          </CardTitle>
+        </CardHeader>
+        {data.data.length > 0 &&
+          data.data
+            .filter((table: any) => table.diningDetails.location === data.table)
+            .map((item: any, i: number) => (
+              <CardContent className="p-6" key={i}>
                 <div className="border rounded-lg">
                   <button
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={() =>
+                      toggleDataExpansion(item.diningDetails.orders[0].orderId)
+                    }
                     className="w-full hover:bg-gray-50 p-4 rounded-lg flex items-center justify-between transition-colors"
                   >
                     <div className="flex items-center justify-between w-full">
@@ -176,15 +192,17 @@ const HotelRestaurantHistory = ({ data }: any) => {
                           )}
                         </p>
                         <ChevronDown
-                          className={`h-5 w-5 transition-transform ${
-                            isExpanded ? "transform rotate-180" : ""
+                          className={`h-4 w-4 transition-transform ${
+                            isExpanded.has(item.diningDetails.orders[0].orderId)
+                              ? "transform rotate-180"
+                              : ""
                           }`}
                         />
                       </div>
                     </div>
                   </button>
 
-                  {isExpanded && (
+                  {isExpanded.has(item.diningDetails.orders[0].orderId) && (
                     <div className="px-4 pt-2 pb-4 space-y-6">
                       {/* Room Service Order Section */}
                       {item.diningDetails.orders.map(
@@ -221,7 +239,7 @@ const HotelRestaurantHistory = ({ data }: any) => {
                               </div>
                             </button>
                             {expandedOrders.has(odr.orderId) && (
-                              <div className="p-4 space-y-4">
+                              <div className="p-4 space-y-4" key={itm}>
                                 <OrderDetailsTable items={odr.items} />
                                 <PaymentDetailsTable payment={odr.payment} />
                               </div>
@@ -270,8 +288,8 @@ const HotelRestaurantHistory = ({ data }: any) => {
                   )}
                 </div>
               </CardContent>
-            </Card>
-          ))}
+            ))}
+      </Card>
     </>
   );
 };

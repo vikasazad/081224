@@ -127,7 +127,7 @@ const Tranasactions = ({ data }: { data: any }) => {
     setTransactionFlag(true);
   };
   return (
-    <div className="max-w-4xl  p-6 space-y-4">
+    <div className="max-w-8xl  p-6 space-y-4">
       {!transactionFlag &&
         data.map((table: any) =>
           Object.entries(table).map(([key, seats]: any, index) => {

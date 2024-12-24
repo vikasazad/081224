@@ -50,6 +50,7 @@ import {
   calculateTax,
   getOnlineStaffFromFirestore,
   setAttendent,
+  setHistory,
   setTables,
   updateOrdersForAttendant,
 } from "../utils/tableApi";
@@ -398,6 +399,17 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     }
   };
 
+  const handleTableClose = () => {
+    console.log("finalSubmitData", finalSubmitData);
+    const type =
+      finalSubmitData.item.diningDetails.capicity === "2"
+        ? "twoseater"
+        : finalSubmitData.item.diningDetails.capicity === "4"
+        ? "fourseater"
+        : "sixseater";
+    setHistory(finalSubmitData.item, type);
+  };
+
   return (
     <div className="space-y-4">
       {tableData && (
@@ -411,7 +423,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                       <div className="flex justify-between items-center w-full">
                         <div className="flex items-center gap-3">
                           <span className="text-xl font-bold">
-                            {item.diningDetails.location}
+                            T-{item.diningDetails.location}
                           </span>
                           <span className="text-slate-600">
                             {item.diningDetails.customer.name}
@@ -858,11 +870,10 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
               confirm that the payment has been received in cash?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col ">
             <Button
               variant="outline"
               onClick={() => setOpenPaymentConfirmation(false)}
-              className="mt-4"
             >
               Cancel
             </Button>
@@ -923,6 +934,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                   // You might want to implement a method to remove the table or mark it as closed
                   console.log("tableClosed");
                   setOpenFinalSubmitConfirmation(false);
+                  handleTableClose();
                 }}
               >
                 Confirm Close

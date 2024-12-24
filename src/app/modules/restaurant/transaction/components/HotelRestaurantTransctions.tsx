@@ -81,36 +81,39 @@ const HotelRestaurantTransctions = ({ data }: any) => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {transaction.payment.timeOfTransaction.toLocaleString(
-                                "en-US",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  hour12: true,
-                                }
-                              )}
+                              {new Date(
+                                transaction.payment.timeOfTransaction
+                              ).toLocaleString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              })}
                             </TableCell>
                             <TableCell>
-                              <div className="flex flex-col">
-                                <span className="text-sm">
-                                  {transaction.payment.discount.code}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {transaction.payment.discount.amount}% off
-                                </span>
-                              </div>
+                              {transaction.payment.discount.type ? (
+                                <div className="flex flex-col">
+                                  <span className="text-sm">
+                                    {transaction.payment.discount.code}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {transaction.payment.discount.amount}% off
+                                  </span>
+                                </div>
+                              ) : (
+                                "N/A"
+                              )}
                             </TableCell>
                             <TableCell className="text-right">
                               ₹{transaction.payment.price}
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              ₹{transaction.payment.priceAfterDiscount}
+                              {transaction.payment.priceAfterDiscount &&
+                                `₹${transaction.payment.priceAfterDiscount}`}
                             </TableCell>
                             <TableCell>
                               <Badge
                                 variant={
-                                  transaction.payment.paymentStatus ===
-                                  "complete"
+                                  transaction.payment.paymentStatus === "paid"
                                     ? "default"
                                     : "secondary"
                                 }
