@@ -57,7 +57,7 @@ export default async function Dashboard() {
           <Business data={data.business} />
         </TabsContent>
         <TabsContent value="staff" className="space-y-4">
-          <Staff />
+          <Staff data={data.staff} />
         </TabsContent>
         <TabsContent value="settings" className="space-y-4">
           <Settings />

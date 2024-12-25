@@ -113,7 +113,11 @@ const QR = ({ data, user }: any) => {
                       variant="outline"
                       size="icon"
                       className="shrink-0"
-                      onClick={() => copyToClipboard(token)}
+                      onClick={() =>
+                        copyToClipboard(
+                          `${process.env.NEXT_PUBLIC_BASE_URL_FOR_FOOD}${token}`
+                        )
+                      }
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
