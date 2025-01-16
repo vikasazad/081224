@@ -69,6 +69,7 @@ export default function DayCheckOut({
   const [openPaymentConfirmation, setOpenPaymentConfirmation] = useState(false);
   const [currentStatusChange, setCurrentStatusChange] = useState<any>(null);
   const [checklistOpen, setChecklistOpen] = useState(false);
+  const [submitFlag, setSubmitFlag] = useState(false);
 
   useEffect(() => {
     setRoomData(data);
@@ -257,6 +258,28 @@ export default function DayCheckOut({
 
   const calculateOrderTotal = (order: any) => {
     return order.items.reduce((total: any, item: any) => total + item.price, 0);
+  };
+  const handleCheckListInfo = (data: any) => {
+    // Clone the roomData to make changes
+    // console.log("DATA", data);s
+    // let index = 0;
+    setSubmitFlag(data.flag);
+    // const updatedRoomData = roomData.map((room: any, i: number) => {
+    //   if (room.diningDetails.location === data.location) {
+    //     index = i;
+    //     return {
+    //       ...room,
+    //       checklist: {
+    //         ...data,
+    //       },
+    //     };
+    //   }
+    //   return room;
+    // });
+
+    // Save the updated data into state
+    // setOfflineRoom(updatedRoomData[index]);
+    // setRoomData(updatedRoomData);
   };
 
   return (
@@ -711,6 +734,7 @@ export default function DayCheckOut({
                               className="flex items-center gap-2"
                               size="sm"
                               onClick={() => setChecklistOpen(true)}
+                              disabled={!submitFlag}
                             >
                               <Send size={16} />
                               Submit
@@ -720,6 +744,7 @@ export default function DayCheckOut({
 
                         <ChecklistDialog
                           data={addItems}
+                          info={handleCheckListInfo}
                           open={checklistOpen}
                           onClose={() => setChecklistOpen(false)}
                           roomNumber={item.bookingDetails.location}
