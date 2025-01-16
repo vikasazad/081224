@@ -46,9 +46,11 @@ import { GiVacuumCleaner } from "react-icons/gi";
 import { TbFireExtinguisher } from "react-icons/tb";
 import { GrStepsOption } from "react-icons/gr";
 import { GiPowerGenerator } from "react-icons/gi";
+import { uploadImageToFirebase } from "../utils/hotelApi";
+import { saveRoomInfo } from "../../utils/hotelDataApi";
 
 const HotelOverview = ({ data }: { data: any }) => {
-  console.log("lskdjfsl;dfjk", data);
+  // console.log("lskdjfsl;dfjk", data);/
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [roomData, setRoomData] = useState<any>();
   const [categoryFlag, setCategoryFlag] = useState<boolean>(false);
@@ -57,15 +59,14 @@ const HotelOverview = ({ data }: { data: any }) => {
   const [roomNumberError, setRoomNumberError] = useState("");
   const [images, setImages] = useState<any>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [categoryName, setCategoryName] = useState("Deluxe");
-  const [price, setPrice] = useState("250.00");
-  const [description, setDescription] = useState(
-    "Spacious room with city view and modern amenities"
-  );
-  const [discountAmount, setDiscountAmount] = useState("10");
-  const [discountCode, setDiscountCode] = useState("SUMMER10");
-  const [discountType, setDiscountType] = useState("percentage");
+  const [categoryName, setCategoryName] = useState("");
+  const [price, setPrice] = useState("");
+  const [description, setDescription] = useState("");
+  const [discountAmount, setDiscountAmount] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountType, setDiscountType] = useState("");
   const [dbImages, setDbImages] = useState<any[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<any[]>([]);
   const [errors, setErrors] = useState({
     categoryName: "",
     price: "",
@@ -87,7 +88,6 @@ const HotelOverview = ({ data }: { data: any }) => {
   }, [data]);
 
   // State for amenities
-  const [selectedAmenities, setSelectedAmenities] = useState<any[]>([]);
 
   // {Available amenities for selection
   const availableAmenities = [
@@ -161,16 +161,18 @@ const HotelOverview = ({ data }: { data: any }) => {
       isValid = false;
     }
 
-    // Validate discount amount
-    if (isNaN(Number(discountAmount)) || Number(discountAmount) <= 0) {
-      newErrors.discountAmount = "Please enter a valid discount amount";
-      isValid = false;
-    }
+    if (discountType !== "none") {
+      if (isNaN(Number(discountAmount)) || Number(discountAmount) <= 0) {
+        // Validate discount amount
+        newErrors.discountAmount = "Please enter a valid discount amount";
+        isValid = false;
+      }
 
-    // Validate discount code
-    if (discountCode.trim().length < 3) {
-      newErrors.discountCode = "Discount code must be at least 3 characters";
-      isValid = false;
+      // Validate discount code
+      if (discountCode.trim().length < 3) {
+        newErrors.discountCode = "Discount code must be at least 3 characters";
+        isValid = false;
+      }
     }
 
     // Validate room numbers
@@ -194,42 +196,71 @@ const HotelOverview = ({ data }: { data: any }) => {
     return isValid;
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      toast.error("Form validation failed", {
+        description: "Please check the errors and try again",
+      });
+      return;
+    }
+
+    try {
+      const uploadPromises = images.map(async (img: any) => {
+        const downloadURL = await uploadImageToFirebase(
+          img.file,
+          img.id,
+          categoryName
+        );
+        return downloadURL;
+
+        // {
+        //   // id: img.id,
+        //   url: downloadURL,
+        //   // isFromDb: false,
+        // };
+      });
+
+      const uploadedImages = await Promise.all(uploadPromises);
+      const _dbImages = dbImages.map((el: any) => {
+        return el.url;
+      });
+
+      // console.log(_dbImages.length);
+      let allImages: any = [];
+
+      if (_dbImages.length > 0) {
+        allImages = [...uploadedImages, _dbImages];
+      } else {
+        allImages = [...uploadedImages];
+      }
+
       const formData = {
-        categoryName,
+        roomType: categoryName,
         price: Number(price),
         description,
-        roomNumbers,
+        roomNo: roomNumbers,
         amenities: selectedAmenities.map((a) => a.name),
         discount: {
           amount: Number(discountAmount),
           code: discountCode,
           type: discountType,
         },
-        images: [
-          ...images.map((img: any) => ({
-            id: img.id,
-            url: img.url,
-            isFromDb: false,
-          })),
-          ...dbImages.map((img) => ({
-            id: img.id,
-            url: img.url,
-            isFromDb: true,
-          })),
-        ],
+        images: allImages,
       };
 
+      saveRoomInfo(formData, categoryName);
+
       toast.success("Form submitted successfully", {
-        description: "All data has been validated",
+        description: "All data has been validated and uploaded",
       });
 
       console.log("Submitted Data:", formData);
-    } else {
-      toast.error("Form validation failed", {
-        description: "Please check the errors and try again",
+      setCategoryFlag(false);
+    } catch (error) {
+      toast.error("Error processing images", {
+        description: "Could not upload images. Please try again.",
       });
+      console.error("Error:", error);
     }
   };
 
@@ -449,7 +480,7 @@ const HotelOverview = ({ data }: { data: any }) => {
         <>
           {roomData && (
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-              {roomData.map((data: any, i: number) => (
+              {Object.values(roomData).map((data: any, i: number) => (
                 <Card
                   key={i}
                   onClick={() => categoryClick(data)}
@@ -466,6 +497,14 @@ const HotelOverview = ({ data }: { data: any }) => {
               ))}
             </div>
           )}
+          <div>
+            <Button
+              className="float-right"
+              onClick={() => setCategoryFlag(true)}
+            >
+              Add New
+            </Button>
+          </div>
         </>
       )}
       {categoryFlag && (
@@ -495,12 +534,12 @@ const HotelOverview = ({ data }: { data: any }) => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price per Night</Label>
+                  <Label htmlFor="price">Price per Night (₹)</Label>
                   <Input
                     id="price"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    prefix="$"
+                    prefix="₹"
                     className={errors.price ? "border-red-500" : ""}
                   />
                   {errors.price && (
@@ -680,6 +719,7 @@ const HotelOverview = ({ data }: { data: any }) => {
                         <SelectValue placeholder="Select discount type" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="percentage">Percentage</SelectItem>
                         <SelectItem value="fixed">Fixed Amount</SelectItem>
                       </SelectContent>
@@ -825,7 +865,12 @@ const HotelOverview = ({ data }: { data: any }) => {
               {/* Action Buttons */}
               <div className="flex justify-between pt-4">
                 <div className="flex gap-2">
-                  <Button variant="outline">Cancel</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCategoryFlag(false)}
+                  >
+                    Cancel
+                  </Button>
                   {/* <Button variant="outline">Add More</Button> */}
                 </div>
                 <Button onClick={handleSubmit}>

@@ -1,8 +1,7 @@
 const hotelData = {
-  rooms: [
-    {
+  rooms: {
+    Deluxe: {
       roomType: "Deluxe",
-      totalRooms: 50,
       description: "Spacious room with city view and modern amenities",
       images: [
         "https://example.com/deluxe-room1.jpg",
@@ -17,72 +16,39 @@ const hotelData = {
       price: "250.00",
       amenities: ["WiFi", "TV", "AC", "Mini Bar", "Service"],
     },
-  ],
-  history: [
-    {
-      bookingDetails: {
-        customer: {
-          name: "vipin",
-          email: "tanejavipin@gmail.com",
-          phone: "+918897562548",
-          address: "26 lokhand wala circle, parel mumbai",
-        },
-        location: "101",
-        roomType: "Deluxe",
-        aggregator: "makeMyTrip",
-        aggregatorLogo:
-          "https://cdn.worldvectorlogo.com/logos/bookingcom-1.svg",
-        bookingDate: "2024-09-21T15:47:00.000Z",
-        checkIn: "2024-09-25T04:47:00.000Z",
-        checkOut: "2024-09-26T04:47:00.000Z",
-        noOfGuests: "2",
-        noOfRoom: "1",
-        inclusions: "taxes, wifi, breakfast",
-        specialRequirements: "Late check-out requested",
-        bookingId: "BO:123",
-        attendant: "Mishra",
-        status: "Checked Out",
-        payment: {
-          mode: "credit card",
-          paymentId: "BOO24092001",
-          price: "750",
-          priceAfterDiscount: "675",
-          timeOfTransaction: "2024-10-02T07:00:00.000Z",
-          paymentStatus: "complete",
-          gst: {
-            gstAmount: "100",
-            gstPercentage: "18%",
-            cgstAmount: "50",
-            cgstPercentage: "9%",
-            sgstAmount: "50",
-            sgstPercentage: "9%",
+  },
+  history: {
+    Deluxe: [
+      {
+        bookingDetails: {
+          customer: {
+            name: "vipin",
+            email: "tanejavipin@gmail.com",
+            phone: "+918897562548",
+            address: "26 lokhand wala circle, parel mumbai",
           },
-          discount: {
-            type: "percentage",
-            amount: 10,
-            code: "SUMMER10",
-          },
-        },
-      },
-      servicesUsed: {
-        massage: {
-          serviceId: "SE:123",
-          status: "in progress",
-          serviceName: "Swedish Massage",
-          type: "massage",
-          requestTime: "2024-09-25T08:47:00.000Z",
-          startTime: "2024-09-25T11:47:00.000Z",
-          endTime: "2024-09-25T12:47:00.000Z",
-          price: "80",
-          attendant: "Sarah Johnson",
+          location: "101",
+          roomType: "Deluxe",
+          aggregator: "makeMyTrip",
+          aggregatorLogo:
+            "https://cdn.worldvectorlogo.com/logos/bookingcom-1.svg",
+          bookingDate: "2024-09-21T15:47:00.000Z",
+          checkIn: "2024-09-25T04:47:00.000Z",
+          checkOut: "2024-09-26T04:47:00.000Z",
+          noOfGuests: "2",
+          noOfRoom: "1",
+          inclusions: "taxes, wifi, breakfast",
+          specialRequirements: "Late check-out requested",
+          bookingId: "BO:123",
+          attendant: "Mishra",
+          status: "Checked Out",
           payment: {
-            transctionId: "XUSie83",
-            paymentStatus: "on checkout",
-            mode: "room charge",
-            paymentId: "SPA24092101",
+            mode: "credit card",
+            paymentId: "BOO24092001",
+            price: "750",
+            priceAfterDiscount: "675",
             timeOfTransaction: "2024-10-02T07:00:00.000Z",
-            price: "80",
-            priceAfterDiscount: "72",
+            paymentStatus: "complete",
             gst: {
               gstAmount: "100",
               gstPercentage: "18%",
@@ -94,42 +60,29 @@ const hotelData = {
             discount: {
               type: "percentage",
               amount: 10,
-              code: "SPAWEEKEND",
+              code: "SUMMER10",
             },
           },
         },
-      },
-      diningDetails: {
-        orders: [
-          {
-            specialRequirement: "Make pina collada extra sour",
-            items: [
-              {
-                itemId: "kdi2",
-                itemName: "Club Sandwich",
-                portionSize: "Regular",
-                price: "15",
-              },
-              {
-                itemId: "iosn3r3",
-                itemName: "Caesar Salad",
-                portionSize: "Large",
-                price: "12",
-              },
-            ],
-            orderId: "OR:RO24",
-            attendant: "Michael Brown",
-            status: "completed",
-            timeOfRequest: "2024-10-03T10:10:00.000Z",
-            timeOfFullfilment: "2024-10-03T10:25:00.000Z",
+        servicesUsed: {
+          massage: {
+            serviceId: "SE:123",
+            status: "in progress",
+            serviceName: "Swedish Massage",
+            type: "massage",
+            requestTime: "2024-09-25T08:47:00.000Z",
+            startTime: "2024-09-25T11:47:00.000Z",
+            endTime: "2024-09-25T12:47:00.000Z",
+            price: "80",
+            attendant: "Sarah Johnson",
             payment: {
               transctionId: "XUSie83",
-              paymentStatus: "pending",
+              paymentStatus: "on checkout",
               mode: "room charge",
-              paymentId: "RO24092101",
-              price: "27",
-              priceAfterDiscount: "27",
+              paymentId: "SPA24092101",
               timeOfTransaction: "2024-10-02T07:00:00.000Z",
+              price: "80",
+              priceAfterDiscount: "72",
               gst: {
                 gstAmount: "100",
                 gstPercentage: "18%",
@@ -139,57 +92,105 @@ const hotelData = {
                 sgstPercentage: "9%",
               },
               discount: {
-                type: "none",
-                amount: 0,
-                code: "",
+                type: "percentage",
+                amount: 10,
+                code: "SPAWEEKEND",
+              },
+            },
+          },
+        },
+        diningDetails: {
+          orders: [
+            {
+              specialRequirement: "Make pina collada extra sour",
+              items: [
+                {
+                  itemId: "kdi2",
+                  itemName: "Club Sandwich",
+                  portionSize: "Regular",
+                  price: "15",
+                },
+                {
+                  itemId: "iosn3r3",
+                  itemName: "Caesar Salad",
+                  portionSize: "Large",
+                  price: "12",
+                },
+              ],
+              orderId: "OR:RO24",
+              attendant: "Michael Brown",
+              status: "completed",
+              timeOfRequest: "2024-10-03T10:10:00.000Z",
+              timeOfFullfilment: "2024-10-03T10:25:00.000Z",
+              payment: {
+                transctionId: "XUSie83",
+                paymentStatus: "pending",
+                mode: "room charge",
+                paymentId: "RO24092101",
+                price: "27",
+                priceAfterDiscount: "27",
+                timeOfTransaction: "2024-10-02T07:00:00.000Z",
+                gst: {
+                  gstAmount: "100",
+                  gstPercentage: "18%",
+                  cgstAmount: "50",
+                  cgstPercentage: "9%",
+                  sgstAmount: "50",
+                  sgstPercentage: "9%",
+                },
+                discount: {
+                  type: "none",
+                  amount: 0,
+                  code: "",
+                },
+              },
+            },
+          ],
+        },
+        issuesReported: {
+          maintenance: {
+            issueId: "IS:123",
+            status: "Completed",
+            category: "maintenance",
+            name: "Leaky Faucet",
+            description: "Bathroom sink faucet is dripping",
+            reportTime: "2024-09-25T09:47:00.000Z",
+            resolutionTime: "2024-09-25T10:00:00.000Z",
+            attendant: "Robert Lee",
+          },
+        },
+        transctions: [
+          {
+            location: "104",
+            against: "SE:7889",
+            attendant: "Mishra",
+            bookingId: "BO:123",
+            payment: {
+              paymentStatus: "complete",
+              mode: "online",
+              paymentId: "TXN123456",
+              timeOfTransaction: "2024-09-29T10:00:00.000Z",
+              price: "30",
+              priceAfterDiscount: "27",
+              gst: {
+                gstAmount: "100",
+                gstPercentage: "18%",
+                cgstAmount: "50",
+                cgstPercentage: "9%",
+                sgstAmount: "50",
+                sgstPercentage: "9%",
+              },
+              discount: {
+                type: "coupon",
+                amount: 3,
+                code: "SAVE10",
               },
             },
           },
         ],
       },
-      issuesReported: {
-        maintenance: {
-          issueId: "IS:123",
-          status: "Completed",
-          category: "maintenance",
-          name: "Leaky Faucet",
-          description: "Bathroom sink faucet is dripping",
-          reportTime: "2024-09-25T09:47:00.000Z",
-          resolutionTime: "2024-09-25T10:00:00.000Z",
-          attendant: "Robert Lee",
-        },
-      },
-      transctions: [
-        {
-          location: "104",
-          against: "SE:7889",
-          attendant: "Mishra",
-          bookingId: "BO:123",
-          payment: {
-            paymentStatus: "complete",
-            mode: "online",
-            paymentId: "TXN123456",
-            timeOfTransaction: "2024-09-29T10:00:00.000Z",
-            price: "30",
-            priceAfterDiscount: "27",
-            gst: {
-              gstAmount: "100",
-              gstPercentage: "18%",
-              cgstAmount: "50",
-              cgstPercentage: "9%",
-              sgstAmount: "50",
-              sgstPercentage: "9%",
-            },
-            discount: {
-              type: "coupon",
-              amount: 3,
-              code: "SAVE10",
-            },
-          },
-        },
-      ],
-    },
-  ],
+    ],
+  },
   reservation: [
     {
       bookingDetails: {
@@ -268,21 +269,17 @@ const hotelData = {
   services: {
     categories: {
       roomupgrades: {
-        roomupgrades: [
-          {
-            typeName: "Room Upgrades",
-            description: "You can upgrade into new room with minimal price",
-            availableOptions: [
-              {
-                name: "deluxe",
-                price: 90,
-                images: [],
-                amenities: [],
-                discount: "new year",
-              },
-            ],
-          },
-        ],
+        roomupgrades: {
+          typeName: "Room Upgrades",
+          description: "You can upgrade into new room with minimal price",
+          availableOptions: [
+            {
+              name: "deluxe",
+              currentPrice: 1500,
+              updatedPrice: 1900,
+            },
+          ],
+        },
       },
       wellness: {
         messages: [

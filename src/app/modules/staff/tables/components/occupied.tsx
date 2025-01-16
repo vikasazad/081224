@@ -34,7 +34,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { PlusCircle, MoreVertical, User, IndianRupee } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
-import { getTableData, setOfflineItem } from "../../utils/staffData";
+import { getTableData, setOfflineTable } from "../../utils/staffData";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -207,7 +207,9 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
               attendant: assignedAttendant
                 ? assignedAttendant.name
                 : "Unassigned",
-              attendantToken: assignedAttendant ? assignedAttendant.token : "",
+              attendantToken: assignedAttendant
+                ? assignedAttendant.notificationToken
+                : "",
               status: "order placed",
               timeOfRequest: new Date().toISOString(),
               timeOfFullfilment: "",
@@ -267,7 +269,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
 
         // const data = await setOfflineItem(updatedTableData);
         console.log("UPDATED", updatedTableData[index]);
-        setOfflineItem(updatedTableData[index]);
+        setOfflineTable(updatedTableData[index]);
         updateOrdersForAttendant(assignedAttendant.name, newOrderId);
       }
     } else if (items[0].issueSubtype) {

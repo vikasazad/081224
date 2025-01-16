@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { MdAdd, MdLightbulb } from "react-icons/md";
 import { ShoppingBag } from "lucide-react";
+import { savePersonalShoppingServices } from "../../utils/hotelDataApi";
 
 const sampleTour = {
   typeName: "Local Culinary Experience Tour",
@@ -39,7 +40,7 @@ const sampleTour = {
   endTime: "21:00",
 };
 
-const PersonalShopping = ({ data }: { data: any }) => {
+const PersonalShopping = ({ data, flag }: any) => {
   const [selectedService, setSelectedService] = useState("");
   const [selectedServiceList, setSelectedServiceList] = useState<string[]>([]);
   const [tours, setTours] = useState<any[]>([]);
@@ -49,7 +50,7 @@ const PersonalShopping = ({ data }: { data: any }) => {
 
   useEffect(() => {
     setSelectedServiceList(Object.keys(data));
-    console.log("first", JSON.stringify(data));
+    console.log("first", data);
   }, [data]);
   const validateForm = () => {
     const newErrors: { [key: string]: { [key: string]: string } } = {};
@@ -110,8 +111,10 @@ const PersonalShopping = ({ data }: { data: any }) => {
 
   const handleNext = () => {
     if (validateForm()) {
+      console.log("Submitted tours:", selectedService, tours);
+      savePersonalShoppingServices(tours, selectedService);
       toast.success("Tours saved successfully!");
-      console.log("Submitted tours:", tours);
+      flag(false);
     } else {
       toast.error("Please fix the errors in the form");
     }
@@ -121,20 +124,16 @@ const PersonalShopping = ({ data }: { data: any }) => {
     const details = data[value].map((item: any) => ({
       typeName: item.typeName,
       description: item.description,
-      price: parseFloat(item.pricingPerPerson) || 0,
+      price: parseFloat(item.price) || 0,
       duration: {
-        hours: parseInt(item.duration)
-          ? parseInt(item.duration.split(" ")[0])
-          : 0,
-        minutes: 0,
+        hours: item.duration.hours || 0,
+        minutes: item.duration.minutes || 0,
       },
-      bookingPolicy: item.bookingAndCancellationPolicy,
-      benefits: item.keyBenefits,
+      bookingPolicy: item.bookingPolicy,
+      benefits: item.benefits,
       timeline: item.timeline,
-      startTime: item.timeline
-        ? item.timeline.split("at ")[1]?.trim() || ""
-        : "",
-      endTime: "", // You might want to calculate this based on duration
+      startTime: item.startTime || "",
+      endTime: item.endTime || "", // You might want to calculate this based on duration
     }));
     setTours(details); // Set the tours state with the formatted data
     setErrors({});
@@ -248,7 +247,7 @@ const PersonalShopping = ({ data }: { data: any }) => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`price-${index}`}>Price ($)</Label>
+                  <Label htmlFor={`price-${index}`}>Price (₹)</Label>
                   <Input
                     id={`price-${index}`}
                     type="number"
@@ -445,11 +444,11 @@ const PersonalShopping = ({ data }: { data: any }) => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setTours([]);
                   setErrors({});
+                  flag(false);
                 }}
               >
-                Clear All
+                Cancel
               </Button>
               <Button
                 onClick={handleNext}

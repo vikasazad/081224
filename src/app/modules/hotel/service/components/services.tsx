@@ -1,14 +1,25 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
   BedDouble,
-  Binoculars,
+  TelescopeIcon as Binoculars,
   CarTaxiFront,
   Dumbbell,
-  Printer,
   ShoppingBag,
+  Settings,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MdSelfImprovement } from "react-icons/md";
 import { MdOutlineDryCleaning } from "react-icons/md";
 import RoomUpgrades from "./roomUpgrades";
@@ -18,20 +29,24 @@ import Transportation from "./transportation";
 import PersonalShopping from "./personalshopping";
 import Laundry from "./laundry";
 import Tours from "./tours";
-import Business from "./business";
+// import Business from "./business";
 
 const Service = ({ data }: { data: any }) => {
+  console.log("DATA", data);
+
   const [serviceData, setServiceData] = useState<any>(true);
   const [categoryFlag, setCategoryFlag] = useState<boolean>(false);
   const [availableComponents, setAvailableComponent] = useState<any>();
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   useEffect(() => {
-    // getHotelData().then((data: any) => {
-    //   console.log("HOTEL", data);
-    //   setRoomData(data.rooms);
-    // });
     setServiceData(data.services.categories);
+    setSelectedServices(Object.keys(data.services.categories));
   }, [data]);
+  const handleCategoryFlag = (flag: boolean) => {
+    setCategoryFlag(flag);
+  };
+
   const availableServices = [
     {
       id: 1,
@@ -64,34 +79,66 @@ const Service = ({ data }: { data: any }) => {
       icon: <MdOutlineDryCleaning className="h-6 w-6 mr-2" />,
     },
     { id: 7, name: "Tours", icon: <Binoculars className="h-6 w-6 mr-2" /> },
-    { id: 8, name: "Business", icon: <Printer className="h-6 w-6 mr-2" /> },
+    // { id: 8, name: "Business", icon: <Printer className="h-6 w-6 mr-2" /> },
   ];
 
   const components = [
     {
       id: "Room upgrades",
-      component: <RoomUpgrades data={serviceData.roomUpgrades} />,
+      component: (
+        <RoomUpgrades
+          data={serviceData["Room upgrades"]}
+          flag={handleCategoryFlag}
+        />
+      ),
     },
-    { id: "Wellness", component: <Wellness data={serviceData.wellness} /> },
+    {
+      id: "Wellness",
+      component: (
+        <Wellness data={serviceData.Wellness} flag={handleCategoryFlag} />
+      ),
+    },
     {
       id: "Recreational",
-      component: <Recreational data={serviceData.recreational} />,
+      component: (
+        <Recreational
+          data={serviceData.Recreational}
+          flag={handleCategoryFlag}
+        />
+      ),
     },
     {
       id: "Transportation",
-      component: <Transportation data={serviceData.transportation} />,
+      component: (
+        <Transportation
+          data={serviceData.Transportation}
+          flag={handleCategoryFlag}
+        />
+      ),
     },
     {
       id: "Personal Shopping",
-      component: <PersonalShopping data={serviceData.personalshopping} />,
+      component: (
+        <PersonalShopping
+          data={serviceData["Personal Shopping"]}
+          flag={handleCategoryFlag}
+        />
+      ),
     },
-    { id: "Laundry", component: <Laundry data={serviceData.laundry} /> },
-    { id: "Tours", component: <Tours data={serviceData.tours} /> },
-    { id: "Business", component: <Business data={serviceData.business} /> },
+    {
+      id: "Laundry",
+      component: (
+        <Laundry data={serviceData.Laundry} flag={handleCategoryFlag} />
+      ),
+    },
+    {
+      id: "Tours",
+      component: <Tours data={serviceData.Tours} flag={handleCategoryFlag} />,
+    },
+    // { id: "Business", component: <Business data={serviceData.Business} /> },
   ];
 
   const categoryClick = (data: any) => {
-    console.log("first", data);
     if (data) {
       components.map((item: any, i: number) => {
         if (data === item.id) {
@@ -101,27 +148,80 @@ const Service = ({ data }: { data: any }) => {
       });
     }
   };
+
+  const toggleService = (serviceName: string) => {
+    setSelectedServices((prev) => {
+      if (prev.includes(serviceName)) {
+        return prev.filter((name) => name !== serviceName);
+      }
+      return [...prev, serviceName];
+    });
+  };
+
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:px-8 py-4">
+    <div className="flex flex-1 flex-col p-4 md:gap-4 md:px-8 py-4">
       {!categoryFlag && (
         <>
+          <div className="flex justify-end">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configure Services
+                </Button>
+              </DialogTrigger>
+              <DialogDescription></DialogDescription>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Select Available Services</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  {availableServices.map((service) => (
+                    <div
+                      key={service.id}
+                      className="flex items-center space-x-2"
+                    >
+                      <Checkbox
+                        id={`service-${service.id}`}
+                        checked={selectedServices.includes(service.name)}
+                        onCheckedChange={() => toggleService(service.name)}
+                      />
+                      <label
+                        htmlFor={`service-${service.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center"
+                      >
+                        {service.icon}
+                        {service.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
           {serviceData && (
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-              {availableServices.map((data: any, i: number) => (
-                <Card
-                  key={i}
-                  onClick={() => categoryClick(data.name)}
-                  className="cursor-pointer"
-                >
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-xl font-bold">
-                      <div className="flex items-center justify-between">
-                        {data.icon} {data.name}
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-              ))}
+              {availableServices
+                .filter(
+                  (service) =>
+                    selectedServices.length === 0 ||
+                    selectedServices.includes(service.name)
+                )
+                .map((data: any, i: number) => (
+                  <Card
+                    key={i}
+                    onClick={() => categoryClick(data.name)}
+                    className="cursor-pointer"
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                      <CardTitle className="text-xl font-bold">
+                        <div className="flex items-center justify-between">
+                          {data.icon} {data.name}
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                ))}
             </div>
           )}
         </>

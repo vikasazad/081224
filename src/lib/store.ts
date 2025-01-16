@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import searchReducer from "./features/searchSlice";
+import serviceToggleReducer from "./features/serviceToggleSlice";
 import addToOrderReducer from "./features/addToOrderSlice";
 import activeFooterItemReducer from "./features/activeFooterCategory";
 
@@ -7,6 +8,7 @@ const store = () => {
   return configureStore({
     reducer: {
       searchTerm: searchReducer,
+      serviceToggle: serviceToggleReducer,
       addToOrderData: addToOrderReducer,
       activeFooterItem: activeFooterItemReducer,
       // firebaseManagementData: firebaseManagementDataReducer,

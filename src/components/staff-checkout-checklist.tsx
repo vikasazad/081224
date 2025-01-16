@@ -22,31 +22,38 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Search, X } from "lucide-react";
+import { toast } from "sonner";
 const checklistItems = [
   {
-    name: "Room Cleanliness: Is the room in good condition? Any deep cleaning needed?",
+    name: "Room Cleanliness: Is the room is not clean or not in good condition?",
   },
   {
-    name: "Damages/Missing Items: Any damages or missing items (e.g., towels, electronics)?",
+    name: "Damages/Missing Items: Are any items (e.g., towels, electronics) missing or damaged?",
   },
   {
-    name: "Laundry/Towels: Are laundry and towels left properly (e.g., laundry bag, bathroom)?",
+    name: "Laundry/Towels: Are laundry items and towels properly placed (e.g., laundry bag, bathroom)?",
   },
-  { name: "Maintenance Issues: Any issues (e.g., broken fixtures)?" },
-  { name: "Repairs Needed: Any repairs required before next occupancy?" },
   {
-    name: "Outstanding Charges: Are all charges (e.g., mini-bar, room service) settled?",
+    name: "Maintenance Issues: Are there any broken fixtures or maintenance concerns?",
   },
-  { name: "Keys Returned: Were all room keys returned?" },
-  { name: "Left-Behind Items: Were any personal belongings left behind?" },
+  {
+    name: "Repairs Needed: Are any repairs needed before the next guest checks in?",
+  },
+  // {
+  //   name: "Outstanding Charges: Are all charges (e.g., mini-bar, room service) settled?",
+  // },
+  { name: "Keys Returned: Have all room keys not been returned?" },
+  { name: "Left-Behind Items: Were any personal belongings left in the room?" },
 ];
 const ChecklistDialog = ({
   data,
+  info,
   open,
   onClose,
   roomNumber,
 }: {
   data: any;
+  info: any;
   open: any;
   onClose: any;
   roomNumber: string;
@@ -62,11 +69,13 @@ const ChecklistDialog = ({
     if (data) setAddItems(data);
   }, [data]);
   const handleChecklistItemChange = (index: any) => {
-    setCheckedItems((prev: any) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
+    setCheckedItems((prev: any) => {
+      const newCheckedItems = { ...prev, [index]: !prev[index] };
+
+      return newCheckedItems;
+    });
   };
+
   const handleSearchChange = (e: any) => {
     const search = e.target.value;
     setSearchTerm(search);
@@ -85,7 +94,47 @@ const ChecklistDialog = ({
     );
   };
   const calculateTotal = () => {
-    return selectedItems.reduce((total, item) => total + item.price, 0);
+    return selectedItems.reduce((total, item) => total + Number(item.price), 0);
+  };
+
+  const handleSubmit = () => {
+    const checkedChecklistItems = Object.keys(checkedItems).filter(
+      (key) => checkedItems[key]
+    );
+
+    // Case 1: No checklist items are checked
+    if (checkedChecklistItems.length === 0) {
+      info({
+        checkedItems: [],
+        selectedItems,
+        note,
+        totalAmount: calculateTotal(),
+        location: roomNumber,
+        flag: true, // No items checked
+      });
+      onClose();
+      return;
+    }
+
+    // Case 2: Checklist items are checked but no note is added
+    if (checkedChecklistItems.length > 0 && !note.trim()) {
+      toast.error("Please add a note before submitting.");
+      return;
+    }
+
+    // Case 3: Checklist items are checked and a note is provided
+    info({
+      checkedItems: checkedChecklistItems.map(
+        (el: any) => checklistItems[el].name
+      ),
+      selectedItems,
+      note,
+      totalAmount: calculateTotal(),
+      location: roomNumber,
+      flag: true, // All criteria met
+    });
+
+    onClose();
   };
 
   return (
@@ -162,7 +211,7 @@ const ChecklistDialog = ({
                         <TableRow key={i}>
                           <TableCell>{item.name}</TableCell>
                           <TableCell>{item.quantity}</TableCell>
-                          <TableCell>${item.price}</TableCell>
+                          <TableCell>{Number(item.price)}</TableCell>
                           <TableCell>
                             <Checkbox
                               checked={selectedItems.includes(item)}
@@ -191,7 +240,7 @@ const ChecklistDialog = ({
                           <TableRow key={i}>
                             <TableCell>{item.name}</TableCell>
                             <TableCell>{item.quantity}</TableCell>
-                            <TableCell>${item.price}</TableCell>
+                            <TableCell>{item.price}</TableCell>
                             <TableCell>
                               <Checkbox
                                 checked={selectedItems.includes(item)}
@@ -215,17 +264,17 @@ const ChecklistDialog = ({
               onChange={(e) => setNote(e.target.value)}
             />
             <div className="text-right">
-              <p className="text-lg font-semibold">
-                Total Amount: ${calculateTotal().toFixed(2)}
+              <p className="text-lg font-semibold mr-2">
+                Total Amount: ₹{calculateTotal()}
               </p>
             </div>
           </div>
         </div>
-        <DialogFooter className="flex-shrink-0">
+        <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={onClose}>Submit</Button>
+          <Button onClick={handleSubmit}>Submit</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

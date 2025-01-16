@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -6,16 +7,30 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Clock, User } from "lucide-react";
+// import { Clock, User } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
 import { Badge } from "@/components/ui/badge";
+import WalkInModal from "./WalkInModal";
 
 const Vacant = ({ data }: { data: any; status: any }) => {
+  console.log("DATA", data);
   const [roomData, setRoomData] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
   useEffect(() => {
     setRoomData(data);
   }, [data]);
+
+  const handleWalkIn = (room: any) => {
+    setSelectedRoom(room);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedRoom(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -27,20 +42,29 @@ const Vacant = ({ data }: { data: any; status: any }) => {
                 <Accordion type="single" collapsible>
                   <AccordionItem value="item-1">
                     <AccordionTrigger>
-                      <div className="flex justify-between items-center w-full">
+                      <div className="flex justify-between items-center w-full ">
                         <div className="flex items-center gap-3">
                           <span className="text-xl font-bold">
                             {item.roomNo}
                           </span>
                           <Badge variant="outline">{item.roomType}</Badge>
+                          <Badge variant="outline">₹{item.price}</Badge>
                         </div>
+
+                        <span
+                          className="bg-muted text-black px-3 py-1 rounded-md border"
+                          onClick={() => handleWalkIn(item)}
+                        >
+                          Walk-in Guest
+                        </span>
+
                         <div className="flex items-center gap-3">
                           <StatusChip status={item.status} />
                         </div>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <div className="flex items-baseline justify-between">
+                      {/* <div className="flex items-baseline justify-between">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock size={16} />
@@ -69,7 +93,7 @@ const Vacant = ({ data }: { data: any; status: any }) => {
                             {item.cleaning.cleanedBy}
                           </p>
                         </div>
-                      </div>
+                      </div> */}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -77,6 +101,13 @@ const Vacant = ({ data }: { data: any; status: any }) => {
             </Card>
           ))}
         </div>
+      )}
+      {isModalOpen && (
+        <WalkInModal
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          room={selectedRoom}
+        />
       )}
     </div>
   );

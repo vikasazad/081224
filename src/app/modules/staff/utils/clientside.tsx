@@ -53,13 +53,15 @@ export function handleRoomStaffInformation(
                 }
               });
 
-              live.roomsData.roomDetail.forEach((item: any) => {
-                if (item.status === "available") {
-                  result.hotelOverview.vacant.push(item);
-                }
-                if (item.status === "fixing required") {
-                  result.hotelOverview.maintenance.push(item);
-                }
+              Object.keys(live.roomsData.roomDetail).forEach((roomType) => {
+                live.roomsData.roomDetail[roomType].forEach((item: any) => {
+                  if (item.status === "available") {
+                    result.hotelOverview.vacant.push(item);
+                  }
+                  if (item.status === "fixing required") {
+                    result.hotelOverview.maintenance.push(item);
+                  }
+                });
               });
             }
 

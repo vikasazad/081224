@@ -7,7 +7,7 @@ import Ongoing from "./ongoing";
 import DayCheckOut from "./dayCheckOut";
 import DayCheckIn from "./dayCheckIn";
 import Vacant from "./vacant";
-import Maintenance from "./maintenance";
+// import Maintenance from "./maintenance";
 
 export default function Rooms({ data }: { data: any }) {
   const room = data;
@@ -23,7 +23,7 @@ export default function Rooms({ data }: { data: any }) {
                 <TabsTrigger value="todayCheckOut">Today CheckOut</TabsTrigger>
                 <TabsTrigger value="todayCheckIn">Today CheckIn</TabsTrigger>
                 <TabsTrigger value="vacant">Vacant</TabsTrigger>
-                <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+                {/* <TabsTrigger value="maintenance">Maintenance</TabsTrigger> */}
               </TabsList>
 
               {!data ? (
@@ -45,9 +45,9 @@ export default function Rooms({ data }: { data: any }) {
                   <TabsContent value="vacant" className="space-y-4 py-4">
                     <Vacant data={room.vacant} status={room.status} />
                   </TabsContent>
-                  <TabsContent value="maintenance" className="space-y-4 py-4">
+                  {/* <TabsContent value="maintenance" className="space-y-4 py-4">
                     <Maintenance data={room.maintenance} status={room.status} />
-                  </TabsContent>
+                  </TabsContent> */}
                 </>
               )}
             </Tabs>

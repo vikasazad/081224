@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { MdSelfImprovement, MdAdd, MdLightbulb } from "react-icons/md";
+import { saveToursServices } from "../../utils/hotelDataApi";
 
 const sampleTour = {
   typeName: "Local Culinary Experience Tour",
@@ -38,7 +39,7 @@ const sampleTour = {
   endTime: "21:00",
 };
 
-const Tours = ({ data }: { data: any }) => {
+const Tours = ({ data, flag }: any) => {
   const [selectedService, setSelectedService] = useState("");
   const [selectedServiceList, setSelectedServiceList] = useState<string[]>([]);
   const [tours, setTours] = useState<any[]>([]);
@@ -48,7 +49,7 @@ const Tours = ({ data }: { data: any }) => {
 
   useEffect(() => {
     setSelectedServiceList(Object.keys(data));
-    console.log("first", JSON.stringify(data));
+    console.log("first", data);
   }, [data]);
   const validateForm = () => {
     const newErrors: { [key: string]: { [key: string]: string } } = {};
@@ -109,8 +110,10 @@ const Tours = ({ data }: { data: any }) => {
 
   const handleNext = () => {
     if (validateForm()) {
+      saveToursServices(tours, selectedService);
       toast.success("Tours saved successfully!");
-      console.log("Submitted tours:", tours);
+      console.log("Submitted tours:", selectedService, tours);
+      flag(false);
     } else {
       toast.error("Please fix the errors in the form");
     }
@@ -122,18 +125,14 @@ const Tours = ({ data }: { data: any }) => {
       description: item.description,
       price: parseFloat(item.pricingPerPerson) || 0,
       duration: {
-        hours: parseInt(item.duration)
-          ? parseInt(item.duration.split(" ")[0])
-          : 0,
-        minutes: 0,
+        hours: item.duration.hours || 0,
+        minutes: item.duration.minutes || 0,
       },
       bookingPolicy: item.bookingAndCancellationPolicy,
       benefits: item.keyBenefits,
       timeline: item.timeline,
-      startTime: item.timeline
-        ? item.timeline.split("at ")[1]?.trim() || ""
-        : "",
-      endTime: "", // You might want to calculate this based on duration
+      startTime: item.startTime,
+      endTime: item.endTime, // You might want to calculate this based on duration
     }));
     setTours(details); // Set the tours state with the formatted data
     setErrors({});
@@ -210,7 +209,7 @@ const Tours = ({ data }: { data: any }) => {
 
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="service">Select Wellness Service</Label>
+            <Label htmlFor="service">Select Tours</Label>
             <Select value={selectedService} onValueChange={handleServiceChange}>
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Choose a service category" />
@@ -444,11 +443,11 @@ const Tours = ({ data }: { data: any }) => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setTours([]);
                   setErrors({});
+                  flag(false);
                 }}
               >
-                Clear All
+                Cancel
               </Button>
               <Button
                 onClick={handleNext}

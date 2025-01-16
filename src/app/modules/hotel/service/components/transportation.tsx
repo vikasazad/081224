@@ -13,8 +13,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CarTaxiFront } from "lucide-react";
+import { saveTransportationServices } from "../../utils/hotelDataApi";
 
-const Transportation = ({ data }: { data: any }) => {
+const Transportation = ({ data, flag }: any) => {
   const [selectedService, setSelectedService] = useState("");
   const [selectedServiceList, setSelectedServiceList] = useState<string[]>([]);
   const [selectedDetails, setSelectedDetails] = useState<any[]>([]);
@@ -73,8 +74,15 @@ const Transportation = ({ data }: { data: any }) => {
 
   const handleNext = () => {
     if (validateForm()) {
+      console.log(
+        "Form submitted successfully",
+        selectedService,
+        selectedDetails
+      );
+      saveTransportationServices(selectedDetails, selectedService);
+      flag(false);
       toast.success("Form submitted successfully!");
-      console.log("Form data:", selectedDetails);
+      // Handle your form submission logic here
     } else {
       toast.error("Please fix the errors in the form");
     }
@@ -93,6 +101,40 @@ const Transportation = ({ data }: { data: any }) => {
       [field]: value,
     };
     setSelectedDetails(updatedDetails);
+  };
+
+  const addServiceData = () => {
+    // Add a new service entry with default values
+    setSelectedDetails((prev) => [
+      ...prev,
+      {
+        typeName: "",
+        price: "",
+        description: "",
+        bookingPolicy: "",
+        duration: "",
+        airportList: selectedService === "Airport Shuttle" ? [] : undefined,
+        includedItems: selectedService === "Bicycle Rental" ? "" : undefined,
+      },
+    ]);
+    setErrors({}); // Clear errors
+    toast.success("New service added successfully!");
+  };
+
+  const removeLastService = () => {
+    if (selectedDetails.length > 0) {
+      setSelectedDetails((prev) => prev.slice(0, -1)); // Remove the last service
+
+      setErrors((prevErrors) => {
+        const updatedErrors = { ...prevErrors };
+        delete updatedErrors[selectedDetails.length - 1]; // Remove the error associated with the last service
+        return updatedErrors;
+      });
+
+      toast.success("Last service removed successfully!");
+    } else {
+      toast.error("No service to remove!"); // Show a message if there's nothing to remove
+    }
   };
 
   return (
@@ -148,7 +190,7 @@ const Transportation = ({ data }: { data: any }) => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`price-${index}`}>Price ($)</Label>
+                    <Label htmlFor={`price-${index}`}>Price (₹)</Label>
                     <Input
                       id={`price-${index}`}
                       type="number"
@@ -277,6 +319,20 @@ const Transportation = ({ data }: { data: any }) => {
                 </div>
               </div>
             ))}
+          {selectedService && (
+            <div className="flex gap-4">
+              <Button
+                onClick={removeLastService}
+                variant="outline"
+                className="text-red-500 border-red-500"
+              >
+                Remove Last
+              </Button>
+              <Button onClick={addServiceData} variant="outline">
+                Add
+              </Button>
+            </div>
+          )}
         </CardContent>
 
         {selectedService && (
@@ -287,6 +343,7 @@ const Transportation = ({ data }: { data: any }) => {
                 setSelectedService("");
                 setSelectedDetails([]);
                 setErrors({});
+                flag(false);
               }}
             >
               Cancel

@@ -13,8 +13,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { MdOutlineDryCleaning } from "react-icons/md";
+import { saveLaundryServices } from "../../utils/hotelDataApi";
 
-const Laundry = ({ data }: { data: any }) => {
+const Laundry = ({ data, flag }: any) => {
+  console.log("First", data);
   const [selectedService, setSelectedService] = useState("");
   const [selectedServiceList, setSelectedServiceList] = useState<string[]>([]);
   const [selectedDetails, setSelectedDetails] = useState<any[]>([]);
@@ -61,8 +63,10 @@ const Laundry = ({ data }: { data: any }) => {
 
   const handleNext = () => {
     if (validateForm()) {
+      saveLaundryServices(selectedDetails, selectedService);
       toast.success("Form submitted successfully!");
-      console.log("Form data:", selectedDetails);
+      console.log("Form data:", selectedService, selectedDetails);
+      flag(false);
     } else {
       toast.error("Please fix the errors in the form");
     }
@@ -74,8 +78,8 @@ const Laundry = ({ data }: { data: any }) => {
     const details = data[value].map((item: any) => ({
       ...item,
       minTime: {
-        hours: 0,
-        minutes: 0,
+        hours: item.minTime.hours || 0,
+        minutes: item.minTime.minutes || 0,
       },
     }));
     setSelectedDetails(details);
@@ -89,6 +93,38 @@ const Laundry = ({ data }: { data: any }) => {
       [field]: value,
     };
     setSelectedDetails(updatedDetails);
+  };
+
+  const addServiceData = () => {
+    // Adding a new empty service to the list
+    setSelectedDetails((prevDetails) => [
+      ...prevDetails,
+      {
+        typeName: "",
+        price: 0,
+        description: "",
+        minTime: { hours: 0, minutes: 0 },
+      },
+    ]);
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [selectedDetails.length]: {}, // Add a placeholder for potential errors in the new item
+    }));
+  };
+
+  const removeLastService = () => {
+    // Removing the last service from the list
+    setSelectedDetails((prevDetails) => {
+      const updatedDetails = [...prevDetails];
+      updatedDetails.pop();
+      return updatedDetails;
+    });
+
+    setErrors((prevErrors) => {
+      const updatedErrors = { ...prevErrors };
+      delete updatedErrors[selectedDetails.length - 1]; // Remove the corresponding error
+      return updatedErrors;
+    });
   };
 
   return (
@@ -144,7 +180,7 @@ const Laundry = ({ data }: { data: any }) => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor={`price-${index}`}>Price ($)</Label>
+                    <Label htmlFor={`price-${index}`}>Price (₹)</Label>
                     <Input
                       id={`price-${index}`}
                       type="number"
@@ -233,6 +269,20 @@ const Laundry = ({ data }: { data: any }) => {
                 </div>
               </div>
             ))}
+          {selectedService && (
+            <div className="flex gap-4">
+              <Button
+                onClick={removeLastService}
+                variant="outline"
+                className="text-red-500 border-red-500"
+              >
+                Remove Last
+              </Button>
+              <Button onClick={addServiceData} variant="outline">
+                Add
+              </Button>
+            </div>
+          )}
         </CardContent>
 
         {selectedService && (
@@ -243,6 +293,7 @@ const Laundry = ({ data }: { data: any }) => {
                 setSelectedService("");
                 setSelectedDetails([]);
                 setErrors({});
+                flag(false);
               }}
             >
               Cancel

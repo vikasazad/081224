@@ -11,9 +11,10 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Dumbbell } from "lucide-react";
+import { MdSelfImprovement } from "react-icons/md";
+import { saveRecreationalServices } from "../../utils/hotelDataApi";
 
-const Recreational = ({ data }: { data: any }) => {
+const Recreational = ({ data, flag }: any) => {
   const [selectedService, setSelectedService] = useState("");
   const [selectedServiceList, setSelectedServiceList] = useState<string[]>([]);
   const [selectedDetails, setSelectedDetails] = useState<any[]>([]);
@@ -69,6 +70,13 @@ const Recreational = ({ data }: { data: any }) => {
 
   const handleNext = () => {
     if (validateForm()) {
+      console.log(
+        "Form submitted successfully",
+        selectedService,
+        selectedDetails
+      );
+      saveRecreationalServices(selectedDetails, selectedService);
+      flag(false);
       toast.success("Form submitted successfully!");
       // Handle your form submission logic here
     } else {
@@ -98,12 +106,46 @@ const Recreational = ({ data }: { data: any }) => {
     setSelectedDetails(updatedDetails);
   };
 
+  const removeLastService = () => {
+    if (selectedDetails.length > 0) {
+      setSelectedDetails((prev) => prev.slice(0, -1));
+      setErrors((prevErrors) => {
+        const updatedErrors = { ...prevErrors };
+        delete updatedErrors[selectedDetails.length - 1];
+        return updatedErrors;
+      });
+      toast.success("Last service removed successfully!");
+    } else {
+      toast.error("No service to remove!");
+    }
+  };
+
+  const addServiceData = () => {
+    if (validateForm()) {
+      setSelectedDetails((prev) => [
+        ...prev,
+        {
+          typeName: "",
+          price: "",
+          description: "",
+          duration: { hours: 0, minutes: 0 },
+          startTime: "",
+          endTime: "",
+        },
+      ]);
+      setErrors({});
+      toast.success("New service added successfully!");
+    } else {
+      toast.error("Please fix the errors in the form");
+    }
+  };
+
   return (
     <div className="p-4">
       <Card className="w-full max-w-3xl">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Dumbbell className="h-6 w-6 text-primary" />
+            <MdSelfImprovement className="h-6 w-6 text-primary" />
             <CardTitle>Recreational</CardTitle>
           </div>
         </CardHeader>
@@ -281,6 +323,21 @@ const Recreational = ({ data }: { data: any }) => {
                 </div>
               </div>
             ))}
+
+          {selectedService && (
+            <div className="flex gap-4">
+              <Button
+                onClick={removeLastService}
+                variant="outline"
+                className="text-red-500 border-red-500"
+              >
+                Remove Last
+              </Button>
+              <Button onClick={addServiceData} variant="outline">
+                Add
+              </Button>
+            </div>
+          )}
         </CardContent>
 
         {selectedService && (
@@ -291,6 +348,7 @@ const Recreational = ({ data }: { data: any }) => {
                 setSelectedService("");
                 setSelectedDetails([]);
                 setErrors({});
+                flag(false);
               }}
             >
               Cancel
@@ -299,8 +357,7 @@ const Recreational = ({ data }: { data: any }) => {
               onClick={handleNext}
               className="bg-primary hover:bg-primary/90"
             >
-              Next
-              <span className="ml-2">→</span>
+              Finish
             </Button>
           </div>
         )}

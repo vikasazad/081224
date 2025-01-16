@@ -13,38 +13,87 @@ interface StaffMember {
 }
 
 export const calculateOrderTotal = (order: any) => {
-  const itemsTotal = order.reduce(
-    (total: number, item: any) => total + parseFloat(item.price),
-    0
-  );
+  // console.log("Calculating Order Total...", order);
+  const Total =
+    order.reduce((total: number, orderItem: any) => {
+      return total + Number(orderItem.price);
+    }, 0) || 0;
 
-  return itemsTotal;
+  // console.log("Total  Amount:", Total);
+
+  return Total;
 };
 
 export const calculateTax = (order: any, tax: string) => {
+  // console.log("Calculating Tax...", order);
   const total = calculateOrderTotal(order);
-  const rounded = Math.round((total * Number(tax)) / 100);
-  return rounded;
+  // console.log("Order Total for Tax Calculation:", total);
+
+  const roundedTax = Math.round((total * parseFloat(tax)) / 100);
+  // console.log(`Calculated Tax (${tax}%):`, roundedTax);
+
+  return roundedTax;
 };
 
 export const calculateFinalAmount = (item: any) => {
-  const final = item.diningDetails.orders.map((data: any) => {
-    if (data.payment.paymentStatus === "pending") {
-      const total = data.items.reduce((total: number, order: any) => {
-        return total + parseFloat(order.price || "0");
-      }, 0);
-      const gstAmount = parseFloat(data.payment?.gst?.gstAmount || "0");
+  // console.log("Calculating Final Amount...", item);
 
-      return total + gstAmount;
+  let bookingTotal = 0;
+  if (item.bookingDetails.location) {
+    if (item.bookingDetails.payment.paymentStatus === "pending") {
+      const gstAmount = Number(
+        item.bookingDetails.payment?.gst?.gstAmount || "0"
+      );
+      bookingTotal = Number(item.bookingDetails.payment.price) + gstAmount;
     }
-    return undefined; // Explicitly return undefined for clarity
-  });
+  }
 
-  // Filter out undefined values and calculate the sum
-  const validValues = final.filter((value: any) => value !== undefined);
-  const sum = validValues.reduce((acc: any, value: any) => acc + value, 0);
+  // console.log("Total Pending Booking Amount:", bookingTotal);
 
-  return sum || 0; // Return 0 if no valid values
+  // Calculate pending payments for diningDetails
+  const diningTotal =
+    item.diningDetails?.orders
+      ?.map((order: any) => {
+        if (order.payment.paymentStatus === "pending") {
+          // console.log("Pending Dining Order Found:", order);
+          const itemsTotal = order.items.reduce((total: number, item: any) => {
+            // console.log("Pending Dining Item Price:", item.price);
+            return total + parseFloat(item.price || "0");
+          }, 0);
+
+          const gstAmount = parseFloat(order.payment?.gst?.gstAmount || "0");
+          // console.log("Dining GST Amount:", gstAmount);
+
+          const orderTotal = itemsTotal + gstAmount;
+          // console.log("Dining Order Total (Pending):", orderTotal);
+          return orderTotal;
+        }
+        return 0;
+      })
+      .reduce((sum: number, value: number) => sum + value, 0) || 0;
+
+  // console.log("Total Pending Dining Amount:", diningTotal);
+
+  // Calculate pending payments for servicesUsed
+  const servicesTotal =
+    item?.servicesUsed
+      ?.filter(
+        (service: any) =>
+          service.payment.paymentStatus === "pending" &&
+          service.status !== "Cancelled"
+      )
+      .reduce((total: number, service: any) => {
+        const price = parseFloat(service.payment?.price || "0");
+        const gstAmount = parseFloat(service.payment?.gst?.gstAmount || "0");
+        return total + price + gstAmount;
+      }, 0) || 0;
+
+  // console.log("Total Pending Services Amount:", servicesTotal);
+
+  // Return the combined total
+  const combinedFinalAmount = diningTotal + servicesTotal + bookingTotal;
+  // console.log("Combined Final Amount:", combinedFinalAmount);
+  return combinedFinalAmount;
 };
 
 export function getOnlineStaffFromFirestore(callback: any) {
@@ -69,7 +118,7 @@ export function getOnlineStaffFromFirestore(callback: any) {
       const onlineStaff = info
         .filter(
           (staffMember: any) =>
-            staffMember.status === "online" && staffMember.role === "attendant"
+            staffMember.status === "online" && staffMember.role === "concierge"
         )
         .map((staffMember: any) => ({
           name: staffMember.name,
@@ -232,7 +281,23 @@ export async function setTables(tableData: any) {
 
   return false;
 }
+export async function setRooms(roomData: any) {
+  // console.log("ROO<DADTA", roomData);
+  try {
+    const docRef = doc(db, "vikumar.azad@gmail.com", "hotel");
 
+    await updateDoc(docRef, {
+      "live.rooms": roomData,
+    });
+
+    console.log("Data successfully updated and saved to Firestore.");
+    return true;
+  } catch (error) {
+    console.error("ERROR setting offline data:", error);
+  }
+
+  return false;
+}
 export async function setHistory(tableData: any, tableType: string) {
   console.log(tableType);
   try {
@@ -284,7 +349,91 @@ export async function setHistory(tableData: any, tableType: string) {
 
   return false;
 }
+export async function setHistoryRoom(roomData: any, roomType: string) {
+  console.log(roomType);
+  try {
+    const docRef = doc(db, "vikumar.azad@gmail.com", "hotel");
+    const customerPhone = roomData.bookingDetails.customer.phone;
 
+    if (!customerPhone) {
+      console.error("Customer phone number is missing in roomData.");
+      return false;
+    }
+
+    const room = {
+      roomNo: roomData.bookingDetails.location,
+      status: "available",
+      roomType: roomData.bookingDetails.roomType,
+      price: roomData.bookingDetails.payment.price,
+      inclusions: roomData.bookingDetails.inclusions,
+      cleaning: {
+        lastCleaned: "",
+        cleanedBy: "",
+        startTime: "",
+        endTime: "",
+      },
+      maintenance: {
+        issue: "",
+        description: "",
+        startTime: "",
+        endTime: "",
+        fixedBy: "",
+      },
+    };
+
+    // Use arrayUnion to push the new data into the specific history array
+    await updateDoc(docRef, {
+      [`history.${roomType}`]: arrayUnion(roomData),
+    });
+    await updateDoc(docRef, {
+      [`customers.${customerPhone}`]: arrayUnion(roomData),
+    });
+    await updateDoc(docRef, {
+      [`live.roomsData.roomDetail.${roomType}`]: arrayUnion(room),
+    });
+
+    console.log("Data successfully updated and saved to Firestore.");
+    removeRoomData(roomData.bookingDetails.location);
+    return true;
+  } catch (error) {
+    console.error("ERROR setting offline data:", error);
+  }
+
+  return false;
+}
+
+export async function removeRoomData(roomNo: string) {
+  try {
+    const docRef = doc(db, "vikumar.azad@gmail.com", "hotel");
+
+    // Fetch the current live.tables data
+    const docSnapshot = await getDoc(docRef);
+    if (!docSnapshot.exists()) {
+      console.error("Document not found!");
+      return false;
+    }
+
+    const data = docSnapshot.data();
+    const liveRooms = data?.live?.rooms || [];
+
+    // Filter out the tableData to remove the specified table by its ID (e.g., location or unique identifier)
+    const updatedTables = liveRooms.filter(
+      (room: any) => room.bookingDetails?.location !== roomNo
+    );
+
+    // Update Firestore with the remaining data
+    await updateDoc(docRef, {
+      "live.rooms": updatedTables,
+    });
+
+    console.log(`Table with ID '${roomNo}' removed successfully.`);
+    return true;
+  } catch (error) {
+    console.error("ERROR removing table data:", error);
+  }
+
+  return false;
+}
 export async function removeTableData(tableId: string) {
   try {
     const docRef = doc(db, "vikumar.azad@gmail.com", "restaurant");

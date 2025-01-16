@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { MdSelfImprovement } from "react-icons/md";
+import { saveWellnessServices } from "../../utils/hotelDataApi";
 
-const Wellness = ({ data }: { data: any }) => {
+const Wellness = ({ data, flag }: any) => {
   const [selectedService, setSelectedService] = useState("");
   const [selectedServiceList, setSelectedServiceList] = useState<string[]>([]);
   const [selectedDetails, setSelectedDetails] = useState<any[]>([]);
@@ -69,6 +70,13 @@ const Wellness = ({ data }: { data: any }) => {
 
   const handleNext = () => {
     if (validateForm()) {
+      console.log(
+        "Form submitted successfully",
+        selectedService,
+        selectedDetails
+      );
+      saveWellnessServices(selectedDetails, selectedService);
+      flag(false);
       toast.success("Form submitted successfully!");
       // Handle your form submission logic here
     } else {
@@ -81,8 +89,8 @@ const Wellness = ({ data }: { data: any }) => {
     const details = data[value].map((item: any) => ({
       ...item,
       duration: {
-        hours: Math.floor(parseInt(item.duration) / 60),
-        minutes: parseInt(item.duration) % 60,
+        hours: item.duration?.hours,
+        minutes: item.duration?.minutes,
       },
     }));
     setSelectedDetails(details);
@@ -96,6 +104,40 @@ const Wellness = ({ data }: { data: any }) => {
       [field]: value,
     };
     setSelectedDetails(updatedDetails);
+  };
+
+  const removeLastService = () => {
+    if (selectedDetails.length > 0) {
+      setSelectedDetails((prev) => prev.slice(0, -1));
+      setErrors((prevErrors) => {
+        const updatedErrors = { ...prevErrors };
+        delete updatedErrors[selectedDetails.length - 1];
+        return updatedErrors;
+      });
+      toast.success("Last service removed successfully!");
+    } else {
+      toast.error("No service to remove!");
+    }
+  };
+
+  const addServiceData = () => {
+    if (validateForm()) {
+      setSelectedDetails((prev) => [
+        ...prev,
+        {
+          typeName: "",
+          price: "",
+          description: "",
+          duration: { hours: 0, minutes: 0 },
+          startTime: "",
+          endTime: "",
+        },
+      ]);
+      setErrors({});
+      toast.success("New service added successfully!");
+    } else {
+      toast.error("Please fix the errors in the form");
+    }
   };
 
   return (
@@ -126,161 +168,187 @@ const Wellness = ({ data }: { data: any }) => {
           </div>
 
           {selectedService &&
-            selectedDetails.map((service, index) => (
-              <div
-                key={index}
-                className="space-y-6 p-6 border rounded-lg bg-white"
-              >
-                <div className="grid grid-cols-2 gap-6">
+            selectedDetails.map((service, index) => {
+              console.log("SERVICE", service);
+              return (
+                <div
+                  key={index}
+                  className="space-y-6 p-6 border rounded-lg bg-white"
+                >
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor={`name-${index}`}>Name of Service</Label>
+                      <Input
+                        id={`name-${index}`}
+                        value={service.typeName}
+                        onChange={(e) =>
+                          updateServiceDetail(index, "typeName", e.target.value)
+                        }
+                        className={
+                          errors[index]?.typeName ? "border-red-500" : ""
+                        }
+                      />
+                      {errors[index]?.typeName && (
+                        <p className="text-red-500 text-sm">
+                          {errors[index].typeName}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`price-${index}`}>Price ($)</Label>
+                      <Input
+                        id={`price-${index}`}
+                        type="number"
+                        value={service.price}
+                        onChange={(e) =>
+                          updateServiceDetail(index, "price", e.target.value)
+                        }
+                        className={errors[index]?.price ? "border-red-500" : ""}
+                      />
+                      {errors[index]?.price && (
+                        <p className="text-red-500 text-sm">
+                          {errors[index].price}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor={`name-${index}`}>Name of Service</Label>
+                    <Label htmlFor={`description-${index}`}>Description</Label>
                     <Input
-                      id={`name-${index}`}
-                      value={service.typeName}
+                      id={`description-${index}`}
+                      value={service.description}
                       onChange={(e) =>
-                        updateServiceDetail(index, "typeName", e.target.value)
+                        updateServiceDetail(
+                          index,
+                          "description",
+                          e.target.value
+                        )
                       }
                       className={
-                        errors[index]?.typeName ? "border-red-500" : ""
+                        errors[index]?.description ? "border-red-500" : ""
                       }
                     />
-                    {errors[index]?.typeName && (
+                    {errors[index]?.description && (
                       <p className="text-red-500 text-sm">
-                        {errors[index].typeName}
+                        {errors[index].description}
                       </p>
                     )}
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor={`price-${index}`}>Price ($)</Label>
-                    <Input
-                      id={`price-${index}`}
-                      type="number"
-                      value={service.price}
-                      onChange={(e) =>
-                        updateServiceDetail(index, "price", e.target.value)
-                      }
-                      className={errors[index]?.price ? "border-red-500" : ""}
-                    />
-                    {errors[index]?.price && (
+                    <Label>Duration</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Input
+                          type="number"
+                          placeholder="Hours"
+                          value={service.duration?.hours || ""}
+                          onChange={(e) =>
+                            updateServiceDetail(index, "duration", {
+                              ...service.duration,
+                              hours: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          min="0"
+                          max="24"
+                          className={
+                            errors[index]?.duration ? "border-red-500" : ""
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          type="number"
+                          placeholder="Minutes"
+                          value={service.duration?.minutes || ""}
+                          onChange={(e) =>
+                            updateServiceDetail(index, "duration", {
+                              ...service.duration,
+                              minutes: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          min="0"
+                          max="59"
+                          className={
+                            errors[index]?.duration ? "border-red-500" : ""
+                          }
+                        />
+                      </div>
+                    </div>
+                    {errors[index]?.duration && (
                       <p className="text-red-500 text-sm">
-                        {errors[index].price}
+                        {errors[index].duration}
                       </p>
                     )}
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor={`description-${index}`}>Description</Label>
-                  <Input
-                    id={`description-${index}`}
-                    value={service.description}
-                    onChange={(e) =>
-                      updateServiceDetail(index, "description", e.target.value)
-                    }
-                    className={
-                      errors[index]?.description ? "border-red-500" : ""
-                    }
-                  />
-                  {errors[index]?.description && (
-                    <p className="text-red-500 text-sm">
-                      {errors[index].description}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Duration</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Input
-                        type="number"
-                        placeholder="Hours"
-                        value={service.duration?.hours || ""}
-                        onChange={(e) =>
-                          updateServiceDetail(index, "duration", {
-                            ...service.duration,
-                            hours: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        min="0"
-                        max="24"
-                        className={
-                          errors[index]?.duration ? "border-red-500" : ""
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        type="number"
-                        placeholder="Minutes"
-                        value={service.duration?.minutes || ""}
-                        onChange={(e) =>
-                          updateServiceDetail(index, "duration", {
-                            ...service.duration,
-                            minutes: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        min="0"
-                        max="59"
-                        className={
-                          errors[index]?.duration ? "border-red-500" : ""
-                        }
-                      />
-                    </div>
-                  </div>
-                  {errors[index]?.duration && (
-                    <p className="text-red-500 text-sm">
-                      {errors[index].duration}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Available Time Slot</Label>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <Input
-                        type="time"
-                        value={service.startTime}
-                        onChange={(e) =>
-                          updateServiceDetail(
-                            index,
-                            "startTime",
-                            e.target.value
-                          )
-                        }
-                        className={
-                          errors[index]?.startTime ? "border-red-500" : ""
-                        }
-                      />
-                      {errors[index]?.startTime && (
-                        <p className="text-red-500 text-sm">
-                          {errors[index].startTime}
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-muted-foreground">to</span>
-                    <div className="flex-1">
-                      <Input
-                        type="time"
-                        value={service.endTime}
-                        onChange={(e) =>
-                          updateServiceDetail(index, "endTime", e.target.value)
-                        }
-                        className={
-                          errors[index]?.endTime ? "border-red-500" : ""
-                        }
-                      />
-                      {errors[index]?.endTime && (
-                        <p className="text-red-500 text-sm">
-                          {errors[index].endTime}
-                        </p>
-                      )}
+                  <div className="space-y-2">
+                    <Label>Available Time Slot</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Input
+                          type="time"
+                          value={service.startTime}
+                          onChange={(e) =>
+                            updateServiceDetail(
+                              index,
+                              "startTime",
+                              e.target.value
+                            )
+                          }
+                          className={
+                            errors[index]?.startTime ? "border-red-500" : ""
+                          }
+                        />
+                        {errors[index]?.startTime && (
+                          <p className="text-red-500 text-sm">
+                            {errors[index].startTime}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-muted-foreground">to</span>
+                      <div className="flex-1">
+                        <Input
+                          type="time"
+                          value={service.endTime}
+                          onChange={(e) =>
+                            updateServiceDetail(
+                              index,
+                              "endTime",
+                              e.target.value
+                            )
+                          }
+                          className={
+                            errors[index]?.endTime ? "border-red-500" : ""
+                          }
+                        />
+                        {errors[index]?.endTime && (
+                          <p className="text-red-500 text-sm">
+                            {errors[index].endTime}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
+          {selectedService && (
+            <div className="flex gap-4">
+              <Button
+                onClick={removeLastService}
+                variant="outline"
+                className="text-red-500 border-red-500"
+              >
+                Remove Last
+              </Button>
+              <Button onClick={addServiceData} variant="outline">
+                Add
+              </Button>
+            </div>
+          )}
         </CardContent>
 
         {selectedService && (
@@ -291,6 +359,7 @@ const Wellness = ({ data }: { data: any }) => {
                 setSelectedService("");
                 setSelectedDetails([]);
                 setErrors({});
+                flag(false);
               }}
             >
               Cancel
@@ -299,8 +368,7 @@ const Wellness = ({ data }: { data: any }) => {
               onClick={handleNext}
               className="bg-primary hover:bg-primary/90"
             >
-              Next
-              <span className="ml-2">→</span>
+              Finish
             </Button>
           </div>
         )}
