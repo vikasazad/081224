@@ -8,6 +8,7 @@ import {
 import Restaurant from "../modules/restaurant/restaurant/components/Restaurant";
 import History from "../modules/restaurant/history/components/History";
 import Tranasactions from "../modules/restaurant/transaction/components/Transactions";
+import QR from "../modules/restaurant/QR/components/QR";
 
 export default async function Dashboard() {
   const data = await getTableData();
@@ -27,6 +28,7 @@ export default async function Dashboard() {
           <TabsTrigger value="restaurant">Restaurant</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="tranasactions">Tranasactions</TabsTrigger>
+          <TabsTrigger value="qr">QR</TabsTrigger>
         </TabsList>
         <TabsContent value="table" className="space-y-4">
           <Table data={data} />
@@ -40,6 +42,9 @@ export default async function Dashboard() {
         </TabsContent>
         <TabsContent value="tranasactions" className="space-y-4">
           <Tranasactions data={data} />
+        </TabsContent>
+        <TabsContent value="qr" className="space-y-4">
+          <QR data={data} />
         </TabsContent>
       </Tabs>
     </div>

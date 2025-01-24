@@ -1,31 +1,6 @@
-// "use server";
-// import { auth } from "@/auth";
-// import DashboardOverview from "@/components/dashboard-overview";
-// import { get7daysDataFromAll, getLiveData } from "@/lib/firebase/firestore";
-
-// const overview = async () => {
-//   const session = await auth();
-//   const user = session?.user;
-//   let data: any;
-//   let table: any;
-//   if (user) {
-//     if (user.email) {
-//       data = await get7daysDataFromAll(user?.email, "analytics");
-//       table = await getLiveData(user?.email);
-//     }
-//   }
-
-//   // console.log("@@@@@@@@@@@@@@@@@@@@@", user);
-//   return (
-//     <div>
-//       <DashboardOverview user={user} data={data} table={table} />
-//     </div>
-//   );
-// };
-
-// export default overview;
 "use client";
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import DashboardOverview from "@/components/dashboard-overview";
 import { fetchOverviewData } from "../utils/overviewApi";
 
@@ -47,7 +22,15 @@ const Overview = () => {
           table={info.table}
         />
       ) : (
-        <p>Loading...</p> // Show a loading message or spinner
+        <div className="flex justify-center items-center h-screen">
+          <Image
+            src="/avatars/loader.svg"
+            alt="Loading..."
+            width={50} // Specify width
+            height={50} // Specify height
+            priority // Ensures this image loads as soon as possible
+          />
+        </div>
       )}
     </div>
   );

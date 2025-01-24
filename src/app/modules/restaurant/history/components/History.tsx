@@ -33,13 +33,14 @@ const History = ({ data }: { data: any }) => {
     });
     setHistoryFlag(true);
   };
+
   return (
     <div className="max-w-4xl  p-6 space-y-4">
       {!historyFlag &&
         data.map((table: any) =>
           Object.entries(table).map(([key, seats]: any, index) => {
-            console.log("key", key);
-            console.log("seats", seats);
+            // console.log("key", key);
+            // console.log("seats", seats);
             return (
               <Card key={index} className="shadow-sm">
                 <div

@@ -39,12 +39,12 @@ export const calculateFinalAmount = (item: any) => {
   // console.log("Calculating Final Amount...", item);
 
   let bookingTotal = 0;
-  if (item.bookingDetails.location) {
-    if (item.bookingDetails.payment.paymentStatus === "pending") {
+  if (item.bookingDetails?.location) {
+    if (item.bookingDetails?.payment?.paymentStatus === "pending") {
       const gstAmount = Number(
         item.bookingDetails.payment?.gst?.gstAmount || "0"
       );
-      bookingTotal = Number(item.bookingDetails.payment.price) + gstAmount;
+      bookingTotal = Number(item.bookingDetails?.payment?.price) + gstAmount;
     }
   }
 

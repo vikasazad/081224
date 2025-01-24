@@ -62,7 +62,15 @@ const StatsGrid = ({ table }: { table: any }) => {
             <Separator className="my-2" />
             <div className="flex items-center justify-between ">
               <h3 className="text-sm font-normal">Online</h3>
-              <p className="text-sm text-muted-foreground">0</p>
+              <p className="text-sm text-muted-foreground">
+                {table?.hotel?.roomsData?.staff?.online}
+              </p>
+            </div>
+            <div className="flex items-center justify-between ">
+              <h3 className="text-sm font-normal">Offline</h3>
+              <p className="text-sm text-muted-foreground">
+                {table?.hotel?.roomsData?.staff?.offline}
+              </p>
             </div>
           </div>
         </CardContent>

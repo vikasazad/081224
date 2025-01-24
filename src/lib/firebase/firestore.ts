@@ -229,3 +229,66 @@ export async function getLiveData(email: string) {
     return false;
   }
 }
+
+export async function setStats(email: string) {
+  console.log("h1");
+  try {
+    const docRefHotel = doc(db, email, "hotel");
+    const docRefRestaurant = doc(db, email, "restaurant");
+    const docRefInfo = doc(db, email, "info");
+
+    const [docSnapHotel, docSnapRestaurant, docSnapInfo] = await Promise.all([
+      getDoc(docRefHotel),
+      getDoc(docRefRestaurant),
+      getDoc(docRefInfo),
+    ]);
+
+    if (docSnapHotel.exists()) {
+      const data = docSnapHotel.data().live?.roomsData?.roomDetail;
+      const _booked = docSnapHotel.data().live?.rooms?.length;
+      // console.log(Object.values(data));
+      let _availableR: number = 0;
+      Object.values(data).forEach((el: any) => {
+        _availableR = _availableR + el.length;
+      });
+      // console.log("h2", _availableR, _booked);
+
+      await updateDoc(docRefHotel, {
+        "live.roomsData.stats.available": _availableR,
+        "live.roomsData.stats.booked": _booked,
+      });
+    }
+    if (docSnapRestaurant.exists()) {
+      const data = docSnapRestaurant.data().live.tablesData.tableDetails;
+      const _booked = docSnapRestaurant.data().live?.tables?.length || 0;
+      let _availableH: number = 0;
+      Object.values(data).forEach((el: any) => {
+        _availableH = _availableH + el.length;
+      });
+      // console.log("h3", _availableH, _booked);
+      await updateDoc(docRefRestaurant, {
+        "live.tablesData.stats.available": _availableH,
+        "live.tablesData.stats.booked": _booked,
+      });
+    }
+    if (docSnapInfo.exists()) {
+      const data = docSnapInfo.data().staff;
+      let online: number = 0,
+        offline: number = 0;
+      data.forEach((el: any) => {
+        if (el.status === "online") {
+          online = online + 1;
+        } else {
+          offline = offline + 1;
+        }
+      });
+
+      await updateDoc(docRefHotel, {
+        "live.roomsData.staff.online": online,
+        "live.roomsData.staff.offline": offline,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}

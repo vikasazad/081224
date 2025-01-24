@@ -8,6 +8,8 @@ import HotelRoomTransctions from "./HotelRoomTransctions";
 const Transactions = ({ data, room }: { data: any; room: any }) => {
   console.log("first", data, room);
   const [expandedCategory, setExpandedCategory] = useState<any>(null);
+  const [historyData, setHistoryData] = useState<any>({ room: "", data: [] });
+
   const [historyFlag, setHistoryFlag] = useState<boolean>(false);
 
   // Sample room data - in real app this would come from props or API
@@ -44,14 +46,24 @@ const Transactions = ({ data, room }: { data: any; room: any }) => {
   //     },
   //   ];
 
-  const onRoomSelect = (roomNo: string) => {
-    console.log(roomNo);
+  const onRoomSelect = (roomNo: string, type: string) => {
+    console.log(roomNo, type);
+    const _data = room?.history;
+    const info = _data[type].find(
+      (el: any) => el.bookingDetails.location === roomNo
+    );
+    console.log(info);
+    setHistoryData({
+      room: roomNo,
+      data: info,
+    });
     setHistoryFlag(true);
   };
+
   return (
     <div className="max-w-4xl  p-6 space-y-4">
       {!historyFlag &&
-        data.rooms.map((category: any, index: number) => (
+        Object.values(data.rooms).map((category: any, index: number) => (
           <Card key={index} className="shadow-sm">
             <div
               className="cursor-pointer"
@@ -87,7 +99,7 @@ const Transactions = ({ data, room }: { data: any; room: any }) => {
                   {category.roomNo.map((room: any, roomIndex: number) => (
                     <button
                       key={roomIndex}
-                      onClick={() => onRoomSelect(room)}
+                      onClick={() => onRoomSelect(room, category.roomType)}
                       className="p-4 border rounded-lg hover:border-blue-500 transition-colors text-left space-y-2"
                     >
                       <div className="flex justify-between items-center">
@@ -104,7 +116,7 @@ const Transactions = ({ data, room }: { data: any; room: any }) => {
             )}
           </Card>
         ))}
-      {historyFlag && <HotelRoomTransctions />}
+      {historyFlag && <HotelRoomTransctions data={historyData} />}
     </div>
   );
 };

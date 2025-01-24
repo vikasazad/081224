@@ -26,9 +26,9 @@ const HotelRestaurantHistory = ({ data }: any) => {
               console.log("item", item);
               return (
                 <tr key={item.itemId}>
-                  <td className="py-2">{item.id}</td>
-                  <td className="py-2">{item.name}</td>
-                  <td className="py-2">{item.quantity}</td>
+                  <td className="py-2">{item.itemId}</td>
+                  <td className="py-2">{item.itemName}</td>
+                  <td className="py-2">{item.portionSize}</td>
                   <td className="py-2 text-right">₹{Number(item.price)}</td>
                 </tr>
               );

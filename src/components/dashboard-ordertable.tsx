@@ -70,6 +70,31 @@ function processData(data: any) {
     });
   }
 
+  if (data.hotel?.rooms) {
+    data.hotel?.rooms.forEach((table: any) => {
+      if (table.diningDetails.status !== "available") {
+        table.diningDetails.orders.forEach((item: any) => {
+          console.log("HOTEKLLLLL", item);
+          rows.push(
+            createData(
+              item.orderId,
+              table.diningDetails.customer?.name || "",
+              table.diningDetails.location,
+              table.diningDetails.noOfGuests,
+              item.payment.price || 0,
+              item.status,
+              item?.attendant || "",
+              item?.payment?.paymentId || "",
+              item?.timeOfRequest,
+              item?.timeOfFullfilment,
+              item.payment.paymentStatus || "",
+              item?.specialRequirements
+            )
+          );
+        });
+      }
+    });
+  }
   if (data.restaurant?.tables) {
     data.restaurant.tables.forEach((table: any) => {
       if (table.diningDetails.status !== "available") {
@@ -182,6 +207,7 @@ function processData(data: any) {
       row.endTime = format(new Date(row.endTime), "HH:mm (d MMM)");
     }
   });
+  console.log("ROWS", rows);
   return rows;
 }
 
