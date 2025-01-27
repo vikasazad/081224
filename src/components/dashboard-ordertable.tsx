@@ -200,13 +200,17 @@ function processData(data: any) {
 
   // Format start and end times in HR:MIN DD:MM format
   rows.forEach((row: any) => {
-    if (row.startTime) {
+    // Format startTime if it's a valid date
+    if (row.startTime && !isNaN(new Date(row.startTime).getTime())) {
       row.startTime = format(new Date(row.startTime), "HH:mm (d MMM)");
     }
-    if (row.endTime) {
+
+    // Format endTime if it's a valid date
+    if (row.endTime && !isNaN(new Date(row.endTime).getTime())) {
       row.endTime = format(new Date(row.endTime), "HH:mm (d MMM)");
     }
   });
+
   console.log("ROWS", rows);
   return rows;
 }
