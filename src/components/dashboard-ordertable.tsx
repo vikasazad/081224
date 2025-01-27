@@ -72,8 +72,8 @@ function processData(data: any) {
 
   if (data.hotel?.rooms) {
     data.hotel?.rooms.forEach((table: any) => {
-      if (table.diningDetails.status !== "available") {
-        table.diningDetails.orders.forEach((item: any) => {
+      if (table?.diningDetails?.status !== "available") {
+        table?.diningDetails?.orders?.forEach((item: any) => {
           console.log("HOTEKLLLLL", item);
           rows.push(
             createData(
