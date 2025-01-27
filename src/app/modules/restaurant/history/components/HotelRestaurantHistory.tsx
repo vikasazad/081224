@@ -154,15 +154,19 @@ const HotelRestaurantHistory = ({ data }: any) => {
             <Badge className="ml-2">Table {data.table}</Badge>
           </CardTitle>
         </CardHeader>
-        {data.data.length > 0 &&
+        {data?.data?.length > 0 &&
           data.data
-            .filter((table: any) => table.diningDetails.location === data.table)
+            .filter(
+              (table: any) => table?.diningDetails?.location === data?.table
+            )
             .map((item: any, i: number) => (
               <CardContent className="p-6" key={i}>
                 <div className="border rounded-lg">
                   <button
                     onClick={() =>
-                      toggleDataExpansion(item.diningDetails.orders[0].orderId)
+                      toggleDataExpansion(
+                        item?.diningDetails?.orders[0].orderId
+                      )
                     }
                     className="w-full hover:bg-gray-50 p-4 rounded-lg flex items-center justify-between transition-colors"
                   >

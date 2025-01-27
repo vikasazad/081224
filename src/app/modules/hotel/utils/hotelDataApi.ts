@@ -117,6 +117,7 @@ export async function saveRoomInfo(roomData: any, roomType: string) {
         },
       };
     });
+    console.log("ROOMMMMMMMMMMM", room);
     await updateDoc(docRef, {
       [`rooms.${roomType}`]: roomData, // Fixed dynamic field
     });

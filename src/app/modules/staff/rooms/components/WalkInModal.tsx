@@ -176,7 +176,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
         inclusions: room.inclusions,
         checkIn: guestDetails.checkIn.toISOString(),
         checkOut: guestDetails.checkOut.toISOString(),
-        nights,
+        nights: nights,
         paymentMode: Object.keys(guestDetails.paymentMode)
           .filter((mode) => guestDetails.paymentMode[mode])
           .join(", "),
