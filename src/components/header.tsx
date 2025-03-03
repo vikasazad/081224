@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,7 @@ const baseNavItems = [
   { href: "/restaurant", label: "Restaurant" },
   { href: "/request", label: "Requests" },
   { href: "/account", label: "Account" },
+  { href: "/inventory", label: "Inventory" },
 ];
 
 const staffNavItems = [

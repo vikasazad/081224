@@ -397,7 +397,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
         setOfflineRoom(updatedRoomData[index]);
         updateOrdersForAttendant(assignedAttendant.name, newOrderId);
       }
-    } else if (items[0].name) {
+    } else if (items[0].issueSubtype) {
       // Issue item
       const assignedAttendant: any =
         assignAttendantSequentially(availableAttendant);

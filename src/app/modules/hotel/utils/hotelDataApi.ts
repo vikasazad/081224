@@ -94,42 +94,42 @@ export async function saveRoomInfo(roomData: any, roomType: string) {
 
   try {
     const docRef = doc(db, user, "hotel");
-    const room = roomData.roomNo.map((data: any) => {
-      return {
-        roomNo: data,
-        status: "available",
-        roomType: roomType,
-        price: roomData.price,
-        images: roomData.images,
-        inclusions: roomData.amenities,
-        cleaning: {
-          lastCleaned: "",
-          cleanedBy: "",
-          startTime: "",
-          endTime: "",
-        },
-        maintenance: {
-          issue: "",
-          description: "",
-          startTime: "",
-          endTime: "",
-          fixedBy: "",
-        },
-      };
-    });
-    console.log("ROOMMMMMMMMMMM", room);
+    const rooms = roomData.roomNo.map((data: any) => ({
+      roomNo: data,
+      status: "available",
+      roomType: roomType,
+      price: roomData.price,
+      images: roomData.images[0],
+      inclusions: roomData.amenities,
+      cleaning: {
+        lastCleaned: "",
+        cleanedBy: "",
+        startTime: "",
+        endTime: "",
+      },
+      maintenance: {
+        issue: "",
+        description: "",
+        startTime: "",
+        endTime: "",
+        fixedBy: "",
+      },
+    }));
+
     await updateDoc(docRef, {
-      [`rooms.${roomType}`]: roomData, // Fixed dynamic field
+      [`live.roomsData.roomDetail.${roomType}`]: rooms, //  Firestore allows an array of objects here
     });
+
+    // First update rooms data
     await updateDoc(docRef, {
-      [`live.roomsData.roomDetail.${roomType}`]: room, // Fixed dynamic field
+      [`rooms.${roomType}`]: roomData,
     });
-  } catch {
-    // console.error("ERROR setting offline data:", error);
-    return {
-      success: false,
-      error: "Failed to update table information",
-    };
+
+    // Return success response
+    // return room;
+  } catch (error) {
+    console.error("Error saving room info:", error);
+    return false;
   }
 }
 

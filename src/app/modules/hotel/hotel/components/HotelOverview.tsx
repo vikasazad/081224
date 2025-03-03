@@ -248,7 +248,8 @@ const HotelOverview = ({ data }: { data: any }) => {
         images: allImages,
       };
 
-      saveRoomInfo(formData, categoryName);
+      const res = await saveRoomInfo(formData, categoryName);
+      console.log("RES", res);
 
       toast.success("Form submitted successfully", {
         description: "All data has been validated and uploaded",
