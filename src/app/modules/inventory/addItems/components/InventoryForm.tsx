@@ -48,17 +48,29 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SupplierForm } from "./SupplierForm";
+import { SkuAddDialog } from "./sku-add-dialog";
 
 const formSchema = z.object({
   sku: z.string().min(1, { message: "SKU is required" }),
   name: z.string().min(1, { message: "Name is required" }),
   description: z.string().optional(),
   category: z.string().min(1, { message: "Category is required" }),
-  quantity: z.number().min(0, { message: "Quantity must be 0 or greater" }),
-  unitPrice: z.number().min(0, { message: "Unit price must be 0 or greater" }),
+  quantity: z
+    .string()
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Quantity must be a valid number greater than or equal to 0",
+    }),
+  unitPrice: z
+    .string()
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Unit price must be a valid number greater than or equal to 0",
+    }),
   reorderLevel: z
-    .number()
-    .min(0, { message: "Reorder level must be 0 or greater" }),
+    .string()
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message:
+        "Reorder level must be a valid number greater than or equal to 0",
+    }),
   supplier: z.string().min(1, { message: "Supplier is required" }),
   supplierGst: z.string().min(1, { message: "Supplier GST is required" }),
   quantityUnit: z.string().min(1, { message: "Quantity unit is required" }),
@@ -70,22 +82,11 @@ const formSchema = z.object({
   amount: z.number().min(0, { message: "Amount must be 0 or greater" }),
 });
 
-const skus = [
-  { value: "SKU001", label: "SKU001: Item 1" },
-  { value: "SKU002", label: "SKU002: Item 2" },
-  { value: "SKU003", label: "SKU003: Item 3" },
-];
-
-const suppliers = [
-  { value: "supplier1", label: "Supplier 1", gstNumbers: ["GST001", "GST002"] },
-  { value: "supplier2", label: "Supplier 2", gstNumbers: ["GST003", "GST004"] },
-  { value: "supplier3", label: "Supplier 3", gstNumbers: ["GST005", "GST006"] },
-];
-
 const quantityUnits = [
   { value: "units", label: "Units" },
   { value: "kg", label: "Kilograms" },
   { value: "g", label: "Grams" },
+  { value: "dzn", label: "Dozens" },
   { value: "pair", label: "Pair" },
 ];
 
@@ -95,18 +96,16 @@ const paymentModes = [
   { value: "bank", label: "Bank Transfer" },
 ];
 
-const categories = [
-  { value: "electronics", label: "Electronics" },
-  { value: "clothing", label: "Clothing" },
-  { value: "food", label: "Food & Beverages" },
-  { value: "furniture", label: "Furniture" },
-  { value: "stationery", label: "Stationery" },
-  { value: "tools", label: "Tools & Equipment" },
-];
-
-export function InventoryForm() {
+export function InventoryForm({
+  data,
+  session,
+  onSubmit: onSubmitProp,
+  newSku,
+}: any) {
+  // console.log("DATA", data);
   const [supplierGstOptions, setSupplierGstOptions] = useState<string[]>([]);
   const [isAddingSupplier, setIsAddingSupplier] = useState(false);
+  const [isAddingSku, setIsAddingSku] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -115,9 +114,9 @@ export function InventoryForm() {
       name: "",
       description: "",
       category: "",
-      quantity: 0,
-      unitPrice: 0,
-      reorderLevel: 0,
+      quantity: "",
+      unitPrice: "",
+      reorderLevel: "",
       supplier: "",
       supplierGst: "",
       quantityUnit: "",
@@ -127,21 +126,22 @@ export function InventoryForm() {
       amount: 0,
     },
   });
-
   const quantity = form.watch("quantity");
   const unitPrice = form.watch("unitPrice");
   const selectedSupplier = form.watch("supplier");
 
   useEffect(() => {
-    const amount = quantity * unitPrice;
+    const amount = Number(quantity) * Number(unitPrice);
     form.setValue("amount", amount);
   }, [quantity, unitPrice, form]);
 
   useEffect(() => {
-    const supplier = suppliers.find((s) => s.value === selectedSupplier);
+    const supplier = data?.suppliers.find(
+      (s: any) => s.name === selectedSupplier
+    );
     if (supplier) {
-      setSupplierGstOptions(supplier.gstNumbers);
-      form.setValue("supplierGst", supplier.gstNumbers[0] || "");
+      setSupplierGstOptions(supplier.gstNumber);
+      form.setValue("supplierGst", supplier?.gstNumber[0] || "");
     } else {
       setSupplierGstOptions([]);
       form.setValue("supplierGst", "");
@@ -149,21 +149,65 @@ export function InventoryForm() {
   }, [selectedSupplier, form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    // Format the date to be more readable
+    const formattedValues = {
+      name: values.name,
+      sku: values.sku,
+      description: values.description,
+      category: values.category,
+      quantity: values.quantity,
+      quantityUnit: values.quantityUnit,
+      supplier: values.supplier,
+      supplierGst: values.supplierGst,
+      batchNo: values.batchNo,
+      paymentMode: values.paymentMode,
+      amount: values.amount,
+      unitPrice: values.unitPrice,
+      status:
+        Number(values.quantity) === 0
+          ? "Out of Stock"
+          : Number(values.quantity) <= Number(values.reorderLevel)
+          ? "Low Stock"
+          : "In Stock",
+      reorderLevel: values.reorderLevel,
+      updatedBy: session?.user?.role || "undefined",
+      date: values.date.toString(), // Format date as YYYY-MM-DD
+    };
+
+    // Call the parent component's onSubmit handler
+    onSubmitProp(formattedValues);
   }
 
   function handleAddSupplier(supplierData: any) {
     // Here you would typically send this data to your backend
     // and get a response with the new supplier's ID
-    const newSupplierId = `supplier${suppliers.length + 1}`;
+    const newSupplierId = `Supplier${data?.suppliers.length + 1}`;
     const newSupplier = {
       value: newSupplierId,
       label: supplierData.name,
-      gstNumbers: supplierData.gstNumbers,
+      gstNumbers: supplierData.gstNumber,
     };
-    suppliers.push(newSupplier);
+    data?.suppliers.push(newSupplier);
     form.setValue("supplier", newSupplierId);
     setIsAddingSupplier(false);
+  }
+
+  function handleAddSku(skuData: { sku: string; itemName: string }) {
+    const newSkuItem = {
+      value: skuData.sku,
+      label: skuData.itemName,
+    };
+    data.sku.push(newSkuItem);
+    form.setValue("sku", skuData.sku);
+    newSku({
+      value: skuData.sku,
+      label: skuData.itemName,
+    });
+    // Add console log for new SKU
+    console.log("New SKU created in Inventory Form:", {
+      value: skuData.sku,
+      label: skuData.itemName,
+    });
   }
 
   return (
@@ -192,8 +236,9 @@ export function InventoryForm() {
                           )}
                         >
                           {field.value
-                            ? skus.find((sku) => sku.value === field.value)
-                                ?.label
+                            ? data?.sku.find(
+                                (sku: any) => sku.value === field.value
+                              )?.label
                             : "Select SKU"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -205,9 +250,9 @@ export function InventoryForm() {
                         <CommandList>
                           <CommandEmpty>No SKU found.</CommandEmpty>
                           <CommandGroup>
-                            {skus.map((sku) => (
+                            {data?.sku.map((sku: any) => (
                               <CommandItem
-                                value={sku.label}
+                                value={sku.value}
                                 key={sku.value}
                                 onSelect={() => {
                                   form.setValue("sku", sku.value);
@@ -221,9 +266,17 @@ export function InventoryForm() {
                                       : "opacity-0"
                                   )}
                                 />
-                                {sku.label}
+                                {`${sku.value}: ${sku.label}`}
                               </CommandItem>
                             ))}
+                            <CommandItem
+                              value="add-new"
+                              onSelect={() => setIsAddingSku(true)}
+                            >
+                              <span className="text-blue-500">
+                                + Add new SKU
+                              </span>
+                            </CommandItem>
                           </CommandGroup>
                         </CommandList>
                       </Command>
@@ -251,8 +304,9 @@ export function InventoryForm() {
                           )}
                         >
                           {field.value
-                            ? categories.find((category) => category.value === field.value)
-                                ?.label
+                            ? data?.categories.find(
+                                (category: any) => category.name === field.value
+                              )?.name
                             : "Select category"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -264,23 +318,23 @@ export function InventoryForm() {
                         <CommandList>
                           <CommandEmpty>No category found.</CommandEmpty>
                           <CommandGroup>
-                            {categories.map((category) => (
+                            {data?.categories.map((category: any) => (
                               <CommandItem
-                                value={category.label}
-                                key={category.value}
+                                value={category.name}
+                                key={category.name}
                                 onSelect={() => {
-                                  form.setValue("category", category.value);
+                                  form.setValue("category", category.name);
                                 }}
                               >
                                 <CheckIcon
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    category.value === field.value
+                                    category.name === field.value
                                       ? "opacity-100"
                                       : "opacity-0"
                                   )}
                                 />
-                                {category.label}
+                                {category.name}
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -326,9 +380,14 @@ export function InventoryForm() {
                   <FormLabel>Quantity</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
+                      placeholder="Item quantity"
                       {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                          field.onChange(value);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -343,9 +402,14 @@ export function InventoryForm() {
                   <FormLabel>Unit Price</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
+                      placeholder="Item unit price"
                       {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                          field.onChange(value);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -360,9 +424,14 @@ export function InventoryForm() {
                   <FormLabel>Reorder Level</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
+                      placeholder="Item reorder level"
                       {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                          field.onChange(value);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -391,9 +460,9 @@ export function InventoryForm() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier.value} value={supplier.value}>
-                          {supplier.label}
+                      {data?.suppliers.map((supplier: any) => (
+                        <SelectItem key={supplier.name} value={supplier.name}>
+                          {supplier.name}
                         </SelectItem>
                       ))}
                       <SelectItem value="add">Add Supplier</SelectItem>
@@ -481,7 +550,7 @@ export function InventoryForm() {
                 <FormItem>
                   <FormLabel>Batch No</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="Item batch number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -577,6 +646,12 @@ export function InventoryForm() {
           </form>
         </Form>
       </CardContent>
+      <SkuAddDialog
+        isOpen={isAddingSku}
+        onClose={() => setIsAddingSku(false)}
+        onSave={handleAddSku}
+        lastSku={data?.sku[data.sku.length - 1]?.value || "SKU000"}
+      />
     </Card>
   );
 }

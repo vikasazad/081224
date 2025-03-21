@@ -1,11 +1,10 @@
 export interface InventoryItem {
-  id: number;
   name: string;
   sku: string;
   category: string;
-  currentStock: number;
+  quantity: string;
   status: "In Stock" | "Low Stock" | "Out of Stock";
-  reorderLevel: number;
+  reorderLevel: string;
   updatedBy: string;
   lastUpdated: string;
   quantityType: string;
@@ -18,13 +17,12 @@ export interface EditInventoryItem
   name: string;
   sku: string;
   category: string;
-  currentStock: number;
-  reorderLevel: number;
+  quantity: string;
+  reorderLevel: string;
   lastUpdated: string;
 }
 
 export interface Category {
-  id: number;
   name: string;
   description: string;
   updatedBy: string;

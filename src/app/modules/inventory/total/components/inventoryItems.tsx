@@ -9,6 +9,7 @@ import {
   Search,
   Trash,
   Copy,
+  Rows3,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,11 +51,24 @@ import { EditItemDialog } from "@/app/modules/inventory/total/components/edit-it
 import { DeleteAlertDialog } from "@/app/modules/inventory/total/components/delete-alert-dialog";
 import { useRouter } from "next/navigation";
 import { InventoryForm } from "@/app/modules/inventory/addItems/components/InventoryForm";
+import { useSession } from "next-auth/react";
+import { SkuEditDialog } from "./sku-edit-dialog";
+import { format } from "date-fns";
+import {
+  addNewCategory,
+  addNewTransaction,
+  saveDeletedItem,
+  saveEditedItem,
+  saveInventoryItem,
+  saveNewSky,
+} from "../../utils/inventoryAPI";
 
-export default function InventoryItems() {
+export default function InventoryItems({ data }: any) {
+  // console.log("DATA", data);
   // State management
+  const { data: session } = useSession();
   const router = useRouter();
-  const [items, setItems] = useState<InventoryItem[]>(initialItems);
+  const [items, setItems] = useState<any>(data?.items.reverse());
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -62,17 +76,28 @@ export default function InventoryItems() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [updatedByFilter, setUpdatedByFilter] = useState("all");
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: "", description: "" });
   const [supplierFilter, setSupplierFilter] = useState("all");
+  const [isSkuDialogOpen, setIsSkuDialogOpen] = useState(false);
+  const [isNewSku, setIsNewSku] = useState<any>(null);
+  const [editingSku, setEditingSku] = useState<{
+    value: string;
+    label: string;
+  } | null>(null);
+  const [isSkuEditDialogOpen, setIsSkuEditDialogOpen] = useState(false);
+  const [categoryErrors, setCategoryErrors] = useState({
+    name: "",
+    description: "",
+  });
 
   // Filter and search logic
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
+    return items.filter((item: any) => {
       const matchesSearch =
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.sku.toLowerCase().includes(searchQuery.toLowerCase());
@@ -81,7 +106,8 @@ export default function InventoryItems() {
       const matchesStatus =
         statusFilter === "all" || item.status === statusFilter;
       const matchesUpdatedBy =
-        updatedByFilter === "all" || item.updatedBy === updatedByFilter;
+        updatedByFilter === "all" ||
+        item.updatedBy?.toLowerCase() === updatedByFilter.toLowerCase();
       const matchesSupplier =
         supplierFilter === "all" || item.supplier === supplierFilter;
 
@@ -119,71 +145,214 @@ export default function InventoryItems() {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    setItemToDelete(id);
+  const handleDelete = (itemName: string) => {
+    setItemToDelete(itemName);
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (itemToDelete) {
-      setItems(items.filter((item) => item.id !== itemToDelete));
-      setIsDeleteDialogOpen(false);
-      setItemToDelete(null);
+      if (itemToDelete.includes("Copy")) {
+        const deletedItems = items.filter(
+          (item: any) => item.name !== itemToDelete
+        );
+        setItems(deletedItems);
+      } else {
+        const deletedItems = items.filter(
+          (item: any) => item.name !== itemToDelete
+        );
+        await saveDeletedItem(deletedItems);
+        setItems(deletedItems);
+        setIsDeleteDialogOpen(false);
+        setItemToDelete(null);
+      }
     }
   };
 
-  const handleSaveItem = (formData: EditInventoryItem) => {
+  const handleSaveItem = async (
+    formData: EditInventoryItem,
+    transactionType: string | undefined,
+    previousQuantity: number
+  ) => {
     if (editingItem) {
-      // Update existing item
-      setItems(
-        items.map((item) =>
-          item.id === editingItem.id
+      try {
+        // Update existing item
+        const updatedItems = items.map((item: any) =>
+          item.name === editingItem.name
             ? {
                 ...item,
                 ...formData,
                 status:
-                  formData.currentStock === 0
+                  Number(formData.quantity) === 0
                     ? "Out of Stock"
-                    : formData.currentStock <= formData.reorderLevel
+                    : Number(formData.quantity) <= Number(formData.reorderLevel)
                     ? "Low Stock"
                     : "In Stock",
+                lastUpdated: new Date().toString(),
+                updatedBy: session?.user?.role || "undefined",
               }
             : item
-        )
-      );
-    } else {
-      // Add new item
-      const newItem: InventoryItem = {
-        id: Math.max(...items.map((item) => item.id)) + 1,
-        ...formData,
-        status:
-          formData.currentStock === 0
-            ? "Out of Stock"
-            : formData.currentStock <= formData.reorderLevel
-            ? "Low Stock"
-            : "In Stock",
-      };
-      setItems([...items, newItem]);
+        );
+
+        // Here you can handle the transactionType as needed
+        // console.log("ITEMS", formData);
+        // console.log("Transaction Type:", transactionType, previousQuantity);
+        const transactionItem = {
+          id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
+          name: formData.name,
+          sku: formData.sku,
+          category: formData.category,
+          previousQuantity: previousQuantity,
+          quantity: formData.quantity,
+          transactionType: transactionType,
+          dateTime: new Date().toString(),
+          supplierCustomer: formData.supplier,
+        };
+        // console.log("ASDFASDF", transactionItem);
+        // console.log("LDFS", updatedItems);
+        await saveEditedItem(updatedItems);
+        if (transactionType) await addNewTransaction(transactionItem);
+
+        if (isNewSku) {
+          await saveNewSky(isNewSku);
+          setIsNewSku(null);
+        }
+
+        setItems(updatedItems);
+        setIsEditDialogOpen(false);
+        setEditingItem(null);
+        router.refresh();
+      } catch (error) {
+        console.error("Error updating item:", error);
+      }
     }
   };
 
-  const handleDuplicate = (item: InventoryItem) => {
+  const handleDuplicate = async (item: InventoryItem) => {
     const newItem: InventoryItem = {
       ...item,
-      id: Math.max(...items.map((item) => item.id)) + 1,
       name: `${item.name} (Copy)`,
       sku: `${item.sku}-COPY`,
-      currentStock: 0,
+      quantity: "0",
       status: "Out of Stock",
-      lastUpdated: new Date().toISOString().replace("T", " ").substring(0, 16),
-      updatedBy: "system",
+      lastUpdated: new Date().toString(),
+      updatedBy: session?.user?.role || "undefined",
     };
 
     // Find the index of the original item and insert the duplicate right after it
-    const originalIndex = items.findIndex((i) => i.id === item.id);
+    const originalIndex = items.findIndex((i: any) => i.name === item.name);
     const newItems = [...items];
     newItems.splice(originalIndex + 1, 0, newItem);
-    setItems(newItems);
+    setItems(newItems.reverse());
+  };
+
+  const handleAddFormSubmit = async (formData: any) => {
+    // Add the new item to the beginning of the items array
+    try {
+      const transactionItem = {
+        id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
+        name: formData.name,
+        sku: formData.sku,
+        category: formData.category,
+        previousQuantity: 0,
+        quantity: formData.quantity,
+        transactionType: "Stock In",
+        dateTime: new Date().toString(),
+        supplierCustomer: formData.supplier,
+      };
+      console.log("transactionItem", transactionItem);
+      if (transactionItem) await addNewTransaction(transactionItem);
+      const result = await saveInventoryItem(formData);
+      if (isNewSku) {
+        await saveNewSky(isNewSku);
+        setIsNewSku(null);
+      }
+      console.log("Item saved successfully:", result);
+      // setOpen(false);
+    } catch (error) {
+      console.error("Error saving Item:", error);
+      // Handle error (show toast/notification)
+    }
+
+    // Close the dialog
+    setIsAddDialogOpen(false);
+  };
+
+  const handleSkuEdit = (sku: string) => {
+    const item = data?.sku.find((item: any) => item.value === sku);
+    if (item) {
+      setEditingSku(item);
+      setIsSkuEditDialogOpen(true);
+      setIsSkuDialogOpen(false);
+    }
+  };
+
+  const handleSkuDelete = (sku: string) => {
+    const item = data?.sku.find((item: any) => item.value === sku);
+    if (item) {
+      setItemToDelete(item.value);
+      setIsDeleteDialogOpen(true);
+      setIsSkuDialogOpen(false);
+    }
+  };
+
+  const handleSkuSave = (updatedItem: { value: string; label: string }) => {
+    // Update the SKU list
+    const updatedSkus = data?.sku.map((item: any) =>
+      item.value === editingSku?.value ? updatedItem : item
+    );
+
+    // Update the main items list
+    const updatedItems = items.map((item: any) => {
+      if (item.sku === editingSku?.value) {
+        return {
+          ...item,
+          sku: updatedItem.value,
+          name: updatedItem.label,
+        };
+      }
+      return item;
+    });
+
+    // Update the state
+    data.sku = updatedSkus;
+    setItems(updatedItems);
+    setIsSkuEditDialogOpen(false);
+    setIsSkuDialogOpen(true); // Reopen the SKU list dialog
+  };
+
+  const handleNewSku = (value: any) => {
+    if (value) {
+      setIsNewSku(value);
+      console.log("VALUE", value);
+    }
+  };
+
+  const handleAddCategory = async (data: any) => {
+    // Reset previous errors
+    setCategoryErrors({ name: "", description: "" });
+
+    // Validate fields
+    const errors = {
+      name: data.name.trim() === "" ? "Category name is required" : "",
+      description:
+        data.description.trim() === "" ? "Description is required" : "",
+    };
+
+    // Check if there are any errors
+    if (errors.name || errors.description) {
+      setCategoryErrors(errors);
+      return;
+    }
+
+    // Process valid form
+    await addNewCategory({
+      ...data,
+      updatedBy: session?.user?.role,
+      lastUpdated: new Date().toString(),
+    });
+    setIsCategoryDialogOpen(false);
+    setNewCategory({ name: "", description: "" });
   };
 
   return (
@@ -194,6 +363,10 @@ export default function InventoryItems() {
           <Button onClick={() => router.back()} className="mr-2">
             <MoveLeft className="w-4 h-4 mr-2" />
             Back
+          </Button>
+          <Button onClick={() => setIsSkuDialogOpen(true)} className="mr-2">
+            <Rows3 className="w-4 h-4 mr-2" />
+            View SKU
           </Button>
           <Button
             onClick={() => setIsCategoryDialogOpen(true)}
@@ -215,7 +388,7 @@ export default function InventoryItems() {
           <Input
             type="search"
             placeholder="Search items..."
-            className="pl-8 md:w-2/3 lg:w-1/3"
+            className="pl-8 md:w-2/3 lg:w-1/1"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -227,9 +400,11 @@ export default function InventoryItems() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="Electronics">Electronics</SelectItem>
-              <SelectItem value="Furniture">Furniture</SelectItem>
-              <SelectItem value="Supplies">Supplies</SelectItem>
+              {data?.categories.map((item: any, num: number) => (
+                <SelectItem value={item?.name} key={num}>
+                  {item?.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -262,13 +437,11 @@ export default function InventoryItems() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Suppliers</SelectItem>
-              <SelectItem value="TechSupplies Inc">TechSupplies Inc</SelectItem>
-              <SelectItem value="Global Electronics">
-                Global Electronics
-              </SelectItem>
-              <SelectItem value="Office Supplies Co">
-                Office Supplies Co
-              </SelectItem>
+              {data?.suppliers.map((item: any, num: number) => (
+                <SelectItem value={item?.name} key={num}>
+                  {item?.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -292,20 +465,22 @@ export default function InventoryItems() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedItems.map((item) => (
-              <TableRow key={item.id}>
+            {paginatedItems.map((item: any) => (
+              <TableRow key={item.sku}>
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>{item.sku}</TableCell>
                 <TableCell>{item.category}</TableCell>
-                <TableCell>{item.currentStock}</TableCell>
-                <TableCell>{item.quantityType}</TableCell>
+                <TableCell>{item.quantity}</TableCell>
+                <TableCell>{item.quantityUnit}</TableCell>
                 <TableCell>{item.supplier}</TableCell>
                 <TableCell>
                   <Badge>{item.status}</Badge>
                 </TableCell>
                 <TableCell>{item.reorderLevel}</TableCell>
                 <TableCell>{item.updatedBy}</TableCell>
-                <TableCell>{item.lastUpdated}</TableCell>
+                <TableCell>
+                  {format(new Date(item.date), "HH:mm (d MMM)")}
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -325,7 +500,7 @@ export default function InventoryItems() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => handleDelete(item.name)}
                       >
                         <Trash className="w-4 h-4 mr-2" />
                         Delete
@@ -388,17 +563,28 @@ export default function InventoryItems() {
 
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogTitle></DialogTitle>
-          <DialogDescription></DialogDescription>
-          <InventoryForm />
+          <DialogTitle>Add New Item</DialogTitle>
+          <DialogDescription>
+            Fill in the details for the new inventory item.
+          </DialogDescription>
+          <InventoryForm
+            data={data}
+            session={session}
+            onSubmit={handleAddFormSubmit}
+            newSku={handleNewSku}
+          />
         </DialogContent>
       </Dialog>
 
       <EditItemDialog
         item={editingItem}
         open={isEditDialogOpen}
+        sku={data?.sku}
+        suppliers={data?.suppliers}
+        categories={data?.categories}
         onOpenChange={setIsEditDialogOpen}
         onSave={handleSaveItem}
+        newSku={handleNewSku}
       />
 
       <DeleteAlertDialog
@@ -426,6 +612,11 @@ export default function InventoryItems() {
                   setNewCategory({ ...newCategory, name: e.target.value })
                 }
               />
+              {categoryErrors.name && (
+                <span className="text-sm text-destructive">
+                  {categoryErrors.name}
+                </span>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
@@ -439,14 +630,19 @@ export default function InventoryItems() {
                   })
                 }
               />
+              {categoryErrors.description && (
+                <span className="text-sm text-destructive">
+                  {categoryErrors.description}
+                </span>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button
               onClick={() => {
                 // Handle category addition here
-                setIsCategoryDialogOpen(false);
-                setNewCategory({ name: "", description: "" });
+
+                handleAddCategory(newCategory);
               }}
             >
               Add Category
@@ -454,74 +650,58 @@ export default function InventoryItems() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isSkuDialogOpen} onOpenChange={setIsSkuDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogTitle>SKU List</DialogTitle>
+          <DialogDescription></DialogDescription>
+          <div className="max-h-[60vh] overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>SKU</TableHead>
+                  <TableHead>Item Name</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.sku.map((item: any, num: number) => (
+                  <TableRow key={num}>
+                    <TableCell>{item.value}</TableCell>
+                    <TableCell>{item.label}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleSkuEdit(item.value)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          onClick={() => handleSkuDelete(item.value)}
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <SkuEditDialog
+        item={editingSku}
+        open={isSkuEditDialogOpen}
+        onOpenChange={setIsSkuEditDialogOpen}
+        onSave={handleSkuSave}
+      />
     </div>
   );
 }
-
-const initialItems: InventoryItem[] = [
-  {
-    id: 1,
-    name: "Widget A",
-    sku: "WDG-001",
-    category: "Electronics",
-    currentStock: 5,
-    quantityType: "units",
-    supplier: "TechSupplies Inc",
-    status: "Low Stock",
-    reorderLevel: 10,
-    updatedBy: "vishal",
-    lastUpdated: "2024-02-25 09:00 AM",
-  },
-  {
-    id: 2,
-    name: "Gadget B",
-    sku: "GDG-002",
-    category: "Electronics",
-    currentStock: 25,
-    quantityType: "Kg",
-    supplier: "Global Electronics",
-    status: "In Stock",
-    reorderLevel: 15,
-    updatedBy: "deepak",
-    lastUpdated: "2024-02-24 02:30 PM",
-  },
-  {
-    id: 3,
-    name: "Tool C",
-    sku: "TL-003",
-    category: "Supplies",
-    currentStock: 0,
-    quantityType: "units",
-    supplier: "Global Electronics",
-    status: "Out of Stock",
-    reorderLevel: 8,
-    updatedBy: "vikas",
-    lastUpdated: "2024-02-23 11:15 AM",
-  },
-  {
-    id: 4,
-    name: "Component D",
-    sku: "CMP-004",
-    category: "Electronics",
-    currentStock: 12,
-    quantityType: "units",
-    supplier: "Office Supplies Co",
-    status: "In Stock",
-    reorderLevel: 10,
-    updatedBy: "nishant",
-    lastUpdated: "2024-02-25 10:45 AM",
-  },
-  {
-    id: 5,
-    name: "Part E",
-    sku: "PRT-005",
-    category: "Supplies",
-    currentStock: 4,
-    quantityType: "Grams",
-    supplier: "TechSupplies Inc",
-    status: "Low Stock",
-    reorderLevel: 6,
-    updatedBy: "pathan",
-    lastUpdated: "2024-02-24 04:20 PM",
-  },
-];

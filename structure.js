@@ -3249,7 +3249,7 @@ const analytics = {
     categories: {
       executive: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -3266,7 +3266,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -3281,7 +3281,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -3296,7 +3296,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -3311,7 +3311,7 @@ const analytics = {
             totalEarnings: 66000,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -3326,7 +3326,7 @@ const analytics = {
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -3336,12 +3336,12 @@ const analytics = {
             avgPrice: 0,
             avgPriceOfServices: 0,
             totalBookings: 7,
-            totalEarnings: 63000,
+            totalEarnings: 6690,
             totalEarningsFromServices: 0,
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -3356,7 +3356,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -3373,7 +3373,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -3393,7 +3393,7 @@ const analytics = {
       },
       deluxe: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -3410,7 +3410,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -3425,7 +3425,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -3440,7 +3440,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -3455,7 +3455,7 @@ const analytics = {
             totalEarnings: 77000,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -3470,7 +3470,7 @@ const analytics = {
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -3485,14 +3485,14 @@ const analytics = {
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
             avgPriceOfRooms: 0,
             avgPriceOfMinibar: 0,
             totalEarningsFromServices: 0,
-            totalEarnings: 73000,
+            totalEarnings: 7690,
             totalServiceRequests: 0,
             totalEarningsFromMinibar: 0,
             totalBookings: 7,
@@ -3500,7 +3500,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -3517,7 +3517,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -3537,7 +3537,7 @@ const analytics = {
       },
       suite: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -3554,7 +3554,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -3569,7 +3569,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -3584,7 +3584,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -3596,10 +3596,10 @@ const analytics = {
             totalIssues: 0,
             totalEarningsFromMinibar: 0,
             avgPriceOfRooms: 0,
-            totalEarnings: 133000,
+            totalEarnings: 13690,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -3610,11 +3610,11 @@ const analytics = {
             avgPriceOfRooms: 0,
             totalBookings: 7,
             avgPriceOfFood: 0,
-            totalEarnings: 130000,
+            totalEarnings: 16900,
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -3629,7 +3629,7 @@ const analytics = {
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -3644,7 +3644,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -3661,7 +3661,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -3681,7 +3681,7 @@ const analytics = {
       },
       "super suite": {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -3698,7 +3698,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -3713,7 +3713,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -3728,7 +3728,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -3743,7 +3743,7 @@ const analytics = {
             totalEarnings: 62000,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -3758,7 +3758,7 @@ const analytics = {
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -3773,7 +3773,7 @@ const analytics = {
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -3788,7 +3788,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -3805,7 +3805,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -3829,7 +3829,7 @@ const analytics = {
     categories: {
       "in-house restaurant": {
         weeks: {
-          38: {
+          11: {
             totalEarnings: 0,
             avgDiningDuration: 0,
             totalBookings: 0,
@@ -3847,7 +3847,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPrice: 0,
             totalIssues: 0,
             avgPricPerOrder: 0,
@@ -3863,7 +3863,7 @@ const analytics = {
             totalEarnings: 41000,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             totalBookings: 10,
             totalFoodOrders: 0,
             totalOrdersOnline: 0,
@@ -3879,7 +3879,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             avgDiningDuration: 0,
             totalBookings: 10,
             avgPrice: 0,
@@ -3895,7 +3895,7 @@ const analytics = {
             avgPriceForOrdersDelivery: 0,
             avgPriceForOrdersTakeaway: 0,
           },
-          298: {
+          67: {
             avgPrice: 0,
             totalIssues: 0,
             avgPricPerOrder: 0,
@@ -3911,7 +3911,7 @@ const analytics = {
             avgPriceForOrdersDelivery: 0,
             avgPriceForOrdersTakeaway: 0,
           },
-          297: {
+          66: {
             avgDiningDuration: 0,
             totalFoodOrders: 0,
             totalOrdersOnline: 0,
@@ -3923,11 +3923,11 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
             totalBookings: 10,
-            totalEarnings: 33000,
+            totalEarnings: 3690,
             avgPriceOfFood: 0,
             avgPricPerOrder: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgDiningDuration: 0,
             avgPricPerOrder: 0,
@@ -3943,7 +3943,7 @@ const analytics = {
             avgPriceForOrdersTakeaway: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPricPerOrder: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -3957,11 +3957,11 @@ const analytics = {
             avgPriceOfFood: 0,
             totalBookings: 10,
             avgDiningDuration: 0,
-            totalEarnings: 30000,
+            totalEarnings: 6900,
           },
         },
         months: {
-          9: {
+          3: {
             totalIssues: 0,
             avgPrice: 0,
             totalEarnings: 0,
@@ -3982,7 +3982,7 @@ const analytics = {
       },
       restaurant: {
         weeks: {
-          38: {
+          11: {
             totalEarnings: 0,
             avgDiningDuration: 0,
             totalBookings: 10,
@@ -4000,7 +4000,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPrice: 0,
             totalIssues: 0,
             avgPricPerOrder: 0,
@@ -4016,7 +4016,7 @@ const analytics = {
             totalEarnings: 51000,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             totalBookings: 10,
             totalFoodOrders: 0,
             totalOrdersOnline: 0,
@@ -4032,7 +4032,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             avgDiningDuration: 0,
             totalBookings: 10,
             avgPrice: 0,
@@ -4048,13 +4048,13 @@ const analytics = {
             avgPriceForOrdersDelivery: 0,
             avgPriceForOrdersTakeaway: 0,
           },
-          298: {
+          67: {
             avgPrice: 0,
             totalIssues: 0,
             avgPricPerOrder: 0,
             totalBookings: 10,
             avgPriceOfFood: 0,
-            totalEarnings: 43000,
+            totalEarnings: 4690,
             avgDiningDuration: 0,
             totalFoodOrders: 0,
             totalOrdersOnline: 0,
@@ -4064,7 +4064,7 @@ const analytics = {
             avgPriceForOrdersDelivery: 0,
             avgPriceForOrdersTakeaway: 0,
           },
-          297: {
+          66: {
             avgDiningDuration: 0,
             totalFoodOrders: 0,
             totalOrdersOnline: 0,
@@ -4080,7 +4080,7 @@ const analytics = {
             avgPriceOfFood: 0,
             avgPricPerOrder: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgDiningDuration: 0,
             avgPricPerOrder: 0,
@@ -4096,7 +4096,7 @@ const analytics = {
             avgPriceForOrdersTakeaway: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPricPerOrder: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -4114,7 +4114,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             totalIssues: 0,
             avgPrice: 0,
             totalEarnings: 0,
@@ -4139,7 +4139,7 @@ const analytics = {
     categories: {
       spa: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -4156,7 +4156,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -4171,7 +4171,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -4186,7 +4186,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4201,7 +4201,7 @@ const analytics = {
             totalEarnings: 27000,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -4216,7 +4216,7 @@ const analytics = {
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -4226,12 +4226,12 @@ const analytics = {
             avgPrice: 0,
             avgPriceOfServices: 0,
             totalBookings: 5,
-            totalEarnings: 23000,
+            totalEarnings: 2690,
             totalEarningsFromServices: 0,
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4246,7 +4246,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -4263,7 +4263,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -4283,7 +4283,7 @@ const analytics = {
       },
       gym: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -4300,7 +4300,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -4311,11 +4311,11 @@ const analytics = {
             totalBookings: 5,
             totalFoodOrders: 0,
             avgStayDuration: 0,
-            totalEarnings: 29500,
+            totalEarnings: 6400,
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -4330,7 +4330,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4345,7 +4345,7 @@ const analytics = {
             totalEarnings: 22000,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -4360,7 +4360,7 @@ const analytics = {
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -4375,7 +4375,7 @@ const analytics = {
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4390,7 +4390,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -4407,7 +4407,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -4427,7 +4427,7 @@ const analytics = {
       },
       laundry: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -4444,7 +4444,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -4459,7 +4459,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -4474,7 +4474,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4489,7 +4489,7 @@ const analytics = {
             totalEarnings: 17000,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -4504,7 +4504,7 @@ const analytics = {
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -4514,12 +4514,12 @@ const analytics = {
             avgPrice: 0,
             avgPriceOfServices: 0,
             totalBookings: 5,
-            totalEarnings: 13000,
+            totalEarnings: 1690,
             totalEarningsFromServices: 0,
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4534,7 +4534,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -4551,7 +4551,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -4571,7 +4571,7 @@ const analytics = {
       },
       pool: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -4588,7 +4588,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -4603,7 +4603,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -4618,7 +4618,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4633,7 +4633,7 @@ const analytics = {
             totalEarnings: 32000,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -4644,11 +4644,11 @@ const analytics = {
             avgPriceOfRooms: 0,
             totalBookings: 5,
             avgPriceOfFood: 0,
-            totalEarnings: 30000,
+            totalEarnings: 6900,
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -4658,19 +4658,19 @@ const analytics = {
             avgPrice: 0,
             avgPriceOfServices: 0,
             totalBookings: 5,
-            totalEarnings: 29900,
+            totalEarnings: 6800,
             totalEarningsFromServices: 0,
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
             avgPriceOfRooms: 0,
             avgPriceOfMinibar: 0,
             totalEarningsFromServices: 0,
-            totalEarnings: 29500,
+            totalEarnings: 6400,
             totalServiceRequests: 0,
             totalEarningsFromMinibar: 0,
             totalBookings: 5,
@@ -4678,7 +4678,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -4695,7 +4695,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -4719,7 +4719,7 @@ const analytics = {
     categories: {
       rooms: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -4736,7 +4736,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -4751,7 +4751,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -4766,7 +4766,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4781,7 +4781,7 @@ const analytics = {
             totalEarnings: 62,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -4796,7 +4796,7 @@ const analytics = {
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -4811,7 +4811,7 @@ const analytics = {
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4826,7 +4826,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -4843,7 +4843,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -4863,7 +4863,7 @@ const analytics = {
       },
       Food: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -4880,7 +4880,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -4895,7 +4895,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -4910,7 +4910,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4925,7 +4925,7 @@ const analytics = {
             totalEarnings: 13,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -4940,7 +4940,7 @@ const analytics = {
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -4955,7 +4955,7 @@ const analytics = {
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -4970,7 +4970,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -4987,7 +4987,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -5007,7 +5007,7 @@ const analytics = {
       },
       services: {
         weeks: {
-          38: {
+          11: {
             avgPriceOfServices: 0,
             totalEarnings: 0,
             avgStayDuration: 0,
@@ -5024,7 +5024,7 @@ const analytics = {
           },
         },
         days: {
-          301: {
+          70: {
             avgPriceOfServices: 0,
             avgPrice: 0,
             totalEarningsFromServices: 0,
@@ -5039,7 +5039,7 @@ const analytics = {
             totalServiceRequests: 0,
             avgPriceOfFood: 0,
           },
-          300: {
+          69: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPriceOfServices: 0,
@@ -5054,7 +5054,7 @@ const analytics = {
             totalIssues: 0,
             avgPrice: 0,
           },
-          299: {
+          68: {
             totalEarningsFromServices: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -5069,7 +5069,7 @@ const analytics = {
             totalEarnings: 7,
             totalFoodOrders: 0,
           },
-          298: {
+          67: {
             avgPriceOfMinibar: 0,
             totalServiceRequests: 0,
             avgPrice: 0,
@@ -5084,7 +5084,7 @@ const analytics = {
             avgStayDuration: 0,
             totalFoodOrders: 0,
           },
-          297: {
+          66: {
             totalServiceRequests: 0,
             avgPriceOfMinibar: 0,
             avgStayDuration: 0,
@@ -5099,7 +5099,7 @@ const analytics = {
             avgPriceOfFood: 0,
             avgPriceOfRooms: 0,
           },
-          296: {
+          65: {
             avgPriceOfFood: 0,
             avgStayDuration: 0,
             avgPriceOfServices: 0,
@@ -5114,7 +5114,7 @@ const analytics = {
             totalFoodOrders: 0,
             avgPrice: 0,
           },
-          295: {
+          64: {
             avgPriceOfRooms: 0,
             totalIssues: 0,
             totalFoodOrders: 0,
@@ -5131,7 +5131,7 @@ const analytics = {
           },
         },
         months: {
-          9: {
+          3: {
             avgPriceOfServices: 0,
             avgPriceOfMinibar: 0,
             totalIssues: 0,
@@ -5163,6 +5163,7 @@ const inventory = {
         category: "Tools",
         quantity: 5,
         unitPrice: 10.5,
+        updatedBy: "Vishal",
         reorderLevel: 15,
         supplier: "Supplier X",
         supplierGst: "GST123456",
@@ -5171,6 +5172,7 @@ const inventory = {
         date: "2024-02-28",
         paymentMode: "Credit Card",
         amount: 52.5,
+        status: "Low Stock",
       },
       {
         sku: "ITEM002",
@@ -5179,6 +5181,7 @@ const inventory = {
         category: "Electronics",
         quantity: 3,
         unitPrice: 25.0,
+        updatedBy: "Vishal",
         reorderLevel: 10,
         supplier: "Supplier Y",
         supplierGst: "GST654321",
@@ -5187,6 +5190,7 @@ const inventory = {
         date: "2024-02-27",
         paymentMode: "Bank Transfer",
         amount: 75.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM003",
@@ -5195,6 +5199,7 @@ const inventory = {
         category: "Tools",
         quantity: 12,
         unitPrice: 15.0,
+        updatedBy: "Vishal",
         reorderLevel: 8,
         supplier: "Supplier X",
         supplierGst: "GST123456",
@@ -5203,6 +5208,7 @@ const inventory = {
         date: "2024-02-26",
         paymentMode: "Cash",
         amount: 180.0,
+        status: "In Stock",
       },
       {
         sku: "ITEM004",
@@ -5211,6 +5217,7 @@ const inventory = {
         category: "Tools",
         quantity: 2,
         unitPrice: 20.0,
+        updatedBy: "Vishal",
         reorderLevel: 5,
         supplier: "Supplier Z",
         supplierGst: "GST789123",
@@ -5219,6 +5226,7 @@ const inventory = {
         date: "2024-02-25",
         paymentMode: "UPI",
         amount: 40.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM005",
@@ -5227,6 +5235,7 @@ const inventory = {
         category: "Furniture",
         quantity: 1,
         unitPrice: 150.0,
+        updatedBy: "Deepak",
         reorderLevel: 3,
         supplier: "Supplier A",
         supplierGst: "GST159753",
@@ -5235,6 +5244,7 @@ const inventory = {
         date: "2024-02-24",
         paymentMode: "Credit Card",
         amount: 150.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM006",
@@ -5243,6 +5253,7 @@ const inventory = {
         category: "Electronics",
         quantity: 0,
         unitPrice: 30.0,
+        updatedBy: "Deepak",
         reorderLevel: 5,
         supplier: "Supplier Y",
         supplierGst: "GST654321",
@@ -5251,6 +5262,7 @@ const inventory = {
         date: "2024-02-23",
         paymentMode: "Debit Card",
         amount: 0.0,
+        status: "Out of Stock",
       },
       {
         sku: "ITEM007",
@@ -5259,6 +5271,7 @@ const inventory = {
         category: "Office Supplies",
         quantity: 25,
         unitPrice: 8.5,
+        updatedBy: "Deepak",
         reorderLevel: 20,
         supplier: "Supplier A",
         supplierGst: "GST159753",
@@ -5267,6 +5280,7 @@ const inventory = {
         date: "2024-02-22",
         paymentMode: "Cash",
         amount: 212.5,
+        status: "In Stock",
       },
       {
         sku: "ITEM008",
@@ -5275,6 +5289,7 @@ const inventory = {
         category: "Office Supplies",
         quantity: 10,
         unitPrice: 5.0,
+        updatedBy: "Deepak",
         reorderLevel: 15,
         supplier: "Supplier A",
         supplierGst: "GST159753",
@@ -5283,6 +5298,7 @@ const inventory = {
         date: "2024-02-21",
         paymentMode: "Bank Transfer",
         amount: 50.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM009",
@@ -5291,6 +5307,7 @@ const inventory = {
         category: "Electronics",
         quantity: 7,
         unitPrice: 40.0,
+        updatedBy: "Deepak",
         reorderLevel: 5,
         supplier: "Supplier Z",
         supplierGst: "GST789123",
@@ -5299,6 +5316,7 @@ const inventory = {
         date: "2024-02-20",
         paymentMode: "Credit Card",
         amount: 280.0,
+        status: "In Stock",
       },
       {
         sku: "ITEM010",
@@ -5307,6 +5325,7 @@ const inventory = {
         category: "Electronics",
         quantity: 2,
         unitPrice: 60.0,
+        updatedBy: "Vikas",
         reorderLevel: 4,
         supplier: "Supplier Y",
         supplierGst: "GST654321",
@@ -5315,6 +5334,7 @@ const inventory = {
         date: "2024-02-19",
         paymentMode: "UPI",
         amount: 120.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM011",
@@ -5323,6 +5343,7 @@ const inventory = {
         category: "Electronics",
         quantity: 6,
         unitPrice: 25.0,
+        updatedBy: "Vikas",
         reorderLevel: 10,
         supplier: "Supplier Y",
         supplierGst: "GST654321",
@@ -5331,6 +5352,7 @@ const inventory = {
         date: "2024-02-18",
         paymentMode: "Credit Card",
         amount: 150.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM012",
@@ -5339,6 +5361,7 @@ const inventory = {
         category: "Office Supplies",
         quantity: 15,
         unitPrice: 3.0,
+        updatedBy: "Vikas",
         reorderLevel: 10,
         supplier: "Supplier A",
         supplierGst: "GST159753",
@@ -5347,6 +5370,7 @@ const inventory = {
         date: "2024-02-17",
         paymentMode: "UPI",
         amount: 45.0,
+        status: "In Stock",
       },
       {
         sku: "ITEM013",
@@ -5355,6 +5379,7 @@ const inventory = {
         category: "Electronics",
         quantity: 4,
         unitPrice: 15.0,
+        updatedBy: "Vikas",
         reorderLevel: 5,
         supplier: "Supplier Z",
         supplierGst: "GST789123",
@@ -5363,6 +5388,7 @@ const inventory = {
         date: "2024-02-16",
         paymentMode: "Bank Transfer",
         amount: 60.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM014",
@@ -5371,6 +5397,7 @@ const inventory = {
         category: "Furniture",
         quantity: 9,
         unitPrice: 12.0,
+        updatedBy: "Nishant",
         reorderLevel: 10,
         supplier: "Supplier A",
         supplierGst: "GST159753",
@@ -5379,6 +5406,7 @@ const inventory = {
         date: "2024-02-15",
         paymentMode: "Cash",
         amount: 108.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM015",
@@ -5387,6 +5415,7 @@ const inventory = {
         category: "Tools",
         quantity: 2,
         unitPrice: 8.0,
+        updatedBy: "Nishant",
         reorderLevel: 5,
         supplier: "Supplier X",
         supplierGst: "GST123456",
@@ -5395,6 +5424,7 @@ const inventory = {
         date: "2024-02-14",
         paymentMode: "Debit Card",
         amount: 16.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM016",
@@ -5403,6 +5433,7 @@ const inventory = {
         category: "Tools",
         quantity: 3,
         unitPrice: 80.0,
+        updatedBy: "Nishant",
         reorderLevel: 5,
         supplier: "Supplier X",
         supplierGst: "GST123456",
@@ -5411,6 +5442,7 @@ const inventory = {
         date: "2024-02-13",
         paymentMode: "Credit Card",
         amount: 240.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM017",
@@ -5419,6 +5451,7 @@ const inventory = {
         category: "Furniture",
         quantity: 1,
         unitPrice: 220.0,
+        updatedBy: "Nishant",
         reorderLevel: 2,
         supplier: "Supplier A",
         supplierGst: "GST159753",
@@ -5427,6 +5460,7 @@ const inventory = {
         date: "2024-02-12",
         paymentMode: "UPI",
         amount: 220.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM018",
@@ -5435,6 +5469,7 @@ const inventory = {
         category: "Electronics",
         quantity: 2,
         unitPrice: 65.0,
+        updatedBy: "Pathan",
         reorderLevel: 3,
         supplier: "Supplier Z",
         supplierGst: "GST789123",
@@ -5443,6 +5478,7 @@ const inventory = {
         date: "2024-02-11",
         paymentMode: "Cash",
         amount: 130.0,
+        status: "Low Stock",
       },
       {
         sku: "ITEM019",
@@ -5451,6 +5487,7 @@ const inventory = {
         category: "Office Supplies",
         quantity: 18,
         unitPrice: 4.5,
+        updatedBy: "Pathan",
         reorderLevel: 10,
         supplier: "Supplier A",
         supplierGst: "GST159753",
@@ -5459,6 +5496,7 @@ const inventory = {
         date: "2024-02-10",
         paymentMode: "Bank Transfer",
         amount: 81.0,
+        status: "In Stock",
       },
       {
         sku: "ITEM020",
@@ -5467,6 +5505,7 @@ const inventory = {
         category: "Electronics",
         quantity: 3,
         unitPrice: 50.0,
+        updatedBy: "Pathan",
         reorderLevel: 5,
         supplier: "Supplier Y",
         supplierGst: "GST654321",
@@ -5475,6 +5514,7 @@ const inventory = {
         date: "2024-02-09",
         paymentMode: "Credit Card",
         amount: 150.0,
+        status: "Low Stock",
       },
     ],
     categories: [
@@ -5506,32 +5546,37 @@ const inventory = {
     suppliers: [
       {
         name: "Supplier X",
-        phoneNumber: "+1234567890",
+        phoneNumber: ["+1234567890"],
         email: "supplierx@example.com",
         address: "123 Industrial Ave, City",
-        gstNumber: "GST123456",
+        gstNumber: ["GST123456"],
       },
       {
         name: "Supplier Y",
-        phoneNumber: "+0987654321",
+        phoneNumber: ["+0987654321"],
         email: "suppliery@example.com",
         address: "456 Tech Park, City",
-        gstNumber: "GST654321",
+        gstNumber: ["GST654321"],
       },
       {
         name: "Supplier Z",
-        phoneNumber: "+1122334455",
+        phoneNumber: ["+1122334455"],
         email: "supplierz@example.com",
         address: "789 Market Road, City",
-        gstNumber: "GST789123",
+        gstNumber: ["GST789123"],
       },
       {
         name: "Supplier A",
-        phoneNumber: "+5566778899",
+        phoneNumber: ["+5566778899"],
         email: "suppliera@example.com",
         address: "999 Office Blvd, City",
-        gstNumber: "GST159753",
+        gstNumber: ["GST159753"],
       },
+    ],
+    sku: [
+      { value: "SKU001", label: "Item 1" },
+      { value: "SKU002", label: "Item 2" },
+      { value: "SKU003", label: "Item 3" },
     ],
     recentTransactions: [
       {

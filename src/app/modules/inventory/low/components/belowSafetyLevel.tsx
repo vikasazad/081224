@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { MoreHorizontal, MoveLeft, Search, Trash } from "lucide-react";
+import { MoreHorizontal, MoveLeft, Search, Trash, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,29 +28,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { format } from "date-fns";
+import { EditItemDialog } from "../../total/components/edit-item-dialog";
+import {
+  addNewTransaction,
+  saveLowStockEditedItem,
+} from "../../utils/inventoryAPI";
 
 // const ITEMS_PER_PAGE = 5;
 
-export default function BelowSafetyLevel() {
+export default function BelowSafetyLevel({ data }: any) {
+  // console.log("LOW", data);
   const router = useRouter();
-  const [items, setItems] = React.useState<any[]>(initialItems);
+  const [items, setItems] = React.useState<any[]>(
+    data?.items
+      ?.filter((item: any) => item.quantity < item.reorderLevel / 2)
+      .reverse() || []
+  );
   const [searchQuery, setSearchQuery] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState("all");
   const [currentPage, setCurrentPage] = React.useState(1);
   const [itemsPerPage, setItemsPerPage] = React.useState(5);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<number | null>(null);
-
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [itemToEdit, setItemToEdit] = React.useState<any>(null);
+  console.log(items);
   // Filter and search logic
   const filteredItems = React.useMemo(() => {
-    return items
-      .filter((item) => item.currentStock < item.reorderLevel)
-      .filter(
-        (item) =>
-          (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.supplier.toLowerCase().includes(searchQuery.toLowerCase())) &&
-          (categoryFilter === "all" || item.Category === categoryFilter)
-      );
+    return items.filter(
+      (item) =>
+        (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.supplier.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        (categoryFilter === "all" || item.category === categoryFilter)
+    );
   }, [items, searchQuery, categoryFilter]);
 
   // Pagination logic
@@ -59,7 +70,7 @@ export default function BelowSafetyLevel() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredItems, currentPage, itemsPerPage]);
-
+  // console.log("paginatedItems", paginatedItems);
   // Action handlers
 
   const handleDelete = (id: number) => {
@@ -69,10 +80,39 @@ export default function BelowSafetyLevel() {
 
   const confirmDelete = () => {
     if (itemToDelete) {
-      setItems(items.filter((item) => item.id !== itemToDelete));
+      setItems(items.filter((item) => item.name !== itemToDelete));
       setIsDeleteDialogOpen(false);
       setItemToDelete(null);
     }
+  };
+
+  const handleEdit = (item: any) => {
+    setItemToEdit(item);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async (
+    editedItem: any,
+    transactionType: string | undefined,
+    previousQuantity: number
+  ) => {
+    console.log("EDITED", editedItem, transactionType, previousQuantity);
+    const transactionItem = {
+      id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: editedItem.name,
+      sku: editedItem.sku,
+      category: editedItem.category,
+      previousQuantity: previousQuantity,
+      quantity: editedItem.quantity,
+      transactionType: transactionType,
+      dateTime: new Date().toString(),
+      supplierCustomer: editedItem.supplier,
+    };
+    await saveLowStockEditedItem(editedItem);
+    if (transactionType) await addNewTransaction(transactionItem);
+    setItems(
+      items.map((item) => (item.name === editedItem.name ? editedItem : item))
+    );
   };
 
   return (
@@ -103,9 +143,11 @@ export default function BelowSafetyLevel() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="Electronics">Electronics</SelectItem>
-              <SelectItem value="Furniture">Furniture</SelectItem>
-              <SelectItem value="Supplies">Supplies</SelectItem>
+              {data?.categories.map((item: any, num: number) => (
+                <SelectItem value={item?.name} key={num}>
+                  {item?.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -119,26 +161,33 @@ export default function BelowSafetyLevel() {
               <TableHead>SKU</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Current Stock</TableHead>
-              <TableHead>Reorder Level</TableHead>
+              <TableHead>Quantity Type</TableHead>
               <TableHead>Supplier</TableHead>
-              <TableHead>Last Updated</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Reorder Level</TableHead>
+              <TableHead>Updated By</TableHead>
+              <TableHead>Last Updated</TableHead>
               <TableHead className="w-[80px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedItems.map((item) => (
-              <TableRow key={item.id}>
+              <TableRow key={item.sku}>
                 <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>
-                  <Badge>{item.SKU}</Badge>
-                </TableCell>
-                <TableCell>{item.Category}</TableCell>
-                <TableCell>{item.currentStock}</TableCell>
-                <TableCell>{item.reorderLevel}</TableCell>
+                <TableCell>{item.sku}</TableCell>
+                <TableCell>{item.category}</TableCell>
+                <TableCell>{item.quantity}</TableCell>
+                <TableCell>{item.quantityUnit}</TableCell>
                 <TableCell>{item.supplier}</TableCell>
-                <TableCell>{item.lastUpdated} days</TableCell>
-                <TableCell>{item.status}</TableCell>
+                <TableCell>
+                  <Badge>{item.status}</Badge>
+                </TableCell>
+                <TableCell>{item.reorderLevel}</TableCell>
+                <TableCell>{item.updatedBy}</TableCell>
+                <TableCell>
+                  {format(new Date(item.date), "HH:mm (d MMM)")}
+                </TableCell>
+
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -148,6 +197,10 @@ export default function BelowSafetyLevel() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(item)}>
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => handleDelete(item.id)}
@@ -219,31 +272,20 @@ export default function BelowSafetyLevel() {
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={confirmDelete}
       />
+
+      <EditItemDialog
+        item={itemToEdit}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSave={handleSaveEdit}
+        sku={data.sku}
+        suppliers={data.suppliers}
+        categories={data.categories}
+        newSku={(sku: any) => {
+          // Handle new SKU if needed
+          console.log("New SKU:", sku);
+        }}
+      />
     </div>
   );
 }
-
-const initialItems: any = [
-  {
-    id: 1,
-    name: "Item C",
-    SKU: "EERKE",
-    Category: "Electronics",
-    currentStock: 80,
-    reorderLevel: 100,
-    supplier: "Supplier X",
-    lastUpdated: 10,
-    status: "Below Reorder",
-  },
-  {
-    id: 2,
-    name: "Item D",
-    SKU: "EERKE",
-    Category: "Supplies",
-    currentStock: 60,
-    reorderLevel: 90,
-    supplier: "Supplier Y",
-    lastUpdated: 12,
-    status: "Below Reorder",
-  },
-];

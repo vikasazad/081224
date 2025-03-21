@@ -90,8 +90,14 @@ export const calculateFinalAmount = (item: any) => {
 
   // console.log("Total Pending Services Amount:", servicesTotal);
 
+  const checklistTotal =
+    item?.checklist?.payment?.paymentStatus === "pending"
+      ? item?.checklist?.payment?.price
+      : 0;
+
   // Return the combined total
-  const combinedFinalAmount = diningTotal + servicesTotal + bookingTotal;
+  const combinedFinalAmount =
+    diningTotal + servicesTotal + bookingTotal + checklistTotal;
   // console.log("Combined Final Amount:", combinedFinalAmount);
   return combinedFinalAmount;
 };

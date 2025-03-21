@@ -29,38 +29,40 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// const ITEMS_PER_PAGE = 5;
-
-export default function RecentTransactions() {
+export default function RecentTransactions({ data }: any) {
+  console.log(data);
   const router = useRouter();
-  const [items, setItems] = React.useState<any[]>(initialItems);
+  const [items, setItems] = React.useState<any[]>(data?.recentTransactions);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState("all");
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [itemsPerPage, setItemsPerPage] = React.useState(5);
+  const [itemsPerPage, setItemsPerPage] = React.useState(20);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<number | null>(null);
 
   // Filter and search logic
   const filteredItems = React.useMemo(() => {
-    return items
-      .filter((item) => item.quantity < item.reorderLevel)
-      .filter(
-        (item) =>
-          (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.supplier.toLowerCase().includes(searchQuery.toLowerCase())) &&
-          (categoryFilter === "all" || item.category === categoryFilter)
-      );
+    return items.filter(
+      (item) =>
+        (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.supplierCustomer
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())) &&
+        (categoryFilter === "all" || item.category === categoryFilter)
+    );
   }, [items, searchQuery, categoryFilter]);
+
+  console.log("FILER", filteredItems);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  // const paginatedItems = React.useMemo(() => {
-  //   const startIndex = (currentPage - 1) * itemsPerPage;
-  //   return filteredItems.slice(startIndex, startIndex + itemsPerPage);
-  // }, [filteredItems, currentPage, itemsPerPage]);
+  const paginatedItems = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredItems, currentPage, itemsPerPage]);
 
   // Action handlers
+  console.log("PAge", paginatedItems);
 
   const handleDelete = (id: number) => {
     setItemToDelete(id);
@@ -103,9 +105,11 @@ export default function RecentTransactions() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="Electronics">Electronics</SelectItem>
-              <SelectItem value="Furniture">Furniture</SelectItem>
-              <SelectItem value="Supplies">Supplies</SelectItem>
+              {data?.categories.map((item: any, num: number) => (
+                <SelectItem value={item?.name} key={num}>
+                  {item?.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -119,6 +123,7 @@ export default function RecentTransactions() {
               <TableHead>Item Name</TableHead>
               <TableHead>SKU</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Prev. Quantity</TableHead>
               <TableHead>Quantity</TableHead>
               <TableHead>Transaction Type</TableHead>
               <TableHead>Date & Time</TableHead>
@@ -127,7 +132,7 @@ export default function RecentTransactions() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {initialItems.map((item: any) => (
+            {paginatedItems?.map((item: any) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.id}</TableCell>
                 <TableCell>{item.name}</TableCell>
@@ -135,6 +140,7 @@ export default function RecentTransactions() {
                   <Badge>{item.SKU}</Badge>
                 </TableCell>
                 <TableCell>{item.category}</TableCell>
+                <TableCell>{item.previousQuantity}</TableCell>
                 <TableCell>{item.quantity}</TableCell>
                 <TableCell>{item.transactionType}</TableCell>
                 <TableCell>{item.dateTime}</TableCell>
@@ -222,26 +228,3 @@ export default function RecentTransactions() {
     </div>
   );
 }
-
-const initialItems: any = [
-  {
-    id: 1,
-    name: "Item C",
-    SKU: "EERKE",
-    category: "Electronics",
-    quantity: 80,
-    transactionType: 100,
-    dateTime: "Supplier X",
-    supplierCustomer: 10,
-  },
-  {
-    id: 2,
-    name: "Item D",
-    SKU: "EERKE",
-    category: "Supplies",
-    quantity: 60,
-    transactionType: 100,
-    dateTime: "Supplier X",
-    supplierCustomer: 12,
-  },
-];

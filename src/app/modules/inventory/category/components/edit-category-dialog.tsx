@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { EditCategory, Category } from "@/types/inventory";
+import { useSession } from "next-auth/react";
 
 interface EditCategoryDialogProps {
   category: Category | null;
@@ -30,9 +31,16 @@ export function EditCategoryDialog({
   onOpenChange,
   onSave,
 }: EditCategoryDialogProps) {
+  const { data: session } = useSession();
   const [formData, setFormData] = useState<any>({
     name: category?.name || "",
     description: category?.description || "",
+  });
+
+  // Add error state
+  const [errors, setErrors] = useState({
+    name: "",
+    description: "",
   });
 
   useEffect(() => {
@@ -51,7 +59,31 @@ export function EditCategoryDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+
+    // Reset errors
+    setErrors({ name: "", description: "" });
+
+    // Validate fields
+    let hasErrors = false;
+    if (!formData.name.trim()) {
+      setErrors((prev) => ({ ...prev, name: "Name is required" }));
+      hasErrors = true;
+    }
+    if (!formData.description.trim()) {
+      setErrors((prev) => ({
+        ...prev,
+        description: "Description is required",
+      }));
+      hasErrors = true;
+    }
+
+    if (hasErrors) return;
+
+    onSave({
+      ...formData,
+      lastUpdated: new Date().toString(),
+      updatedBy: session?.user?.role || "undefined",
+    });
     onOpenChange(false);
   };
 
@@ -75,6 +107,9 @@ export function EditCategoryDialog({
                   setFormData({ ...formData, name: e.target.value })
                 }
               />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name}</p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
@@ -85,6 +120,9 @@ export function EditCategoryDialog({
                   setFormData({ ...formData, description: e.target.value })
                 }
               />
+              {errors.description && (
+                <p className="text-sm text-red-500">{errors.description}</p>
+              )}
             </div>
           </div>
           <DialogFooter>

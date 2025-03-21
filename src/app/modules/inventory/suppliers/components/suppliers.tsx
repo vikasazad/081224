@@ -38,14 +38,18 @@ import type { Supplier } from "@/types/inventory";
 import { DeleteAlertDialog } from "@/app/modules/inventory/suppliers/components/delete-alert-dialog";
 import { SupplierForm } from "@/app/modules/inventory/addItems/components/SupplierForm";
 import { useRouter } from "next/navigation";
+import {
+  addNewSupplier,
+  saveDeletedSupplier,
+  saveEditedSupplier,
+} from "../../utils/inventoryAPI";
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 20;
 
-export default function Suppliers() {
+export default function Suppliers({ data }: any) {
   // State management
   const router = useRouter();
-  const [suppliers, setSuppliers] =
-    React.useState<Supplier[]>(initialSuppliers);
+  const [suppliers, setSuppliers] = React.useState<Supplier[]>(data?.suppliers);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [currentPage, setCurrentPage] = React.useState(1);
   const [editingSupplier, setEditingSupplier] = React.useState<Supplier | null>(
@@ -53,7 +57,7 @@ export default function Suppliers() {
   );
   const [isSupplierFormOpen, setIsSupplierFormOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
-  const [supplierToDelete, setSupplierToDelete] = React.useState<number | null>(
+  const [supplierToDelete, setSupplierToDelete] = React.useState<string | null>(
     null
   );
 
@@ -85,53 +89,54 @@ export default function Suppliers() {
     setIsSupplierFormOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    setSupplierToDelete(id);
+  const handleDelete = (name: string) => {
+    setSupplierToDelete(name);
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (supplierToDelete) {
-      setSuppliers(
-        suppliers.filter((supplier) => supplier.id !== supplierToDelete)
+      const deletedSupplier = suppliers.filter(
+        (supplier) => supplier.name !== supplierToDelete
       );
+      await saveDeletedSupplier(deletedSupplier);
+      setSuppliers(deletedSupplier);
       setIsDeleteDialogOpen(false);
       setSupplierToDelete(null);
     }
   };
 
-  const handleSaveSupplier = (formData: any) => {
+  const handleSaveSupplier = async (formData: any) => {
     if (editingSupplier) {
       // Update existing supplier
-      setSuppliers(
-        suppliers.map((supplier) =>
-          supplier.id === editingSupplier.id
-            ? { ...supplier, ...formData }
-            : supplier
-        )
+      const editedSupplier = suppliers.map((supplier) =>
+        supplier.name === editingSupplier.name
+          ? { ...supplier, ...formData }
+          : supplier
       );
+      console.log("EDITED", editedSupplier);
+      await saveEditedSupplier(editedSupplier);
+      setSuppliers(editedSupplier);
     } else {
       // Add new supplier
-      const newSupplier: Supplier = {
-        id: Math.max(...suppliers.map((supplier) => supplier.id)) + 1,
-        ...formData,
-      };
-      setSuppliers([...suppliers, newSupplier]);
+      await addNewSupplier(formData);
+      setSuppliers([...suppliers, formData]);
     }
   };
 
   const handleSupplierFormSave = (formData: any) => {
     const supplierData = {
-      phoneNumber: formData.phoneNumbers[0],
-      gstNumber: formData.gstNumbers[0],
+      phoneNumber: formData.phoneNumbers,
+      gstNumber: formData.gstNumbers,
       name: formData.name,
       email: formData.email,
       address: formData.address,
     };
 
     if (editingSupplier) {
-      handleSaveSupplier({ ...supplierData, id: editingSupplier.id });
+      handleSaveSupplier(supplierData);
     } else {
+      console.log("ASDFASD", supplierData);
       handleSaveSupplier(supplierData);
     }
     setIsSupplierFormOpen(false);
@@ -180,13 +185,13 @@ export default function Suppliers() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedSuppliers.map((supplier) => (
-              <TableRow key={supplier.id}>
+            {paginatedSuppliers.map((supplier: any) => (
+              <TableRow key={supplier.name}>
                 <TableCell className="font-medium">{supplier.name}</TableCell>
-                <TableCell>{supplier.phoneNumber}</TableCell>
+                <TableCell>{supplier.phoneNumber.join(", ")}</TableCell>
                 <TableCell>{supplier.email}</TableCell>
                 <TableCell>{supplier.address}</TableCell>
-                <TableCell>{supplier.gstNumber}</TableCell>
+                <TableCell>{supplier.gstNumber.join(", ")}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -202,7 +207,7 @@ export default function Suppliers() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
-                        onClick={() => handleDelete(supplier.id)}
+                        onClick={() => handleDelete(supplier.name)}
                       >
                         <Trash className="w-4 h-4 mr-2" />
                         Delete
@@ -255,10 +260,10 @@ export default function Suppliers() {
               editingSupplier
                 ? {
                     name: editingSupplier.name,
-                    phoneNumbers: [editingSupplier.phoneNumber],
+                    phoneNumbers: editingSupplier.phoneNumber,
                     email: editingSupplier.email,
                     address: editingSupplier.address,
-                    gstNumbers: [editingSupplier.gstNumber],
+                    gstNumbers: editingSupplier.gstNumber,
                   }
                 : undefined
             }
@@ -274,30 +279,3 @@ export default function Suppliers() {
     </div>
   );
 }
-
-const initialSuppliers: Supplier[] = [
-  {
-    id: 1,
-    name: "Tech Solutions Inc.",
-    phoneNumber: "+1 (555) 123-4567",
-    email: "info@techsolutions.com",
-    address: "123 Tech Street, Silicon Valley, CA 94000",
-    gstNumber: "GST1234567890",
-  },
-  {
-    id: 2,
-    name: "Global Gadgets Ltd.",
-    phoneNumber: "+1 (555) 987-6543",
-    email: "sales@globalgadgets.com",
-    address: "456 Gadget Avenue, New York, NY 10001",
-    gstNumber: "GST0987654321",
-  },
-  {
-    id: 3,
-    name: "Innovative Electronics Co.",
-    phoneNumber: "+1 (555) 246-8135",
-    email: "support@innovativeelectronics.com",
-    address: "789 Innovation Road, Austin, TX 78701",
-    gstNumber: "GST1357924680",
-  },
-];

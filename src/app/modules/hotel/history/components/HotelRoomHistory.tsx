@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, Users, DollarSign, Clock, Settings } from "lucide-react";
+import { format } from "date-fns";
 
 const HotelRoomHistory = ({ data }: any) => {
   console.log(data);
@@ -11,37 +12,52 @@ const HotelRoomHistory = ({ data }: any) => {
     new Set()
   );
 
-  const OrderDetailsTable = ({ items }: { items: any }) => (
-    <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-      <h4 className="font-medium text-sm">Order Details</h4>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b">
-            <tr>
-              <th className="text-left py-2">ITEM ID</th>
-              <th className="text-left py-2">NAME</th>
-              <th className="text-left py-2">PORTION</th>
-              <th className="text-right py-2">PRICE</th>
-              {/* <th className="text-right py-2">REQUEST TIME</th>
-              <th className="text-right py-2">FULFILLMENT TIME</th> */}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item: any) => (
-              <tr key={item.id}>
-                <td className="py-2">{item.id}</td>
-                <td className="py-2">{item.name}</td>
-                <td className="py-2">{item.quantity}</td>
-                <td className="py-2 text-right">₹{item.price}</td>
-                {/* <td className="py-2 text-right">{item.requestTime}</td>
-                <td className="py-2 text-right">{item.fulfillmentTime}</td> */}
+  const OrderDetailsTable = ({
+    items,
+    timeOfFullfilment,
+    timeOfRequest,
+  }: any) => {
+    // console.log(timeOfFullfilment, timeOfRequest);
+    return (
+      <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+        <h4 className="font-medium text-sm">Order Details</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b">
+              <tr>
+                <th className="text-left py-2">ITEM ID</th>
+                <th className="text-left py-2">NAME</th>
+                <th className="text-left py-2">PORTION</th>
+                <th className="text-right py-2">PRICE</th>
+                <th className="text-right py-2">REQUEST TIME</th>
+                <th className="text-right py-2">FULFILLMENT TIME</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item: any) => (
+                <tr key={item.id}>
+                  <td className="py-2">{item.id}</td>
+                  <td className="py-2">{item.name}</td>
+                  <td className="py-2">{item.quantity}</td>
+                  <td className="py-2 text-right">₹{item.price}</td>
+                  <td className="py-2 text-right">
+                    {timeOfRequest
+                      ? format(new Date(timeOfRequest), "HH:mm (d MMM)")
+                      : "N/A"}
+                  </td>
+                  <td className="py-2 text-right">
+                    {timeOfFullfilment
+                      ? format(new Date(timeOfFullfilment), "HH:mm (d MMM)")
+                      : "N/A"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const PaymentDetailsTable = ({ payment }: { payment: any }) => (
     <div className="bg-gray-50 p-4 rounded-lg space-y-4">
@@ -225,7 +241,11 @@ const HotelRoomHistory = ({ data }: any) => {
                         </button>
                         {expandedOrder.has(el.orderId) && (
                           <div className="p-4 space-y-4">
-                            <OrderDetailsTable items={el.items} />
+                            <OrderDetailsTable
+                              items={el.items}
+                              timeOfFullfilment={el.timeOfFullfilment}
+                              timeOfRequest={el.timeOfRequest}
+                            />
                             <PaymentDetailsTable payment={el.payment} />
                           </div>
                         )}

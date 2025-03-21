@@ -1,10 +1,12 @@
 import ReorderLevel from "@/app/modules/inventory/reorder/components/reorderLevel";
+import { getInventoryData } from "@/app/modules/inventory/store/utils/InventoryApi";
 import React from "react";
 
-const page = () => {
+const page = async () => {
+  const data: any = await getInventoryData();
   return (
     <div>
-      <ReorderLevel />
+      <ReorderLevel data={data?.inventory?.store} />
     </div>
   );
 };

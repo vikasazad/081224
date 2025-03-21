@@ -27,18 +27,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import type { EditCategory, Category } from "@/types/inventory";
+import type { Category } from "@/types/inventory";
 import { EditCategoryDialog } from "@/app/modules/inventory/category/components/edit-category-dialog";
 import { DeleteAlertDialog } from "@/app/modules/inventory/category/components/delete-alert-dialog";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import {
+  addNewCategory,
+  saveDeletedCategory,
+  saveEditedCategory,
+} from "../../utils/inventoryAPI";
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 20;
 
-export default function Categories() {
+export default function Categories({ data }: any) {
   // State management
   const router = useRouter();
-  const [categories, setCategories] =
-    React.useState<Category[]>(initialCategories);
+  const [categories, setCategories] = React.useState<Category[]>(
+    data?.categories
+  );
   const [searchQuery, setSearchQuery] = React.useState("");
   const [currentPage, setCurrentPage] = React.useState(1);
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(
@@ -46,7 +53,7 @@ export default function Categories() {
   );
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
-  const [categoryToDelete, setCategoryToDelete] = React.useState<number | null>(
+  const [categoryToDelete, setCategoryToDelete] = React.useState<string | null>(
     null
   );
 
@@ -77,44 +84,43 @@ export default function Categories() {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    setCategoryToDelete(id);
+  const handleDelete = (name: string) => {
+    setCategoryToDelete(name);
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (categoryToDelete) {
-      setCategories(
-        categories.filter((category) => category.id !== categoryToDelete)
+      const deletedCategory = categories.filter(
+        (category) => category.name !== categoryToDelete
       );
+
+      await saveDeletedCategory(deletedCategory);
+      setCategories(deletedCategory);
       setIsDeleteDialogOpen(false);
       setCategoryToDelete(null);
     }
   };
 
-  const handleSaveCategory = (formData: EditCategory) => {
-    const now = new Date().toISOString();
+  const handleSaveCategory = async (formData: any) => {
+    const now = new Date().toString();
 
     if (editingCategory) {
       // Update existing category
-      setCategories(
-        categories.map((category) =>
-          category.id === editingCategory.id
-            ? { ...category, ...formData, lastUpdated: now }
-            : category
-        )
+      const editedCategory = categories.map((category) =>
+        category.name === editingCategory.name
+          ? { ...category, ...formData, lastUpdated: now }
+          : category
       );
+      await saveEditedCategory(editedCategory);
+      setCategories(editedCategory);
     } else {
       // Add new category
-      const newCategory: Category = {
-        id: Math.max(...categories.map((category) => category.id)) + 1,
-        ...formData,
-        lastUpdated: now,
-      };
-      setCategories([...categories, newCategory]);
+      await addNewCategory(formData);
+      setCategories([formData, ...categories]);
     }
   };
-
+  console.log("dslkjfdslkj", categories);
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -157,12 +163,12 @@ export default function Categories() {
           </TableHeader>
           <TableBody>
             {paginatedCategories.map((category) => (
-              <TableRow key={category.id}>
+              <TableRow key={category.name}>
                 <TableCell className="font-medium">{category.name}</TableCell>
                 <TableCell>{category.description}</TableCell>
                 <TableCell>{category.updatedBy}</TableCell>
                 <TableCell>
-                  {new Date(category.lastUpdated).toLocaleString()}
+                  {format(new Date(category.lastUpdated), "HH:mm (d MMM)")}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -179,7 +185,7 @@ export default function Categories() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
-                        onClick={() => handleDelete(category.id)}
+                        onClick={() => handleDelete(category.name)}
                       >
                         <Trash className="w-4 h-4 mr-2" />
                         Delete
@@ -232,27 +238,3 @@ export default function Categories() {
     </div>
   );
 }
-
-const initialCategories: Category[] = [
-  {
-    id: 1,
-    name: "Electronics",
-    description: "Electronic devices and accessories",
-    updatedBy: "John Doe",
-    lastUpdated: "2024-02-25T09:00:00Z",
-  },
-  {
-    id: 2,
-    name: "Furniture",
-    description: "Home and office furniture",
-    updatedBy: "Jane Smith",
-    lastUpdated: "2024-02-24T14:30:00Z",
-  },
-  {
-    id: 3,
-    name: "Clothing",
-    description: "Apparel and fashion items",
-    updatedBy: "Mike Johnson",
-    lastUpdated: "2024-02-23T11:15:00Z",
-  },
-];

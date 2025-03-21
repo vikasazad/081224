@@ -30,10 +30,14 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SupplierForm } from "@/app/modules/inventory/addItems/components/SupplierForm";
+import { useSession } from "next-auth/react";
+import { saveInventoryItem } from "../../utils/inventoryAPI";
 
 const Store = ({ data }: any) => {
   console.log(data);
   const router = useRouter();
+  const { data: session } = useSession();
+
   function MetricCard({
     title,
     value,
@@ -60,20 +64,9 @@ const Store = ({ data }: any) => {
 
   function ReorderAlertsCard() {
     // Simulating a larger number of reorder items
-    const reorderItems = [
-      { name: "Widget A", stock: 5 },
-      { name: "Gadget B", stock: 3 },
-      { name: "Tool C", stock: 7 },
-      { name: "Component D", stock: 2 },
-      { name: "Part E", stock: 4 },
-      { name: "Material F", stock: 6 },
-      { name: "Product G", stock: 1 },
-      { name: "Item H", stock: 8 },
-      { name: "Unit I", stock: 3 },
-      { name: "Element J", stock: 5 },
-      { name: "Device K", stock: 2 },
-      { name: "Module L", stock: 4 },
-    ];
+    const reorderItems = data?.items
+      ?.filter((item: any) => item.quantity <= item.reorderLevel)
+      .reverse();
 
     return (
       <Card className="border-red-500">
@@ -87,12 +80,12 @@ const Store = ({ data }: any) => {
         <CardContent>
           <ScrollArea className="h-[300px] pr-4">
             <ul className="space-y-4">
-              {reorderItems.map((item, index) => (
+              {reorderItems.map((item: any, index: number) => (
                 <li key={index} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      Current stock: {item.stock}
+                      Current stock: {item.quantity}
                     </p>
                   </div>
                   <Button
@@ -136,6 +129,19 @@ const Store = ({ data }: any) => {
       }
     };
 
+    const handleInventorySubmit = async (formData: any) => {
+      // console.log("New inventory item data:", formData);
+      try {
+        const result = await saveInventoryItem(formData);
+        console.log("Item saved successfully:", result);
+        setOpen(false);
+      } catch (error) {
+        console.error("Error saving Item:", error);
+        // Handle error (show toast/notification)
+      }
+      // setOpen(false);
+    };
+
     const handleAddCategory = (e: React.FormEvent) => {
       e.preventDefault();
       // Add your category creation logic here
@@ -145,9 +151,8 @@ const Store = ({ data }: any) => {
       setCategoryDescription("");
     };
 
-    const handleSupplierSave = (data: any) => {
-      console.log("Supplier data:", data);
-      setOpen(false);
+    const handleSupplierSave = () => {
+      console.log("Supplier data:");
     };
 
     return (
@@ -170,9 +175,16 @@ const Store = ({ data }: any) => {
         {title === "Add New Item" && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogTitle></DialogTitle>
-              <DialogDescription></DialogDescription>
-              <InventoryForm />
+              <DialogTitle>Add New Item</DialogTitle>
+              <DialogDescription>
+                Enter the item details below
+              </DialogDescription>
+              <InventoryForm
+                data={data}
+                session={session}
+                onSubmit={handleInventorySubmit}
+                onCancel={() => setOpen(false)}
+              />
             </DialogContent>
           </Dialog>
         )}
@@ -229,6 +241,14 @@ const Store = ({ data }: any) => {
       </>
     );
   }
+
+  //  const handleAddFormSubmit = (formData: any) => {
+  //   // Add the new item to the beginning of the items array
+  //   setItems([formData, ...items]);
+
+  //   // Close the dialog
+  //   setIsAddDialogOpen(false);
+  // };
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       {/* Left Column - Metrics and Quick Actions */}
@@ -243,13 +263,17 @@ const Store = ({ data }: any) => {
           />
           <MetricCard
             title="Low Stock"
-            value="8"
+            value={data?.items
+              ?.filter((item: any) => item.quantity < item.reorderLevel / 2)
+              .length.toString()}
             icon={<AlertTriangle className="h-4 w-4" />}
             onClick={() => router.push("/inventory/low")}
           />
           <MetricCard
             title="Reorder Level"
-            value="15"
+            value={data?.items
+              ?.filter((item: any) => item.quantity <= item.reorderLevel)
+              .length.toString()}
             icon={<PackageCheck className="h-4 w-4" />}
             onClick={() => router.push("/inventory/reorder")}
           />

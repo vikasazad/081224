@@ -30,6 +30,7 @@ export async function add(email: string, newUser: any, field: string) {
     return false;
   }
 }
+
 export async function update(email: string, newUser: any, field: string) {
   try {
     const docRef = doc(db, email, field);
@@ -290,5 +291,29 @@ export async function setStats(email: string) {
     }
   } catch (error) {
     console.log(error);
+  }
+}
+
+export async function getDataFromVikumar() {
+  try {
+    // Get data from vikumar's hotel document
+    const sourceDocRef = doc(db, "vikumar.azad@gmail.com", "socialMedia");
+    const sourceDocSnap = await getDoc(sourceDocRef);
+
+    if (sourceDocSnap.exists()) {
+      // Create a reference to the forTesting document
+      const targetDocRef = doc(db, "forTesting", "socialMedia");
+
+      // Copy the data to forTesting
+      await setDoc(targetDocRef, sourceDocSnap.data());
+
+      return sourceDocSnap.data();
+    } else {
+      console.error("Source document does not exist!");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error copying document:", error);
+    return false;
   }
 }

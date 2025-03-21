@@ -84,7 +84,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   const [openFinalSubmitConfirmation, setOpenFinalSubmitConfirmation] =
     useState(false);
   const [finalSubmitData, setFinalSubmitData] = useState<any>(null);
-  const gstPercentage = "";
+  const gstPercentage = "18";
 
   useEffect(() => {
     setRoomData(data);
@@ -558,7 +558,18 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
     setRoomData((prevTableData: any) => {
       const updatedRoomData: any = [...prevTableData];
 
-      if (orderId.startsWith("ABS")) {
+      if (orderId === "checklist") {
+        if (status.toLowerCase() === "paid") {
+          updatedRoomData[index].checklist.payment = {
+            ...updatedRoomData[index].checklist.payment,
+            mode: "cash",
+            paymentId: "cash",
+            paymentStatus: "paid",
+            timeOfTransaction: new Date().toISOString(),
+            transctionId: "cash",
+          };
+        }
+      } else if (orderId.startsWith("ABS")) {
         if (status.toLocaleLowerCase() === "paid") {
           updatedRoomData[index].bookingDetails.payment = {
             ...updatedRoomData[index].bookingDetails.payment, // Preserve existing fields
@@ -603,10 +614,21 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
           }
         }
       } else if (orderId.startsWith("SE")) {
+        console.log("here in services", orderId, status);
         const servicesUsed = updatedRoomData[index].servicesUsed;
         servicesUsed.forEach((el: any, i: number) => {
           if (el.serviceId === orderId) {
             updatedRoomData[index].servicesUsed[i].status = status;
+            if (status.toLocaleLowerCase() === "paid") {
+              updatedRoomData[index].servicesUsed[i].payment = {
+                ...updatedRoomData[index].servicesUsed[i].payment, // Preserve existing fields
+                mode: "cash",
+                paymentId: "cash",
+                paymentStatus: "paid",
+                timeOfTransaction: new Date().toISOString(),
+                transctionId: "cash",
+              };
+            }
           }
         });
       } else if (orderId.startsWith("IS")) {
@@ -1483,8 +1505,32 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
 
                           {item.checklist?.selectedItems?.length > 0 && (
                             <>
-                              <div className="font-semibold text-lg">
-                                Menu Items
+                              <div className="font-semibold text-lg flex justify-between items-center">
+                                <span>Mini-Bar Items</span>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-8 p-0"
+                                    >
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleStatusChange(
+                                          "Paid",
+                                          "checklist",
+                                          main
+                                        )
+                                      }
+                                    >
+                                      Mark as Paid
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
                               <div className="bg-slate-50 rounded-lg p-4 space-y-3">
                                 <div>
@@ -1522,21 +1568,17 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                     </span>
                                   </div>
                                   <span className="text-green-600 font-semibold">
-                                    ₹{item.checklist?.totalAmount}
+                                    ₹{item.checklist?.payment.subtotal}
                                   </span>
                                 </div>
-                                {gstPercentage && (
+                                {item.checklist?.payment?.gst
+                                  ?.gstPercentage && (
                                   <div className="flex justify-between items-center">
                                     <div>
-                                      <span className="font-medium">{`Tax (${gstPercentage}%)`}</span>
+                                      <span className="font-medium">{`Tax (${item.checklist?.payment?.gst?.gstPercentage}%)`}</span>
                                     </div>
                                     <span className="text-green-600 font-semibold">
-                                      ₹
-                                      {Math.round(
-                                        (item.checklist?.totalAmount *
-                                          Number(gstPercentage)) /
-                                          100
-                                      )}
+                                      ₹{item.checklist?.payment?.gst?.gstAmount}
                                     </span>
                                   </div>
                                 )}
@@ -1544,9 +1586,30 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                 <div className="flex justify-between items-center">
                                   <div>
                                     <span className="font-medium">Total</span>
+                                    {item?.checklist?.payment.paymentStatus ===
+                                    "paid" ? (
+                                      <>
+                                        <Badge
+                                          variant="outline"
+                                          className="mx-2"
+                                        >
+                                          Paid
+                                        </Badge>
+                                        <Badge
+                                          variant="outline"
+                                          className="mx-2"
+                                        >
+                                          {item?.checklist?.payment.mode}
+                                        </Badge>
+                                      </>
+                                    ) : (
+                                      <Badge variant="outline" className="mx-2">
+                                        Pending
+                                      </Badge>
+                                    )}
                                   </div>
                                   <span className="text-green-600 font-semibold">
-                                    ₹{item.checklist?.totalAmount}
+                                    ₹{item.checklist?.payment?.price}
                                   </span>
                                 </div>
                               </div>
@@ -1575,18 +1638,21 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                             <div className="flex items-center gap-2">
                               <div>
                                 {(() => {
-                                  let total = calculateFinalAmount(item);
-                                  if (item.checklist?.totalAmount) {
-                                    total = total + item.checklist?.totalAmount;
-                                  }
-                                  if (gstPercentage) {
-                                    const gst = Math.round(
-                                      (item.checklist?.totalAmount *
-                                        Number(gstPercentage)) /
-                                        100
-                                    );
-                                    total = total + gst;
-                                  }
+                                  const total = calculateFinalAmount(item);
+                                  // console.log("total", total);
+                                  // if (item.checklist?.totalAmount) {
+                                  //   total = total + item.checklist?.totalAmount;
+                                  // }
+                                  // console.log("total", total);
+
+                                  // if (gstPercentage) {
+                                  //   const gst = Math.round(
+                                  //     (item.checklist?.totalAmount *
+                                  //       Number(gstPercentage)) /
+                                  //       100
+                                  //   );
+                                  //   total = total + gst;
+                                  // }
                                   return (
                                     <>
                                       {total ? (
@@ -1637,6 +1703,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                             open={checklistOpen}
                             onClose={() => setChecklistOpen(false)}
                             roomNumber={item.bookingDetails.location}
+                            gst={gstPercentage}
                           />
                         </div>
                       </AccordionContent>

@@ -51,12 +51,14 @@ const ChecklistDialog = ({
   open,
   onClose,
   roomNumber,
+  gst,
 }: {
   data: any;
   info: any;
   open: any;
   onClose: any;
   roomNumber: string;
+  gst: string;
 }) => {
   const [addItems, setAddItems] = useState<any>([]);
   const [checkedItems, setCheckedItems] = useState<any>({});
@@ -96,6 +98,16 @@ const ChecklistDialog = ({
   const calculateTotal = () => {
     return selectedItems.reduce((total, item) => total + Number(item.price), 0);
   };
+  const calculateTax = (tax: string) => {
+    // console.log("Calculating Tax...", order);
+    const total = calculateTotal();
+    // console.log("Order Total for Tax Calculation:", total);
+
+    const roundedTax = Math.round((total * parseFloat(tax)) / 100);
+    // console.log(`Calculated Tax (${tax}%):`, roundedTax);
+
+    return roundedTax;
+  };
 
   const handleSubmit = () => {
     const checkedChecklistItems = Object.keys(checkedItems).filter(
@@ -108,7 +120,33 @@ const ChecklistDialog = ({
         checkedItems: [],
         selectedItems,
         note,
-        totalAmount: calculateTotal(),
+        payment: {
+          transctionId: "",
+          paymentStatus: "pending",
+          mode: "",
+          paymentId: "",
+          price: gst
+            ? Number(calculateTotal()) + Number(calculateTax(gst))
+            : calculateTotal(),
+          subtotal: calculateTotal(),
+          priceAfterDiscount: gst
+            ? calculateTotal() + calculateTax(gst)
+            : calculateTotal(),
+          timeOfTransaction: "",
+          gst: {
+            gstAmount: gst ? calculateTax(gst) : 0,
+            gstPercentage: gst,
+            cgstAmount: "",
+            cgstPercentage: "",
+            sgstAmount: "",
+            sgstPercentage: "",
+          },
+          discount: {
+            type: "none",
+            amount: 0,
+            code: "",
+          },
+        },
         location: roomNumber,
         flag: true, // No items checked
       });
@@ -129,7 +167,34 @@ const ChecklistDialog = ({
       ),
       selectedItems,
       note,
-      totalAmount: calculateTotal(),
+      payment: {
+        transctionId: "",
+        paymentStatus: "pending",
+        mode: "",
+        paymentId: "",
+        price: gst
+          ? Number(calculateTotal()) + Number(calculateTax(gst))
+          : calculateTotal(),
+        subtotal: calculateTotal(),
+        priceAfterDiscount: gst
+          ? calculateTotal() + calculateTax(gst)
+          : calculateTotal(),
+        timeOfTransaction: "",
+        gst: {
+          gstAmount: gst ? calculateTax(gst) : 0,
+          gstPercentage: gst,
+          cgstAmount: "",
+          cgstPercentage: "",
+          sgstAmount: "",
+          sgstPercentage: "",
+        },
+        discount: {
+          type: "none",
+          amount: 0,
+          code: "",
+        },
+      },
+
       location: roomNumber,
       flag: true, // All criteria met
     });

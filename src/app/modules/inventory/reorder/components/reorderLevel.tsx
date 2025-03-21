@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { MoreHorizontal, MoveLeft, Search, Trash } from "lucide-react";
+import { Edit2, MoreHorizontal, MoveLeft, Search, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,7 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { DeleteAlertDialog } from "@/app/modules/inventory/total/components/delete-alert-dialog";
 import { useRouter } from "next/navigation";
 import {
@@ -28,23 +27,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { addNewTransaction } from "../../utils/inventoryAPI";
+import { saveLowStockEditedItem } from "../../utils/inventoryAPI";
+import { EditItemDialog } from "../../total/components/edit-item-dialog";
 
 // const ITEMS_PER_PAGE = 5;
 
-export default function ReorderLevel() {
+export default function ReorderLevel({ data }: any) {
   const router = useRouter();
-  const [items, setItems] = React.useState<any[]>(initialItems);
+  const [items, setItems] = React.useState<any[]>(
+    data?.items
+      ?.filter((item: any) => item.quantity <= item.reorderLevel)
+      .reverse()
+  );
   const [searchQuery, setSearchQuery] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState("all");
   const [currentPage, setCurrentPage] = React.useState(1);
   const [itemsPerPage, setItemsPerPage] = React.useState(5);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<number | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [itemToEdit, setItemToEdit] = React.useState<any>(null);
 
   // Filter and search logic
   const filteredItems = React.useMemo(() => {
     return items
-      .filter((item) => item.currentStock < item.reorderLevel)
+      .filter((item) => Number(item.quantity) < Number(item.reorderLevel))
       .filter(
         (item) =>
           (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -59,7 +69,7 @@ export default function ReorderLevel() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredItems, currentPage, itemsPerPage]);
-
+  console.log("paginatedItems", paginatedItems);
   // Action handlers
 
   const handleDelete = (id: number) => {
@@ -73,6 +83,34 @@ export default function ReorderLevel() {
       setIsDeleteDialogOpen(false);
       setItemToDelete(null);
     }
+  };
+  const handleEdit = (item: any) => {
+    setItemToEdit(item);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async (
+    editedItem: any,
+    transactionType: string | undefined,
+    previousQuantity: number
+  ) => {
+    console.log("EDITED", editedItem, transactionType, previousQuantity);
+    const transactionItem = {
+      id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
+      name: editedItem.name,
+      sku: editedItem.sku,
+      category: editedItem.category,
+      previousQuantity: previousQuantity,
+      quantity: editedItem.quantity,
+      transactionType: transactionType,
+      dateTime: new Date().toString(),
+      supplierCustomer: editedItem.supplier,
+    };
+    await saveLowStockEditedItem(editedItem);
+    if (transactionType) await addNewTransaction(transactionItem);
+    setItems(
+      items.map((item) => (item.name === editedItem.name ? editedItem : item))
+    );
   };
 
   return (
@@ -103,9 +141,11 @@ export default function ReorderLevel() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="Electronics">Electronics</SelectItem>
-              <SelectItem value="Furniture">Furniture</SelectItem>
-              <SelectItem value="Supplies">Supplies</SelectItem>
+              {data?.categories?.map((item: any, num: number) => (
+                <SelectItem value={item?.name} key={num}>
+                  {item?.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -119,24 +159,32 @@ export default function ReorderLevel() {
               <TableHead>SKU</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Current Stock</TableHead>
-              <TableHead>Reorder Level</TableHead>
+              <TableHead>Quantity Type</TableHead>
               <TableHead>Supplier</TableHead>
-              <TableHead>Days Since Last Purchase</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Reorder Level</TableHead>
+              <TableHead>Updated By</TableHead>
+              <TableHead>Last Updated</TableHead>
               <TableHead className="w-[80px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedItems.map((item) => (
-              <TableRow key={item.id}>
+              <TableRow key={item.sku}>
                 <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>{item.SKU}</TableCell>
+                <TableCell>{item.sku}</TableCell>
                 <TableCell>{item.category}</TableCell>
+                <TableCell>{item.quantity}</TableCell>
+                <TableCell>{item.quantityUnit}</TableCell>
+                <TableCell>{item.supplier}</TableCell>
                 <TableCell>
-                  <Badge>{item.currentStock}</Badge>
+                  <Badge>{item.status}</Badge>
                 </TableCell>
                 <TableCell>{item.reorderLevel}</TableCell>
-                <TableCell>{item.supplier}</TableCell>
-                <TableCell>{item.daysSinceLastPurchase} days</TableCell>
+                <TableCell>{item.updatedBy}</TableCell>
+                <TableCell>
+                  {format(new Date(item.date), "HH:mm (d MMM)")}
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -146,6 +194,10 @@ export default function ReorderLevel() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(item)}>
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => handleDelete(item.id)}
@@ -217,31 +269,19 @@ export default function ReorderLevel() {
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={confirmDelete}
       />
+      <EditItemDialog
+        item={itemToEdit}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSave={handleSaveEdit}
+        sku={data.sku}
+        suppliers={data.suppliers}
+        categories={data.categories}
+        newSku={(sku: any) => {
+          // Handle new SKU if needed
+          console.log("New SKU:", sku);
+        }}
+      />
     </div>
   );
 }
-
-const initialItems: any = [
-  {
-    id: 1,
-    SKU: "lkjaoiab",
-    category: "Electronics",
-    name: "Item C",
-    currentStock: 80,
-    reorderLevel: 100,
-    supplier: "Supplier X",
-    daysSinceLastPurchase: 10,
-    status: "Below Reorder",
-  },
-  {
-    id: 2,
-    SKU: "34gs35",
-    category: "Supplies",
-    name: "Item D",
-    currentStock: 60,
-    reorderLevel: 90,
-    supplier: "Supplier Y",
-    daysSinceLastPurchase: 12,
-    status: "Below Reorder",
-  },
-];

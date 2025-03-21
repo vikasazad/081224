@@ -56,7 +56,7 @@ function processData(data: any) {
             room.bookingDetails.customer.name,
             room.bookingDetails.location,
             room.bookingDetails.noOfGuests,
-            room.bookingDetails.payment?.priceAfterDiscount || 0,
+            room.bookingDetails.payment?.price || 0,
             room.bookingDetails.status,
             room.bookingDetails.attendant || "",
             room.bookingDetails.payment?.paymentId || "",
@@ -232,6 +232,7 @@ const headCells = [
 
 export default function OrderTable({ data }: { data: any }) {
   const rows = processData(data);
+  // console.log("ROWSssss", rows);
 
   return (
     <Card className="w-full">

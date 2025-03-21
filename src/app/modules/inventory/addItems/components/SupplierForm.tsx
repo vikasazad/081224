@@ -36,7 +36,7 @@ type SupplierFormValues = z.infer<typeof supplierFormSchema>;
 interface SupplierFormProps {
   onSave: (data: SupplierFormValues) => void;
   onCancel: () => void;
-  initialData?: SupplierFormValues;
+  initialData?: any;
 }
 
 export function SupplierForm({
@@ -44,19 +44,21 @@ export function SupplierForm({
   onCancel,
   initialData,
 }: SupplierFormProps) {
-  const [phoneNumbers, setPhoneNumbers] = useState(
+  const [phoneNumbers, setPhoneNumbers] = useState<string[]>(
     initialData?.phoneNumbers || [""]
   );
-  const [gstNumbers, setGstNumbers] = useState(initialData?.gstNumbers || [""]);
+  const [gstNumbers, setGstNumbers] = useState<string[]>(
+    initialData?.gstNumbers || [""]
+  );
 
   const form = useForm<SupplierFormValues>({
     resolver: zodResolver(supplierFormSchema),
-    defaultValues: initialData || {
-      name: "",
-      phoneNumbers: [""],
-      email: "",
-      address: "",
-      gstNumbers: [""],
+    defaultValues: {
+      name: initialData?.name || "",
+      phoneNumbers: initialData?.phoneNumbers || [""],
+      email: initialData?.email || "",
+      address: initialData?.address || "",
+      gstNumbers: initialData?.gstNumbers || [""],
     },
   });
 
@@ -64,9 +66,35 @@ export function SupplierForm({
     onSave(data);
   }
 
+  const addPhoneNumber = () => {
+    if (phoneNumbers.length < 2) {
+      const newPhoneNumbers = [...phoneNumbers, ""];
+      setPhoneNumbers(newPhoneNumbers);
+      form.setValue("phoneNumbers", newPhoneNumbers);
+    }
+  };
+
+  const removePhoneNumber = (index: number) => {
+    const newPhoneNumbers = phoneNumbers.filter((_, i) => i !== index);
+    setPhoneNumbers(newPhoneNumbers);
+    form.setValue("phoneNumbers", newPhoneNumbers);
+  };
+
+  const addGstNumber = () => {
+    const newGstNumbers = [...gstNumbers, ""];
+    setGstNumbers(newGstNumbers);
+    form.setValue("gstNumbers", newGstNumbers);
+  };
+
+  const removeGstNumber = (index: number) => {
+    const newGstNumbers = gstNumbers.filter((_, i) => i !== index);
+    setGstNumbers(newGstNumbers);
+    form.setValue("gstNumbers", newGstNumbers);
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardContent className="py-2">
+      <CardContent className="py-2 max-h-[80vh] overflow-y-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
@@ -95,14 +123,12 @@ export function SupplierForm({
                     <FormControl>
                       <div className="flex items-center space-x-2">
                         <Input placeholder="Phone number" {...field} />
-                        {index === 0 && phoneNumbers.length < 2 && (
+                        {phoneNumbers.length < 2 && index === 0 && (
                           <Button
                             type="button"
                             variant="outline"
                             size="icon"
-                            onClick={() =>
-                              setPhoneNumbers([...phoneNumbers, ""])
-                            }
+                            onClick={addPhoneNumber}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -112,10 +138,7 @@ export function SupplierForm({
                             type="button"
                             variant="outline"
                             size="icon"
-                            onClick={() => {
-                              setPhoneNumbers([phoneNumbers[0]]);
-                              form.unregister(`phoneNumbers.1`);
-                            }}
+                            onClick={() => removePhoneNumber(index)}
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -177,7 +200,7 @@ export function SupplierForm({
                             type="button"
                             variant="outline"
                             size="icon"
-                            onClick={() => setGstNumbers([...gstNumbers, ""])}
+                            onClick={addGstNumber}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -187,12 +210,7 @@ export function SupplierForm({
                             type="button"
                             variant="outline"
                             size="icon"
-                            onClick={() => {
-                              const newGstNumbers = [...gstNumbers];
-                              newGstNumbers.splice(index, 1);
-                              setGstNumbers(newGstNumbers);
-                              form.unregister(`gstNumbers.${index}`);
-                            }}
+                            onClick={() => removeGstNumber(index)}
                           >
                             <X className="h-4 w-4" />
                           </Button>

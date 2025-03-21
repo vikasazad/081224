@@ -29,18 +29,45 @@ export function EditSupplierDialog({
   onOpenChange,
   onSave,
 }: EditSupplierDialogProps) {
+  console.log("LLLLLLLLLL", supplier);
   const [formData, setFormData] = useState<any>({
     name: supplier?.name || "",
     phoneNumber: supplier?.phoneNumber || "",
+    additionalPhoneNumber: supplier?.phoneNumber?.[1] || "",
     email: supplier?.email || "",
     address: supplier?.address || "",
-    gstNumber: supplier?.gstNumber || "",
+    gstNumbers: supplier?.gstNumber || [""],
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    const phoneNumbers = [formData.phoneNumber];
+    if (formData.additionalPhoneNumber) {
+      phoneNumbers.push(formData.additionalPhoneNumber);
+    }
+
+    onSave({
+      ...formData,
+      phoneNumber: phoneNumbers,
+      gstNumber: formData.gstNumbers.filter(Boolean),
+    });
     onOpenChange(false);
+  };
+
+  const addGstNumber = () => {
+    setFormData({
+      ...formData,
+      gstNumbers: [...formData.gstNumbers, ""],
+    });
+  };
+
+  const updateGstNumber = (index: number, value: string) => {
+    const newGstNumbers = [...formData.gstNumbers];
+    newGstNumbers[index] = value;
+    setFormData({
+      ...formData,
+      gstNumbers: newGstNumbers,
+    });
   };
 
   return (
@@ -67,9 +94,24 @@ export function EditSupplierDialog({
               <Label htmlFor="phoneNumber">Phone Number</Label>
               <Input
                 id="phoneNumber"
-                value={formData.phoneNumber}
+                value={formData.phoneNumber[0]}
                 onChange={(e) =>
                   setFormData({ ...formData, phoneNumber: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="additionalPhoneNumber">
+                Additional Phone Number
+              </Label>
+              <Input
+                id="additionalPhoneNumber"
+                value={formData.additionalPhoneNumber}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    additionalPhoneNumber: e.target.value,
+                  })
                 }
               />
             </div>
@@ -95,14 +137,23 @@ export function EditSupplierDialog({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="gstNumber">GST Number</Label>
-              <Input
-                id="gstNumber"
-                value={formData.gstNumber}
-                onChange={(e) =>
-                  setFormData({ ...formData, gstNumber: e.target.value })
-                }
-              />
+              <Label>GST Numbers</Label>
+              {formData.gstNumbers.map((gst: string, index: number) => (
+                <Input
+                  key={index}
+                  value={gst}
+                  onChange={(e) => updateGstNumber(index, e.target.value)}
+                  placeholder={`GST Number ${index + 1}`}
+                />
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addGstNumber}
+                className="mt-2"
+              >
+                Add Another GST Number
+              </Button>
             </div>
           </div>
           <DialogFooter>
