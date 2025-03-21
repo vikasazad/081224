@@ -70,6 +70,7 @@ export default function DayCheckOut({
   const [currentStatusChange, setCurrentStatusChange] = useState<any>(null);
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [submitFlag, setSubmitFlag] = useState(false);
+  const gst = "18";
 
   useEffect(() => {
     setRoomData(data);
@@ -748,6 +749,7 @@ export default function DayCheckOut({
                           open={checklistOpen}
                           onClose={() => setChecklistOpen(false)}
                           roomNumber={item.bookingDetails.location}
+                          gst={gst}
                         />
                       </div>
                     </AccordionContent>
