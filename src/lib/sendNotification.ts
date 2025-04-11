@@ -8,10 +8,10 @@ import * as dotenv from "dotenv";
 dotenv.config();
 // console.log(":::::::::::::::::::::", process.env.FIREBASE_ADMIN_CREDENTIALS);
 // Initialize Firebase Admin SDK
-if (process.env.FIREBASE_ADMIN_CREDENTIALS) {
+if (process.env.NEXT_PUBLIC_FIREBASE_ADMIN_CREDENTIALS) {
   if (!admin.apps.length) {
     const serviceAccount: any = JSON.parse(
-      process.env.FIREBASE_ADMIN_CREDENTIALS
+      process.env.NEXT_PUBLIC_FIREBASE_ADMIN_CREDENTIALS
     );
 
     admin.initializeApp({

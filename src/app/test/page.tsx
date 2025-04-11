@@ -1,5 +1,5 @@
 "use client";
-import { add, sendWhatsAppMessage, update } from "@/lib/firebase/firestore";
+import { update } from "@/lib/firebase/firestore";
 // import { update } from "@/lib/firebase/firestore";
 // import { SignJWT } from "jose";
 export default function Test() {
