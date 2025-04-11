@@ -44,3 +44,23 @@ export async function getMenuData() {
     return false;
   }
 }
+
+export async function getKitchenData() {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data().kitchen;
+    } else {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+}

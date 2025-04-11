@@ -36,18 +36,24 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { saveRoomData } from "../../utils/staffData";
 
 const WalkInModal = ({ isOpen, onClose, room }: any) => {
+  // Get today and tomorrow's dates
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
   const [guestDetails, setGuestDetails] = useState<any>({
     name: "",
     phone: "",
     email: "",
-    checkIn: null,
-    checkOut: null,
+    checkIn: today,
+    checkOut: tomorrow,
     paymentMode: {
       cash: false,
       card: false,
       upi: false,
+      ota: false,
     },
-    numberOfGuests: "1",
+    numberOfGuests: "2",
     numberOfRooms: "1",
   });
   const [errors, setErrors] = useState<any>({});
@@ -77,9 +83,9 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
     if (!guestDetails.phone.trim()) formErrors.phone = "Phone is required";
     if (!/^\d{10}$/.test(guestDetails.phone))
       formErrors.phone = "Invalid phone number";
-    if (!guestDetails.email.trim()) formErrors.email = "Email is required";
-    if (!/\S+@\S+\.\S+/.test(guestDetails.email))
+    if (guestDetails.email.trim() && !/\S+@\S+\.\S+/.test(guestDetails.email)) {
       formErrors.email = "Invalid email address";
+    }
     if (!guestDetails.checkIn) formErrors.checkIn = "Check-in date is required";
     if (!guestDetails.checkOut)
       formErrors.checkOut = "Check-out date is required";
@@ -93,7 +99,8 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
     if (
       !guestDetails.paymentMode.cash &&
       !guestDetails.paymentMode.card &&
-      !guestDetails.paymentMode.upi
+      !guestDetails.paymentMode.upi &&
+      !guestDetails.paymentMode.ota
     ) {
       formErrors.paymentMode = "Please select a payment mode";
     }
@@ -263,7 +270,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
                 )}
               </div>
               <div>
-                <Label htmlFor="email">Email*</Label>
+                <Label htmlFor="email">Email (Optional)</Label>
                 <Input
                   id="email"
                   type="email"
@@ -424,6 +431,14 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
                       onCheckedChange={() => handlePaymentModeChange("upi")}
                     />
                     <Label htmlFor="upi">UPI</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="ota"
+                      checked={guestDetails.paymentMode.ota}
+                      onCheckedChange={() => handlePaymentModeChange("ota")}
+                    />
+                    <Label htmlFor="ota">OTA</Label>
                   </div>
                 </div>
               </div>

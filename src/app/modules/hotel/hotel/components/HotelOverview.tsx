@@ -64,7 +64,7 @@ const HotelOverview = ({ data }: { data: any }) => {
   const [description, setDescription] = useState("");
   const [discountAmount, setDiscountAmount] = useState("");
   const [discountCode, setDiscountCode] = useState("");
-  const [discountType, setDiscountType] = useState("");
+  const [discountType, setDiscountType] = useState("none");
   const [dbImages, setDbImages] = useState<any[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<any[]>([]);
   const [errors, setErrors] = useState({

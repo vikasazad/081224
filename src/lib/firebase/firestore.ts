@@ -35,7 +35,7 @@ export async function update(email: string, newUser: any, field: string) {
   try {
     const docRef = doc(db, email, field);
     await updateDoc(docRef, {
-      services: newUser,
+      kitchen: newUser,
     });
     return "User registered Successfully";
   } catch (error) {
@@ -315,5 +315,63 @@ export async function getDataFromVikumar() {
   } catch (error) {
     console.error("Error copying document:", error);
     return false;
+  }
+}
+
+export async function sendWhatsAppMessage(
+  phoneNumber: string,
+  variables: string[]
+) {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    const formattedPhone = phoneNumber.replace(/\D/g, "");
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: "booking",
+            language: { code: "en_US" },
+            components: [
+              {
+                type: "header",
+                parameters: [{ type: "text", text: "Pawan Rai" }], // Reservation number as header
+              },
+              {
+                type: "body",
+                parameters: variables.map((value) => ({
+                  type: "text",
+                  text: value,
+                })),
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("WhatsApp API Response:", data); // Add logging for debugging
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to send message");
+    }
+
+    return { success: true, message: "Message sent successfully!", data };
+  } catch (error: any) {
+    console.error("WhatsApp API Error:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
   }
 }

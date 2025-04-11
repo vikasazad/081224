@@ -100,7 +100,13 @@ import {
 
 export default auth((req) => {
   console.log("=============", req.auth);
+
+  // Check if the request is for the webhook
   const { nextUrl } = req;
+  if (nextUrl.pathname.startsWith("/api/webhooks/instagram")) {
+    return; // Let it go through without auth or redirects
+  }
+
   const user = req.auth?.user;
   const isLoggedIn = !!req.auth;
   const newUser = user?.newUser;

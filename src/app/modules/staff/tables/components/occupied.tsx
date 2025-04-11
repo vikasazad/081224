@@ -334,7 +334,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     setTableData((prevTableData: any) => {
       const updatedTableData: any = [...prevTableData];
 
-      if (orderId.startsWith("OR") || orderId.startsWith("ABS")) {
+      if (orderId.startsWith("OR") || orderId.startsWith("BOK")) {
         const orderIndex = updatedTableData[
           index
         ].diningDetails.orders.findIndex(

@@ -26,16 +26,18 @@ const baseNavItems = [
   { href: "/staff", label: "Staff" },
   { href: "/hotel", label: "Hotel" },
   { href: "/restaurant", label: "Restaurant" },
-  { href: "/request", label: "Requests" },
   { href: "/account", label: "Account" },
   { href: "/inventory", label: "Inventory" },
+  { href: "/kitchen", label: "Kitchen" },
+  { href: "/social", label: "Social" },
 ];
 
 const staffNavItems = [
   { href: "/staff", label: "Staff" },
   { href: "/hotel", label: "Hotel" },
   { href: "/restaurant", label: "Restaurant" },
-  { href: "/request", label: "Requests" },
+  { href: "/kitchen", label: "Kitchen" },
+  { href: "/social", label: "Social" },
 ];
 
 export function Header({ staff }: HeaderProps) {

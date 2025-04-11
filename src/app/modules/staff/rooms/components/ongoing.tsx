@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
 import {
+  addKitchenOrder,
   calculateTax,
   getRoomData,
   setOfflineRoom,
@@ -65,6 +66,11 @@ import {
 } from "../../tables/utils/tableApi";
 import { cn } from "@/lib/utils";
 
+// Function to generate a 4-digit random number
+const generateRandomOrderNumber = () => {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+};
+
 export default function Ongoing({ data, status }: { data: any; status: any }) {
   const [roomData, setRoomData] = useState<any>([]);
   const [addItems, setAddItems] = useState<any>([]);
@@ -84,8 +90,9 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   const [openFinalSubmitConfirmation, setOpenFinalSubmitConfirmation] =
     useState(false);
   const [finalSubmitData, setFinalSubmitData] = useState<any>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const gstPercentage = "18";
-
+  // console.log("addItems", addItems);
   useEffect(() => {
     setRoomData(data);
   }, [data]);
@@ -132,6 +139,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   };
 
   const handleCategoryItemSelect = (item: any) => {
+    console.log("ITEM", item);
     setSelectedCategoryItems((prev) =>
       prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
@@ -156,7 +164,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
     const updatedTableData = [...roomData];
 
     // Perform changes based on the order ID prefix
-    if (orderId.startsWith("ABS:")) {
+    if (orderId.startsWith("BOK:")) {
       // Update booking details
       console.log("HERE.....................");
       updatedTableData[index].bookingDetails.attendant = attendant;
@@ -212,257 +220,271 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   };
 
   const handleAdd = async (items: any[], index: number) => {
-    console.log("AAAAAAAA", items);
-    const updatedRoomData: any = [...roomData];
+    if (items.length > 0) {
+      console.log("AAAAAAAA", items);
+      const updatedRoomData: any = [...roomData];
 
-    if (items[0].quantity) {
-      const assignedAttendant: any =
-        assignAttendantSequentially(availableAttendant);
-      const newOrderId = `OR:${
-        roomData[index].bookingDetails.location
-      }:${new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })}`;
-      setAddedType("food");
-      updatedRoomData[index] = {
-        ...updatedRoomData[index],
-        diningDetails: {
-          ...updatedRoomData[index].diningDetails,
+      if (items[0]?.quantity) {
+        const assignedAttendant: any =
+          assignAttendantSequentially(availableAttendant);
+        const newOrderId = `OR:R-${
+          roomData[index].bookingDetails.location
+        }:${generateRandomOrderNumber()}`;
+        setAddedType("food");
+        updatedRoomData[index] = {
+          ...updatedRoomData[index],
+          diningDetails: {
+            ...updatedRoomData[index].diningDetails,
 
+            attendant: assignedAttendant
+              ? assignedAttendant.name
+              : "Unassigned",
+            attendantToken: assignedAttendant
+              ? assignedAttendant.notificationToken
+              : "",
+            location:
+              updatedRoomData[index]?.bookingDetails?.location ||
+              "Not Available",
+            noOfGuests:
+              updatedRoomData[index]?.bookingDetails?.noOfGuests ||
+              "Not Available",
+            timeOfRequest: new Date().toISOString(),
+            timeOfFullfilment: "",
+            orders: [
+              ...(updatedRoomData[index].diningDetails?.orders || []),
+              {
+                orderId: newOrderId,
+                items: items,
+                attendant: assignedAttendant
+                  ? assignedAttendant.name
+                  : "Unassigned",
+                attendantToken: assignedAttendant
+                  ? assignedAttendant.notificationToken
+                  : "",
+                status: "order placed",
+                timeOfRequest: new Date().toISOString(),
+                timeOfFullfilment: "",
+                specialRequirement: "",
+                payment: {
+                  discount: {
+                    type: "none",
+                    amount: 0,
+                    code: "",
+                  },
+                  gst: {
+                    gstAmount: gstPercentage
+                      ? await calculateTax(items, gstPercentage)
+                      : "",
+                    gstPercentage: gstPercentage || "",
+                    cgstAmount: "",
+                    cgstPercentage: "",
+                    sgstAmount: "",
+                    sgstPercentage: "",
+                  },
+                  subtotal: await calculateOrderTotal(items),
+                  mode: "",
+                  paymentId: "",
+                  paymentStatus: "pending",
+                  price: gstPercentage
+                    ? (await calculateOrderTotal(items)) +
+                      (await calculateTax(items, gstPercentage))
+                    : await calculateOrderTotal(items),
+                  priceAfterDiscount: "",
+                  timeOfTransaction: "",
+                  transctionId: "",
+                },
+              },
+            ],
+          },
+        };
+
+        if (availableAttendant) {
+          const updatedAttendants = availableAttendant.map((staff: any) =>
+            staff.name === assignedAttendant.name
+              ? { ...staff, orders: [...staff.orders, newOrderId] }
+              : staff
+          );
+          setavailableAttendant(updatedAttendants);
+        }
+        if (roomData[index]) {
+          // const token = roomData[index]?.diningDetails.customer.notificationToken;
+          // if (token) {
+          //   console.log("token", token);
+          //   sendNotification(
+          //     token,
+          //     "Item Added to Order!",
+          //     "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
+          //   );
+          // }
+
+          // const data = await setOfflineItem(updatedTableData);
+          console.log("UPDATED", updatedRoomData[index]);
+          setOfflineRoom(updatedRoomData[index]);
+          const price = gstPercentage
+            ? (await calculateOrderTotal(items)) +
+              (await calculateTax(items, gstPercentage))
+            : await calculateOrderTotal(items);
+
+          // console.log("ADD KITCHEN ORDER", {
+          //   newOrderId,
+          //   customerName: updatedRoomData[index]?.bookingDetails?.customer?.name,
+          //   items,
+          //   price,
+          // });
+          addKitchenOrder(
+            newOrderId,
+            updatedRoomData[index]?.bookingDetails?.customer?.name,
+            items,
+            price
+          );
+          updateOrdersForAttendant(assignedAttendant.name, newOrderId);
+        }
+      } else if (items[0]?.startTime || items[0]?.endTime) {
+        // Service items[0]
+        console.log("here in services", items[0]);
+        const assignedAttendant: any =
+          assignAttendantSequentially(availableAttendant);
+        const newOrderId = `SE:R-${
+          roomData[index].bookingDetails.location
+        }:${generateRandomOrderNumber()}`;
+        const newService = {
+          serviceId: newOrderId,
+          serviceName: items[0].name,
+          startTime: items[0].startTime,
+          endTime: items[0].endTime,
+          price: parseFloat(items[0].price),
           attendant: assignedAttendant ? assignedAttendant.name : "Unassigned",
           attendantToken: assignedAttendant
             ? assignedAttendant.notificationToken
             : "",
-          location:
-            updatedRoomData[index]?.bookingDetails?.location || "Not Available",
-          noOfGuests:
-            updatedRoomData[index]?.bookingDetails?.noOfGuests ||
-            "Not Available",
+          status: "requested",
+          description: items[0].description,
           timeOfRequest: new Date().toISOString(),
-          timeOfFullfilment: "",
-          orders: [
-            ...(updatedRoomData[index].diningDetails?.orders || []),
-            {
-              orderId: newOrderId,
-              items: items,
-              attendant: assignedAttendant
-                ? assignedAttendant.name
-                : "Unassigned",
-              attendantToken: assignedAttendant
-                ? assignedAttendant.notificationToken
-                : "",
-              status: "order placed",
-              timeOfRequest: new Date().toISOString(),
-              timeOfFullfilment: "",
-              specialRequirement: "",
-              payment: {
-                discount: {
-                  type: "none",
-                  amount: 0,
-                  code: "",
-                },
-                gst: {
-                  gstAmount: gstPercentage
-                    ? calculateTax(items, gstPercentage)
-                    : "",
-                  gstPercentage: gstPercentage || "",
-                  cgstAmount: "",
-                  cgstPercentage: "",
-                  sgstAmount: "",
-                  sgstPercentage: "",
-                },
-                subtotal: calculateOrderTotal(items),
-                mode: "",
-                paymentId: "",
-                paymentStatus: "pending",
-                price: gstPercentage
-                  ? calculateOrderTotal(items) +
-                    calculateTax(items, gstPercentage)
-                  : calculateOrderTotal(items),
-                priceAfterDiscount: "",
-                timeOfTransaction: "",
-                transctionId: "",
-              },
+          payment: {
+            discount: {
+              type: "none",
+              amount: 0,
+              code: "",
             },
-          ],
-        },
-      };
-
-      if (availableAttendant) {
-        const updatedAttendants = availableAttendant.map((staff: any) =>
-          staff.name === assignedAttendant.name
-            ? { ...staff, orders: [...staff.orders, newOrderId] }
-            : staff
-        );
-        setavailableAttendant(updatedAttendants);
-      }
-      if (roomData[index]) {
-        // const token = roomData[index]?.diningDetails.customer.notificationToken;
-        // if (token) {
-        //   console.log("token", token);
-        //   sendNotification(
-        //     token,
-        //     "Item Added to Order!",
-        //     "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
-        //   );
-        // }
-
-        // const data = await setOfflineItem(updatedTableData);
-        console.log("UPDATED", updatedRoomData[index]);
-        setOfflineRoom(updatedRoomData[index]);
-        updateOrdersForAttendant(assignedAttendant.name, newOrderId);
-      }
-    } else if (items[0].startTime || items[0].endTime) {
-      // Service items[0]
-      console.log("here in services", items[0]);
-      const assignedAttendant: any =
-        assignAttendantSequentially(availableAttendant);
-      const newOrderId = `SE:${
-        roomData[index].bookingDetails.location
-      }:${new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })}`;
-      const newService = {
-        serviceId: newOrderId,
-        serviceName: items[0].name,
-        startTime: items[0].startTime,
-        endTime: items[0].endTime,
-        price: parseFloat(items[0].price),
-        attendant: assignedAttendant ? assignedAttendant.name : "Unassigned",
-        attendantToken: assignedAttendant
-          ? assignedAttendant.notificationToken
-          : "",
-        status: "requested",
-        description: items[0].description,
-        timeOfRequest: new Date().toISOString(),
-        payment: {
-          discount: {
-            type: "none",
-            amount: 0,
-            code: "",
+            gst: {
+              gstAmount: gstPercentage
+                ? await calculateTax(items, gstPercentage)
+                : "",
+              gstPercentage: gstPercentage || "",
+              cgstAmount: "",
+              cgstPercentage: "",
+              sgstAmount: "",
+              sgstPercentage: "",
+            },
+            subtotal: await calculateOrderTotal(items),
+            mode: "",
+            paymentId: "",
+            paymentStatus: "pending",
+            price: gstPercentage
+              ? (await calculateOrderTotal(items)) +
+                (await calculateTax(items, gstPercentage))
+              : await calculateOrderTotal(items),
+            priceAfterDiscount: "",
+            timeOfTransaction: "",
+            transctionId: "",
           },
-          gst: {
-            gstAmount: gstPercentage ? calculateTax(items, gstPercentage) : "",
-            gstPercentage: gstPercentage || "",
-            cgstAmount: "",
-            cgstPercentage: "",
-            sgstAmount: "",
-            sgstPercentage: "",
+        };
+
+        // Ensure servicesUsed is an array before updating
+        updatedRoomData[index] = {
+          ...updatedRoomData[index],
+          servicesUsed: Array.isArray(updatedRoomData[index]?.servicesUsed)
+            ? [...updatedRoomData[index].servicesUsed, newService]
+            : [newService], // Initialize as a new array if undefined or not an array
+        };
+        if (availableAttendant) {
+          const updatedAttendants = availableAttendant.map((staff: any) =>
+            staff.name === assignedAttendant.name
+              ? { ...staff, orders: [...staff.orders, newOrderId] }
+              : staff
+          );
+          setavailableAttendant(updatedAttendants);
+        }
+        if (roomData[index]) {
+          // const token = roomData[index]?.diningDetails.customer.notificationToken;
+          // if (token) {
+          //   console.log("token", token);
+          //   sendNotification(
+          //     token,
+          //     "Item Added to Order!",
+          //     "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
+          //   );
+          // }
+
+          // const data = await setOfflineItem(updatedTableData);
+          console.log("UPDATED", updatedRoomData[index]);
+          setOfflineRoom(updatedRoomData[index]);
+          updateOrdersForAttendant(assignedAttendant.name, newOrderId);
+        }
+      } else if (items[0]?.issueSubtype) {
+        // Issue item
+        const assignedAttendant: any =
+          assignAttendantSequentially(availableAttendant);
+        const newOrderId = `IS:R-${
+          roomData[index].bookingDetails.location
+        }:${generateRandomOrderNumber()}`;
+        setAddedType("issue");
+        const newIssue = {
+          issueId: newOrderId,
+          name: items[0].name,
+          category: items[0].issueSubtype,
+          description: issueDescription
+            ? issueDescription
+            : "No description provided",
+          reportTime: new Date().toISOString(),
+          status: "Assigned",
+          attendant: assignedAttendant ? assignedAttendant.name : "Unassigned",
+          attendantToken: assignedAttendant
+            ? assignedAttendant.notificationToken
+            : "",
+        };
+
+        updatedRoomData[index] = {
+          ...updatedRoomData[index],
+          issuesReported: {
+            ...updatedRoomData[index].issuesReported,
+            [items[0].name]: newIssue,
           },
-          subtotal: calculateOrderTotal(items),
-          mode: "",
-          paymentId: "",
-          paymentStatus: "pending",
-          price: gstPercentage
-            ? calculateOrderTotal(items) + calculateTax(items, gstPercentage)
-            : calculateOrderTotal(items),
-          priceAfterDiscount: "",
-          timeOfTransaction: "",
-          transctionId: "",
-        },
-      };
+        };
 
-      // Ensure servicesUsed is an array before updating
-      updatedRoomData[index] = {
-        ...updatedRoomData[index],
-        servicesUsed: Array.isArray(updatedRoomData[index]?.servicesUsed)
-          ? [...updatedRoomData[index].servicesUsed, newService]
-          : [newService], // Initialize as a new array if undefined or not an array
-      };
-      if (availableAttendant) {
-        const updatedAttendants = availableAttendant.map((staff: any) =>
-          staff.name === assignedAttendant.name
-            ? { ...staff, orders: [...staff.orders, newOrderId] }
-            : staff
-        );
-        setavailableAttendant(updatedAttendants);
+        if (availableAttendant) {
+          const updatedAttendants = availableAttendant.map((staff: any) =>
+            staff.name === assignedAttendant.name
+              ? { ...staff, orders: [...staff.orders, newOrderId] }
+              : staff
+          );
+          setavailableAttendant(updatedAttendants);
+        }
+        if (roomData[index]) {
+          // const token = roomData[index]?.diningDetails.customer.notificationToken;
+          // if (token) {
+          //   console.log("token", token);
+          //   sendNotification(
+          //     token,
+          //     "Item Added to Order!",
+          //     "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
+          //   );
+          // }
+
+          // const data = await setOfflineItem(updatedTableData);
+          console.log("UPDATED", updatedRoomData[index]);
+          setOfflineRoom(updatedRoomData[index]);
+          updateOrdersForAttendant(assignedAttendant.name, newOrderId);
+        }
       }
-      if (roomData[index]) {
-        // const token = roomData[index]?.diningDetails.customer.notificationToken;
-        // if (token) {
-        //   console.log("token", token);
-        //   sendNotification(
-        //     token,
-        //     "Item Added to Order!",
-        //     "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
-        //   );
-        // }
+      console.log("updatedRoomData", updatedRoomData[index]);
 
-        // const data = await setOfflineItem(updatedTableData);
-        console.log("UPDATED", updatedRoomData[index]);
-        setOfflineRoom(updatedRoomData[index]);
-        updateOrdersForAttendant(assignedAttendant.name, newOrderId);
-      }
-    } else if (items[0].issueSubtype) {
-      // Issue item
-      const assignedAttendant: any =
-        assignAttendantSequentially(availableAttendant);
-      const newOrderId = `IS:${
-        roomData[index].bookingDetails.location
-      }:${new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })}`;
-      setAddedType("issue");
-      const newIssue = {
-        issueId: newOrderId,
-        name: items[0].name,
-        category: items[0].issueSubtype,
-        description: issueDescription
-          ? issueDescription
-          : "No description provided",
-        reportTime: new Date().toISOString(),
-        status: "Assigned",
-        attendant: assignedAttendant ? assignedAttendant.name : "Unassigned",
-        attendantToken: assignedAttendant
-          ? assignedAttendant.notificationToken
-          : "",
-      };
-
-      updatedRoomData[index] = {
-        ...updatedRoomData[index],
-        issuesReported: {
-          ...updatedRoomData[index].issuesReported,
-          [items[0].name]: newIssue,
-        },
-      };
-
-      if (availableAttendant) {
-        const updatedAttendants = availableAttendant.map((staff: any) =>
-          staff.name === assignedAttendant.name
-            ? { ...staff, orders: [...staff.orders, newOrderId] }
-            : staff
-        );
-        setavailableAttendant(updatedAttendants);
-      }
-      if (roomData[index]) {
-        // const token = roomData[index]?.diningDetails.customer.notificationToken;
-        // if (token) {
-        //   console.log("token", token);
-        //   sendNotification(
-        //     token,
-        //     "Item Added to Order!",
-        //     "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
-        //   );
-        // }
-
-        // const data = await setOfflineItem(updatedTableData);
-        console.log("UPDATED", updatedRoomData[index]);
-        setOfflineRoom(updatedRoomData[index]);
-        updateOrdersForAttendant(assignedAttendant.name, newOrderId);
-      }
+      setRoomData(updatedRoomData);
+      setSelectedCategoryItems([]);
+      setCategorySearchTerm("");
+      setIssueDescription("");
+      setIsAddDialogOpen(false);
     }
-    console.log("updatedRoomData", updatedRoomData[index]);
-
-    setRoomData(updatedRoomData);
-    setSelectedCategoryItems([]);
-    setCategorySearchTerm("");
-    setIssueDescription("");
   };
 
   const handleStatusChange = async (
@@ -569,7 +591,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
             transctionId: "cash",
           };
         }
-      } else if (orderId.startsWith("ABS")) {
+      } else if (orderId.startsWith("BOK")) {
         if (status.toLocaleLowerCase() === "paid") {
           updatedRoomData[index].bookingDetails.payment = {
             ...updatedRoomData[index].bookingDetails.payment, // Preserve existing fields
@@ -582,6 +604,42 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
         } else {
           updatedRoomData[index].bookingDetails.payment.paymentStatus = status;
         }
+      } else if (orderId.startsWith("RES")) {
+        console.log("here in ros", orderId, status);
+        const orderIndex = updatedRoomData[
+          index
+        ].diningDetails.orders.findIndex(
+          (order: any) => order.orderId === orderId
+        );
+        if (orderIndex !== -1) {
+          if (status.toLocaleLowerCase() === "served") {
+            console.log("here1");
+            // Set fulfillment time first
+            updatedRoomData[index].diningDetails.timeOfFullfilment =
+              new Date().toString();
+            updatedRoomData[index].diningDetails.orders[
+              orderIndex
+            ].timeOfFullfilment = new Date().toString();
+
+            // Check payment status and set final status accordingly
+          } else if (status.toLocaleLowerCase() === "paid") {
+            console.log("here3");
+            updatedRoomData[index].diningDetails.orders[orderIndex].status =
+              status;
+            updatedRoomData[index].diningDetails.orders[orderIndex].payment = {
+              ...updatedRoomData[index].diningDetails.orders[orderIndex]
+                .payment,
+              mode: "cash",
+              paymentId: "cash",
+              paymentStatus: "paid",
+              timeOfTransaction: new Date().toISOString(),
+              transctionId: "cash",
+            };
+          } else {
+            updatedRoomData[index].diningDetails.orders[orderIndex].status =
+              status;
+          }
+        }
       } else if (orderId.startsWith("OR")) {
         const orderIndex = updatedRoomData[
           index
@@ -592,14 +650,11 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
           updatedRoomData[index].diningDetails.orders[orderIndex].status =
             status;
           if (status.toLocaleLowerCase() === "served") {
-            if (
-              updatedRoomData[index].diningDetails.orders[orderIndex].payment
-                .paymentStatus === "paid"
-            ) {
-              updateStatus("paid", orderId, index);
-            } else {
-              updateStatus("Pending", orderId, index);
-            }
+            updatedRoomData[index].diningDetails.timeOfFullfilment =
+              new Date().toString();
+            updatedRoomData[index].diningDetails.orders[
+              orderIndex
+            ].timeOfFullfilment = new Date().toString();
           }
           if (status.toLocaleLowerCase() === "paid") {
             updatedRoomData[index].diningDetails.orders[orderIndex].payment = {
@@ -652,11 +707,12 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
 
   const handleCheckListInfo = (data: any) => {
     // Clone the roomData to make changes
-    // console.log("DATA", data);s
+    console.log("DATA", data);
+
     let index = 0;
     setSubmitFlag(data.flag);
     const updatedRoomData = roomData.map((room: any, i: number) => {
-      if (room.diningDetails.location === data.location) {
+      if (room.bookingDetails.location === data.location) {
         index = i;
         return {
           ...room,
@@ -667,7 +723,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
       }
       return room;
     });
-
+    console.log("roomData", updatedRoomData);
     // Save the updated data into state
     setOfflineRoom(updatedRoomData[index]);
     setRoomData(updatedRoomData);
@@ -726,7 +782,10 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                           </div>
                           <div className="flex items-center gap-3">
                             <div>
-                              <Dialog>
+                              <Dialog
+                                open={isAddDialogOpen}
+                                onOpenChange={setIsAddDialogOpen}
+                              >
                                 <DialogTrigger asChild>
                                   <div
                                     className="flex items-center gap-1 px-2 py-1 border rounded-md"
@@ -802,7 +861,23 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                                   {categorySelect ===
                                                     "Food" && (
                                                     <TableCell>
-                                                      {item.quantity}
+                                                      <div className="flex items-center gap-2">
+                                                        <span className="text-sm text-muted-foreground">
+                                                          {item.quantity}
+                                                        </span>
+                                                        <Input
+                                                          type="number"
+                                                          min="1"
+                                                          defaultValue="1"
+                                                          className="w-20"
+                                                          onChange={(e) => {
+                                                            item.count =
+                                                              parseInt(
+                                                                e.target.value
+                                                              ) || 1;
+                                                          }}
+                                                        />
+                                                      </div>
                                                     </TableCell>
                                                   )}
                                                   {categorySelect ===
@@ -835,11 +910,19 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                                       checked={selectedCategoryItems.includes(
                                                         item
                                                       )}
-                                                      onCheckedChange={() =>
+                                                      onCheckedChange={() => {
+                                                        if (
+                                                          categorySelect ===
+                                                          "Food"
+                                                        ) {
+                                                          if (!item.count) {
+                                                            item.count = 1;
+                                                          }
+                                                        }
                                                         handleCategoryItemSelect(
                                                           item
-                                                        )
-                                                      }
+                                                        );
+                                                      }}
                                                     />
                                                   </TableCell>
                                                 </TableRow>
@@ -862,9 +945,9 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                   <DialogFooter>
                                     <Button
                                       variant="outline"
-                                      onClick={() =>
-                                        handleAdd(selectedCategoryItems, main)
-                                      }
+                                      onClick={() => {
+                                        handleAdd(selectedCategoryItems, main);
+                                      }}
                                     >
                                       Add
                                     </Button>

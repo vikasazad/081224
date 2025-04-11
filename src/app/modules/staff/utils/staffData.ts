@@ -1,7 +1,8 @@
 "use server";
 import { auth } from "@/auth";
 import { db } from "@/config/db/firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { SignJWT } from "jose";
 interface StaffMember {
   name: string;
   notificationToken: string;
@@ -331,6 +332,8 @@ export async function setOfflineRoom(tableData: any) {
         "live.rooms": updatedData,
       });
 
+      // await addKitchenOrder(tableData);
+
       console.log("Data successfully updated and saved to Firestore.");
       return true;
     } else {
@@ -582,7 +585,7 @@ export async function setAttendent(tableData: any) {
 //     return false;
 //   }
 
-//   const _bookingId = generateOrderId("ABS", roomInfo.roomNo);
+//   const _bookingId = generateOrderId("BOK", roomInfo.roomNo);
 //   const _attendant = await getOnlineConcierge();
 
 //   const _roominfo = {
@@ -703,7 +706,7 @@ export async function saveRoomData(roomInfo: any) {
       return false;
     }
 
-    const _bookingId = generateOrderId("ABS", roomInfo.roomNo);
+    const _bookingId = generateOrderId("BOK", roomInfo.roomNo);
     const _attendant = await getOnlineConcierge();
 
     const _roomInfo = {
@@ -770,6 +773,7 @@ export async function saveRoomData(roomInfo: any) {
             paymentId: roomInfo.paymentId,
             timeOfTransaction: new Date().toISOString(),
             price: roomInfo.price,
+            subtotal: roomInfo.price,
             priceAfterDiscount: roomInfo.priceAfterDiscount || "",
             gst: {
               gstAmount: roomInfo.gstAmount || "",
@@ -809,7 +813,26 @@ export async function saveRoomData(roomInfo: any) {
       if (_attendant) {
         await updateOrdersForAttendant(_attendant.name, _bookingId);
         await removeRoomByNumber(roomInfo.roomNo, roomInfo.roomType);
-        // return _remove;
+        const shortUrl = await shortenURL(
+          "vikumar.azad@gmail.com",
+          roomInfo.roomNo,
+          roomInfo.phone,
+          "concierge",
+          "18"
+        );
+        await sendWhatsAppMessage(`91${roomInfo.phone}`, roomInfo.name, [
+          _bookingId,
+          roomInfo.roomNo,
+          roomInfo.checkIn,
+          roomInfo.checkOut,
+          roomInfo.nights,
+          roomInfo.price,
+          roomInfo.price,
+          "0",
+          "123-456-7890", // Hotel Contact 1
+          "987-654-3210", // Hotel Contact 2
+          shortUrl,
+        ]);
       }
 
       console.log("Room data updated successfully");
@@ -818,5 +841,158 @@ export async function saveRoomData(roomInfo: any) {
     }
   } catch (error) {
     console.error("Error while saving room data:", error);
+  }
+}
+
+export async function sendWhatsAppMessage(
+  phoneNumber: string,
+  name: string,
+  variables: string[]
+) {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    console.log("phoneNumber", phoneNumber, name, variables);
+    const formattedPhone = phoneNumber.replace(/\D/g, "");
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: "booking1",
+            language: { code: "en_US" },
+            components: [
+              {
+                type: "header",
+                parameters: [{ type: "text", text: name }], // Reservation number as header
+              },
+              {
+                type: "body",
+                parameters: variables.map((value) => ({
+                  type: "text",
+                  text: String(value),
+                })),
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("WhatsApp API Response:", data); // Add logging for debugging
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to send message");
+    }
+
+    return { success: true, message: "Message sent successfully!", data };
+  } catch (error: any) {
+    console.error("WhatsApp API Error:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
+  }
+}
+
+async function shortenURL(
+  email: string,
+  roomNo: string,
+  phone: string,
+  tag: string,
+  gstPercentage: string
+) {
+  const encodedSecretKey = new TextEncoder().encode("Vikas@1234");
+  const payload = {
+    email: email,
+    roomNo: roomNo,
+    phone: phone,
+    tag: tag,
+    tax: { gstPercentage: gstPercentage },
+  };
+  const newToken = await new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .sign(encodedSecretKey);
+  const longUrl = `${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}/login?token=${newToken}`;
+
+  const response = await fetch(
+    `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`
+  );
+  const shortUrl = await response.text();
+
+  console.log(shortUrl);
+  return shortUrl;
+}
+
+export async function addKitchenOrder(
+  orderId: string,
+  customerName: string,
+  items: any[],
+  price: number
+) {
+  try {
+    const session = await auth();
+    const user = session?.user?.email;
+
+    if (!user) {
+      console.error("User email is undefined");
+      return false;
+    }
+
+    // Reference to the Firestore document containing kitchen orders
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      // If kitchen document doesn't exist, create it with initial structure
+      await setDoc(docRef, {
+        orders: {},
+      });
+    }
+
+    const kitchenData = docSnap.exists()
+      ? docSnap.data().kitchen
+      : { orders: {} };
+
+    // Generate a unique order ID if not provided
+
+    // Create the new order object with required fields
+    const newOrder = {
+      id: orderId,
+      customerName: customerName,
+      status: "New",
+      items: items,
+      createdAt: new Date().toString(),
+      startedAt: null,
+      completedAt: null,
+      totalAmount: price,
+      preparationTimeMinutes: null,
+    };
+
+    // Add the new order to the kitchen orders
+    const updatedOrders = {
+      [orderId]: newOrder,
+      ...kitchenData.orders,
+    };
+
+    // Update the document with the new order
+    await updateDoc(docRef, {
+      "kitchen.orders": updatedOrders,
+    });
+
+    console.log("Kitchen order added successfully");
+    return true;
+  } catch (error) {
+    console.error("Error adding kitchen order: ", error);
+    return false;
   }
 }

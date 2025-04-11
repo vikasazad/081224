@@ -2,16 +2,34 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import DashboardOverview from "@/components/dashboard-overview";
-import { fetchOverviewData } from "../utils/overviewApi";
+import { setupRealtimeDashboard } from "../utils/overviewApi";
+import { useSession } from "next-auth/react";
 
 const Overview = () => {
   const [info, setInfo] = useState<any>(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
-    fetchOverviewData().then((data) => {
-      setInfo(data); // Update state
-    });
-  }, []);
+    let cleanup: (() => void) | undefined;
+
+    if (session?.user?.email) {
+      // Setup real-time listeners
+      cleanup = setupRealtimeDashboard(session.user.email, (dashboardData) => {
+        setInfo({
+          user: session.user,
+          data: dashboardData.data,
+          table: dashboardData.table,
+        });
+      });
+    }
+
+    // Cleanup function to remove listeners when component unmounts
+    return () => {
+      if (cleanup) {
+        cleanup();
+      }
+    };
+  }, [session]);
 
   return (
     <div>
@@ -26,9 +44,9 @@ const Overview = () => {
           <Image
             src="/avatars/loader.svg"
             alt="Loading..."
-            width={50} // Specify width
-            height={50} // Specify height
-            priority // Ensures this image loads as soon as possible
+            width={50}
+            height={50}
+            priority
           />
         </div>
       )}
