@@ -45,7 +45,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
 
           const existingAdmin = await findUserByEmail(email);
-          console.log("existingAdmin", existingAdmin);
+          // console.log("existingAdmin", existingAdmin);
           if (!existingAdmin)
             throw new Error("Couldn't find for Buildbility Account!");
 
@@ -60,7 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               staff: isValidStaff.password,
               pass: await compare(password, isValidStaff.password),
             });
-            if (await compare(password, isValidStaff.password)) {
+            if (password === isValidStaff.password) {
               const newUser: any = {
                 id: existingAdmin.personalInfo.contactInfo.email,
                 email: existingAdmin.personalInfo.contactInfo.email,
@@ -123,6 +123,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: "/login",
   },
+
   callbacks: {
     signIn: async ({ user, account }) => {
       if (account?.provider === "google") {

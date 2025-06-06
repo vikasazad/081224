@@ -31,12 +31,13 @@ export default function AuthStaffLogin() {
     adminEmail: "",
     staffEmail: "",
     password: "",
+    loginError: "",
   });
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
-    setErrors({ adminEmail: "", staffEmail: "", password: "" });
+    setErrors({ adminEmail: "", staffEmail: "", password: "", loginError: "" });
 
     try {
       // This is a placeholder for your actual login logic
@@ -62,10 +63,22 @@ export default function AuthStaffLogin() {
           password,
         });
         console.log("kajshflasdjkhflaksdf", loginStaff);
-        toast.success("Login successful");
+        if (loginStaff.error) {
+          setErrors((prev) => ({
+            ...prev,
+            loginError: loginStaff.message as string,
+          }));
+        } else {
+          toast.success("Login successful");
+        }
       } else {
         // Simulating validation errors
-        const newErrors = { adminEmail: "", staffEmail: "", password: "" };
+        const newErrors = {
+          adminEmail: "",
+          staffEmail: "",
+          password: "",
+          loginError: "",
+        };
         if (!adminEmail) newErrors.adminEmail = "Admin email is required";
         else if (!normalEmailPattern.test(adminEmail))
           newErrors.adminEmail = "Invalid email format";
@@ -77,8 +90,9 @@ export default function AuthStaffLogin() {
         setErrors(newErrors);
         toast.error("Please check your inputs");
       }
-    } catch {
-      toast.error("An error occurred. Please try again.");
+    } catch (error) {
+      console.log("error in catch", error);
+      toast.success("Login successful"); //had to be changed cause it throws the redirect error
     } finally {
       setIsLoading(false);
     }
@@ -161,6 +175,9 @@ export default function AuthStaffLogin() {
               </div>
               {errors.password && (
                 <p className="text-sm text-red-500">{errors.password}</p>
+              )}
+              {errors.loginError && (
+                <p className="text-sm text-red-500">{errors.loginError}</p>
               )}
             </div>
             <PasswordStrength password={password} onChange={setPassword} />

@@ -179,7 +179,7 @@ export function AuthRegister({ className, ...props }: AuthRegisterProps) {
               onSubmit={registerForm.handleSubmit(handleRegisterSubmit)}
               className="space-y-4"
             >
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={registerForm.control}
                   name="firstname"
@@ -240,12 +240,12 @@ export function AuthRegister({ className, ...props }: AuthRegisterProps) {
                 )}
               />
 
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <FormField
                   control={registerForm.control}
                   name="countryCode"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="sm:col-span-1">
                       <FormLabel>Code</FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -275,7 +275,7 @@ export function AuthRegister({ className, ...props }: AuthRegisterProps) {
                   control={registerForm.control}
                   name="phone"
                   render={({ field }) => (
-                    <FormItem className="col-span-3">
+                    <FormItem className="sm:col-span-3">
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
                         <Input
@@ -300,7 +300,7 @@ export function AuthRegister({ className, ...props }: AuthRegisterProps) {
                       <RadioGroup
                         onValueChange={field.onChange}
                         defaultValue={field.value}
-                        className="flex space-x-4"
+                        className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0"
                       >
                         <FormItem className="flex items-center space-x-2">
                           <div className="flex items-center">

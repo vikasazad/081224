@@ -381,8 +381,8 @@ const DashboardOverview = ({
           </CardContent>
         </Card>
       </div>
-      <div className="flex flex-col gap-4 md:flex-row md:gap-8">
-        <Card className="w-full">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-8">
+        <Card className="w-full md:col-span-4">
           <CardHeader>
             <CardTitle>Overview</CardTitle>
           </CardHeader>
@@ -398,7 +398,9 @@ const DashboardOverview = ({
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        <StatsGrid table={table} />
+        <div className="w-full md:col-span-1">
+          <StatsGrid table={table} />
+        </div>
       </div>
 
       <div>

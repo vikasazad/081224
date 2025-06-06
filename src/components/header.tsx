@@ -1,9 +1,8 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Menu, Package2, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Menu } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -15,6 +14,7 @@ import {
 import { UserNav } from "@/components/user-nav";
 import { Notifications } from "@/components/notifications";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface HeaderProps {
   staff?: boolean;
@@ -42,6 +42,7 @@ const staffNavItems = [
 
 export function Header({ staff }: HeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Function to check if the route is active
   const isActive = (path: string) => {
@@ -55,21 +56,25 @@ export function Header({ staff }: HeaderProps) {
   const navItems = [...(staff ? staffNavItems : baseNavItems)];
 
   return (
-    <div className=" top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+    <div className=" top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-8">
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 text-lg font-semibold md:text-base"
-        >
-          <Package2 className="h-6 w-6" />
-          <span className="sr-only">Acme Inc</span>
-        </Link>
+        <Image
+          src="/Blogo.svg"
+          alt="Brand Logo"
+          width={35}
+          height={35}
+          className="h-10 w-10"
+          priority
+          onClick={() => router.push("/dashboard")}
+        />
+        {/* <span className="sr-only">Acme Inc</span> */}
+
         {navItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              "transition-colors hover:text-foreground",
+              "transition-colors hover:text-foreground ",
               isActive(item.href)
                 ? "text-foreground font-medium"
                 : "text-muted-foreground"
@@ -94,13 +99,16 @@ export function Header({ staff }: HeaderProps) {
             </SheetDescription>
           </SheetHeader>
           <nav className="grid gap-6 text-lg font-medium mt-4">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 text-lg font-semibold"
-            >
-              <Package2 className="h-6 w-6" />
-              <span className="sr-only">Acme Inc</span>
-            </Link>
+            <Image
+              src="/Blogo.svg"
+              alt="Brand Logo"
+              width={35}
+              height={35}
+              className="h-10 w-10"
+              priority
+              onClick={() => router.push("/dashboard")}
+            />
+
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -121,12 +129,12 @@ export function Header({ staff }: HeaderProps) {
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
         <form className="ml-auto flex-1 sm:flex-initial">
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
+            {/* <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /> */}
+            {/* <Input
               type="search"
               placeholder="Search products..."
               className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
-            />
+            /> */}
           </div>
         </form>
         <Notifications />

@@ -17,6 +17,7 @@ export async function staffAuth({
   const email = adminEmail;
   const sEmail = staffEmail;
   const pass = password;
+  console.log("StaffLoginData", { email, sEmail, pass });
 
   if (!email || !staffEmail || !pass)
     throw new Error("Please provide all fields");
@@ -39,25 +40,34 @@ export async function staffAuth({
   }
 
   try {
-    await signIn("credentials", {
+    const response = await signIn("credentials", {
       email,
       staffEmail,
       password,
       redirectTo: "/staff",
     });
+    console.log("response", response);
     return { error: false, message: "Login successful" };
   } catch (err) {
+    console.log("err here also", err);
+
     if (err instanceof AuthError) {
-      switch (err.type) {
+      const { type, cause } = err as AuthError;
+      switch (type) {
         case "CredentialsSignin":
           return {
             error: true,
-            message: "Invalid Credentials!",
+            message: "Invalid credentials.",
+          };
+        case "CallbackRouteError":
+          return {
+            error: true,
+            message: cause?.err?.toString(),
           };
         default:
           return {
             error: true,
-            message: "Something went wrong!",
+            message: "Something went wrong.",
           };
       }
     }
