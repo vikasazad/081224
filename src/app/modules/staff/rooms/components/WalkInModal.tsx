@@ -37,26 +37,49 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { saveRoomData } from "../../utils/staffData";
 
 const WalkInModal = ({ isOpen, onClose, room }: any) => {
-  // Get today and tomorrow's dates
   const today = new Date();
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const [guestDetails, setGuestDetails] = useState<any>({
-    name: "",
-    phone: "",
-    email: "",
-    checkIn: today,
-    checkOut: tomorrow,
-    paymentMode: {
-      cash: false,
-      card: false,
-      upi: false,
-      ota: false,
-    },
-    numberOfGuests: "2",
-    numberOfRooms: "1",
+  const [guestDetails, setGuestDetails] = useState<any>(() => {
+    const savedState = localStorage.getItem("walkInFormState");
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      return (
+        parsedState.guestDetails || {
+          name: "",
+          phone: "",
+          email: "",
+          checkIn: today,
+          checkOut: tomorrow,
+          paymentMode: {
+            cash: false,
+            card: false,
+            upi: false,
+            ota: false,
+          },
+          numberOfGuests: "2",
+          numberOfRooms: "1",
+        }
+      );
+    }
+    return {
+      name: "",
+      phone: "",
+      email: "",
+      checkIn: today,
+      checkOut: tomorrow,
+      paymentMode: {
+        cash: false,
+        card: false,
+        upi: false,
+        ota: false,
+      },
+      numberOfGuests: "2",
+      numberOfRooms: "1",
+    };
   });
+
   const [errors, setErrors] = useState<any>({});
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -65,6 +88,19 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
   const [fNumber, setFNumber] = useState("");
   const [verificationId, setVerificationId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Save state whenever guestDetails changes
+  useEffect(() => {
+    localStorage.setItem("walkInFormState", JSON.stringify({ guestDetails }));
+  }, [guestDetails]);
+
+  // Track form changes
+  const handleFormChange = (field: string, value: any) => {
+    setGuestDetails((prev: any) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
   useEffect(() => {
     let interval: any;
@@ -138,44 +174,20 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
   };
 
   const handleOtpSubmit = async () => {
-    setIsLoading(true); // Add loading state
-    console.log("handleOtpSubmit called with values:", otp);
-
+    setIsLoading(true);
     try {
-      console.log("Verifying phone OTP...");
       const phoneVerified = await verifyOtp(verificationId, otp);
-      console.log("phoneVerified:", phoneVerified);
-
       if (!phoneVerified) {
         toast.error("Invalid phone OTP");
-        console.log("Invalid phone OTP");
         return;
       }
 
-      // Set state and show toast before navigation
       toast.success("Verification successful!");
-      console.log("User verification successful!");
-
-      setIsLoading(false);
-      console.log("Guest Details:", {
-        ...guestDetails,
-        roomNo: room.roomNo,
-        roomType: room.roomType,
-        price: room.price,
-        inclusions: room.inclusions,
-        checkIn: guestDetails.checkIn.toISOString(),
-        checkOut: guestDetails.checkOut.toISOString(),
-        paymentMode: Object.keys(guestDetails.paymentMode)
-          .filter((mode) => guestDetails.paymentMode[mode])
-          .join(", "),
-        noOfGuests: guestDetails.numberOfGuests,
-        noOfRooms: guestDetails.numberOfRooms,
-      });
       const checkIn = new Date(guestDetails.checkIn);
       const checkOut = new Date(guestDetails.checkOut);
-
       const nights =
         (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24);
+
       const roomInfo = {
         ...guestDetails,
         roomNo: room.roomNo,
@@ -191,8 +203,10 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
         noOfGuests: guestDetails.numberOfGuests,
         noOfRooms: guestDetails.numberOfRooms,
       };
+
       const _room = await saveRoomData(roomInfo);
       console.log("ROOM", _room);
+      localStorage.removeItem("walkInFormState"); // Clear saved state after successful submission
       onClose();
     } catch (error) {
       toast.error("Verification failed");
@@ -254,9 +268,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
                 <Input
                   id="name"
                   value={guestDetails.name}
-                  onChange={(e) =>
-                    setGuestDetails({ ...guestDetails, name: e.target.value })
-                  }
+                  onChange={(e) => handleFormChange("name", e.target.value)}
                 />
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name}</p>
@@ -267,9 +279,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
                 <Input
                   id="phone"
                   value={guestDetails.phone}
-                  onChange={(e) =>
-                    setGuestDetails({ ...guestDetails, phone: e.target.value })
-                  }
+                  onChange={(e) => handleFormChange("phone", e.target.value)}
                 />
                 {errors.phone && (
                   <p className="text-sm text-red-500">{errors.phone}</p>
@@ -281,9 +291,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
                   id="email"
                   type="email"
                   value={guestDetails.email}
-                  onChange={(e) =>
-                    setGuestDetails({ ...guestDetails, email: e.target.value })
-                  }
+                  onChange={(e) => handleFormChange("email", e.target.value)}
                 />
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email}</p>
@@ -312,9 +320,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
                     <Calendar
                       mode="single"
                       selected={guestDetails.checkIn}
-                      onSelect={(date) =>
-                        setGuestDetails({ ...guestDetails, checkIn: date })
-                      }
+                      onSelect={(date) => handleFormChange("checkIn", date)}
                       initialFocus
                     />
                   </PopoverContent>
@@ -348,9 +354,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
                     <Calendar
                       mode="single"
                       selected={guestDetails.checkOut}
-                      onSelect={(date) =>
-                        setGuestDetails({ ...guestDetails, checkOut: date })
-                      }
+                      onSelect={(date) => handleFormChange("checkOut", date)}
                       initialFocus
                     />
                   </PopoverContent>
@@ -366,7 +370,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
                 <Select
                   value={guestDetails.numberOfGuests}
                   onValueChange={(value) =>
-                    setGuestDetails({ ...guestDetails, numberOfGuests: value })
+                    handleFormChange("numberOfGuests", value)
                   }
                 >
                   <SelectTrigger>
@@ -391,7 +395,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
                 <Select
                   value={guestDetails.numberOfRooms}
                   onValueChange={(value) =>
-                    setGuestDetails({ ...guestDetails, numberOfRooms: value })
+                    handleFormChange("numberOfRooms", value)
                   }
                 >
                   <SelectTrigger>
