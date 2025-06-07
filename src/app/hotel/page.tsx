@@ -2,16 +2,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HotelOverview from "../modules/hotel/hotel/components/HotelOverview";
 import Service from "../modules/hotel/service/components/services";
 import {
+  getConciergeQRData,
   getHotelData,
   handleRoomInformation,
 } from "../modules/hotel/utils/hotelDataApi";
 import History from "../modules/hotel/history/components/History";
 import Transactions from "../modules/hotel/transctions/components/Transactions";
+import ConciergeQR from "../modules/hotel/ConciergeQR/components/ConciergeQR";
+import { auth } from "@/auth";
 
 export default async function Dashboard() {
+  const session = await auth();
+  const user = session?.user?.email;
   const data = await getHotelData();
   const room = await handleRoomInformation();
-  console.log("DATA", room);
+  const conciergeQR = await getConciergeQRData();
+  // console.log("DATA", conciergeQR);
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="space-y-4 p-2 mx-8">
@@ -30,6 +36,7 @@ export default async function Dashboard() {
           <TabsTrigger value="services">Services</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="tranasactions">Tranasactions</TabsTrigger>
+          <TabsTrigger value="concierge">Concierge QR</TabsTrigger>
         </TabsList>
         <TabsContent value="hotel" className="space-y-4">
           <HotelOverview data={data} />
@@ -43,6 +50,9 @@ export default async function Dashboard() {
         </TabsContent>
         <TabsContent value="tranasactions" className="space-y-4">
           <Transactions data={data} room={room} />
+        </TabsContent>
+        <TabsContent value="concierge" className="space-y-4">
+          <ConciergeQR data={conciergeQR} room={user} />
         </TabsContent>
       </Tabs>
     </div>

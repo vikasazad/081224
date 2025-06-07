@@ -6,18 +6,10 @@ import Profile from "../modules/account/profile/components/Profile";
 import RestaurantDetail from "../modules/account/restaurant/components/RestaurantDetail";
 import Settings from "../modules/account/settings/components/Settings";
 import Staff from "../modules/account/staff/components/Staff";
-import {
-  getManagementData,
-  getQRData,
-} from "../modules/account/utils/AccountApi";
-import QR from "../modules/account/QR/components/QR";
-import { auth } from "@/auth";
+import { getManagementData } from "../modules/account/utils/AccountApi";
 
 export default async function Dashboard() {
-  const session = await auth();
-  const user = session?.user?.email;
   const data: any = await getManagementData();
-  const qr = await getQRData();
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -33,7 +25,6 @@ export default async function Dashboard() {
           <TabsTrigger value="changepassword">Change Password</TabsTrigger>
           <TabsTrigger value="hotel">Hotel</TabsTrigger>
           <TabsTrigger value="restaurant">Restaurant</TabsTrigger>
-          <TabsTrigger value="qr">QR</TabsTrigger>
           <TabsTrigger value="business">Business</TabsTrigger>
           <TabsTrigger value="staff">Staff</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -49,9 +40,6 @@ export default async function Dashboard() {
         </TabsContent>
         <TabsContent value="restaurant" className="space-y-4">
           <RestaurantDetail data={data.restaurant} />
-        </TabsContent>
-        <TabsContent value="qr" className="space-y-4">
-          <QR data={qr} user={user} />
         </TabsContent>
         <TabsContent value="business" className="space-y-4">
           <Business data={data.business} />

@@ -922,7 +922,7 @@ async function shortenURL(
   const newToken = await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .sign(encodedSecretKey);
-  const longUrl = `${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}/login?token=${newToken}`;
+  const longUrl = `${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}${newToken}`;
 
   const response = await fetch(
     `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`

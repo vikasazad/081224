@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+  DrawerDescription,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -235,13 +236,14 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
   };
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[80%] md:max-w-[550px] w-full h-[90vh] md:h-auto p-0">
+      <Drawer open={isOpen} onOpenChange={onClose}>
+        <DrawerContent className="mx-auto sm:max-w-[80%] md:max-w-[550px] w-full h-[90vh] md:h-auto p-0 flex flex-col">
           <div id="recaptcha-container" />
-          <DialogHeader className="p-6 pb-2">
-            <DialogTitle>Walk-in Guest Details</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="h-full max-h-[calc(90vh-4rem)] md:max-h-[600px] px-5 pb-6">
+          <DrawerHeader className="p-6 pb-2">
+            <DrawerTitle>Walk-in Guest Details</DrawerTitle>
+          </DrawerHeader>
+          <DrawerDescription> </DrawerDescription>
+          <ScrollArea className="flex-1 px-5 pb-2">
             <div className="space-y-4 mx-1">
               <div>
                 <Label htmlFor="name">Name*</Label>
@@ -449,12 +451,14 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
               )}
 
               {!isOtpSent ? (
-                <Button onClick={handleSubmit}>
-                  {isLoading && (
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Submit
-                </Button>
+                <DrawerFooter className="sticky bottom-0 bg-background p-2 border-t flex justify-between">
+                  <Button onClick={handleSubmit} className="w-full">
+                    {isLoading && (
+                      <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Submit
+                  </Button>
+                </DrawerFooter>
               ) : (
                 <>
                   <div>
@@ -490,9 +494,8 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
               )}
             </div>
           </ScrollArea>
-        </DialogContent>
-        <DialogDescription></DialogDescription>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 };

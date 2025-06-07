@@ -299,3 +299,34 @@ export async function saveLaundryServices(
     return false;
   }
 }
+
+export async function getConciergeQRData() {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  const docRef = doc(db, user, "hotel");
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const data = docSnap.data().rooms;
+
+    // Extract all table numbers
+    let roomNumbers: string[] = [];
+
+    Object.keys(data).forEach((key) => {
+      const roomCategory = data[key];
+      if (roomCategory.roomNo) {
+        roomNumbers = roomNumbers.concat(roomCategory.roomNo);
+        roomNumbers.sort();
+      }
+    });
+
+    return roomNumbers;
+  } else {
+    console.error("Document not found!");
+    return [];
+  }
+}

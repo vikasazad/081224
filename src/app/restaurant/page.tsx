@@ -3,17 +3,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Table from "../modules/restaurant/table/components/Table";
 import {
   getMenuData,
+  getQRData,
   getTableData,
 } from "../modules/restaurant/utils/restaurantDataApi";
 import Restaurant from "../modules/restaurant/restaurant/components/Restaurant";
 import History from "../modules/restaurant/history/components/History";
 import Tranasactions from "../modules/restaurant/transaction/components/Transactions";
-import QR from "../modules/restaurant/QR/components/QR";
+import TableQR from "../modules/restaurant/QR/components/TableQR";
+import { auth } from "@/auth";
 
 export default async function Dashboard() {
+  const session = await auth();
+  const user = session?.user?.email;
   const data = await getTableData();
   const menu = await getMenuData();
-  console.log("DATA", data);
+  const qr = await getQRData();
+  // console.log("DATA", data);
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="space-y-4 p-2 mx-8">
@@ -28,7 +33,7 @@ export default async function Dashboard() {
           <TabsTrigger value="restaurant">Restaurant</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="tranasactions">Tranasactions</TabsTrigger>
-          <TabsTrigger value="qr">QR</TabsTrigger>
+          <TabsTrigger value="qr">TableQR</TabsTrigger>
         </TabsList>
         <TabsContent value="table" className="space-y-4">
           <Table data={data} />
@@ -44,7 +49,7 @@ export default async function Dashboard() {
           <Tranasactions data={data} />
         </TabsContent>
         <TabsContent value="qr" className="space-y-4">
-          <QR data={data} />
+          <TableQR data={qr} user={user} />
         </TabsContent>
       </Tabs>
     </div>
