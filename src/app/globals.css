@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent zoom on mobile devices */
+html {
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+/* Ensure proper input field sizing to prevent zoom */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+textarea {
+  font-size: 16px !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
