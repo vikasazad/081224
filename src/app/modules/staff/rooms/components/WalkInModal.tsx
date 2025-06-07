@@ -238,7 +238,11 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
     <>
       <Drawer open={isOpen} onOpenChange={onClose}>
         <DrawerContent className="mx-auto sm:max-w-[80%] md:max-w-[550px] w-full h-[90vh] md:h-auto p-0 flex flex-col">
-          <div id="recaptcha-container" />
+          <div
+            id="recaptcha-container"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999]"
+            style={{ position: "fixed" }}
+          />
           <DrawerHeader className="p-6 pb-2">
             <DrawerTitle>Walk-in Guest Details</DrawerTitle>
           </DrawerHeader>
