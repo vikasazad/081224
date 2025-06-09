@@ -81,18 +81,69 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
   });
 
   const [errors, setErrors] = useState<any>({});
-  const [otp, setOtp] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [timer, setTimer] = useState(15);
-  const [canResend, setCanResend] = useState(false);
-  const [fNumber, setFNumber] = useState("");
-  const [verificationId, setVerificationId] = useState<string>("");
+  const [otp, setOtp] = useState(() => {
+    const savedState = localStorage.getItem("walkInFormState");
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      return parsedState.otp || "";
+    }
+    return "";
+  });
+  const [isOtpSent, setIsOtpSent] = useState(() => {
+    const savedState = localStorage.getItem("walkInFormState");
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      return parsedState.isOtpSent || false;
+    }
+    return false;
+  });
+  const [timer, setTimer] = useState(() => {
+    const savedState = localStorage.getItem("walkInFormState");
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      return parsedState.timer || 15;
+    }
+    return 15;
+  });
+  const [canResend, setCanResend] = useState(() => {
+    const savedState = localStorage.getItem("walkInFormState");
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      return parsedState.canResend || false;
+    }
+    return false;
+  });
+  const [fNumber, setFNumber] = useState(() => {
+    const savedState = localStorage.getItem("walkInFormState");
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      return parsedState.fNumber || "";
+    }
+    return "";
+  });
+  const [verificationId, setVerificationId] = useState<string>(() => {
+    const savedState = localStorage.getItem("walkInFormState");
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      return parsedState.verificationId || "";
+    }
+    return "";
+  });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Save state whenever guestDetails changes
+  // Save all state whenever any relevant state changes
   useEffect(() => {
-    localStorage.setItem("walkInFormState", JSON.stringify({ guestDetails }));
-  }, [guestDetails]);
+    const stateToSave = {
+      guestDetails,
+      otp,
+      isOtpSent,
+      timer,
+      canResend,
+      fNumber,
+      verificationId,
+    };
+    localStorage.setItem("walkInFormState", JSON.stringify(stateToSave));
+  }, [guestDetails, otp, isOtpSent, timer, canResend, fNumber, verificationId]);
 
   // Track form changes
   const handleFormChange = (field: string, value: any) => {
@@ -106,7 +157,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
     let interval: any;
     if (isOtpSent && timer > 0) {
       interval = setInterval(() => {
-        setTimer((prevTimer) => prevTimer - 1);
+        setTimer((prevTimer: any) => prevTimer - 1);
       }, 1000);
     } else if (timer === 0) {
       setCanResend(true);
@@ -206,7 +257,31 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
 
       const _room = await saveRoomData(roomInfo);
       console.log("ROOM", _room);
-      localStorage.removeItem("walkInFormState"); // Clear saved state after successful submission
+
+      // Clear all state after successful verification and data save
+      localStorage.removeItem("walkInFormState");
+      setGuestDetails({
+        name: "",
+        phone: "",
+        email: "",
+        checkIn: today,
+        checkOut: tomorrow,
+        paymentMode: {
+          cash: false,
+          card: false,
+          upi: false,
+          ota: false,
+        },
+        numberOfGuests: "2",
+        numberOfRooms: "1",
+      });
+      setOtp("");
+      setIsOtpSent(false);
+      setTimer(15);
+      setCanResend(false);
+      setFNumber("");
+      setVerificationId("");
+
       onClose();
     } catch (error) {
       toast.error("Verification failed");
@@ -252,11 +327,7 @@ const WalkInModal = ({ isOpen, onClose, room }: any) => {
     <>
       <Drawer open={isOpen} onOpenChange={onClose}>
         <DrawerContent className="mx-auto sm:max-w-[80%] md:max-w-[550px] w-full h-[90vh] md:h-auto p-0 flex flex-col">
-          <div
-            id="recaptcha-container"
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999]"
-            style={{ position: "fixed" }}
-          />
+          <div id="recaptcha-container" className=" z-[9999]" />
           <DrawerHeader className="p-6 pb-2">
             <DrawerTitle>Walk-in Guest Details</DrawerTitle>
           </DrawerHeader>
