@@ -823,8 +823,8 @@ export async function saveRoomData(roomInfo: any) {
         await sendWhatsAppMessage(`91${roomInfo.phone}`, roomInfo.name, [
           _bookingId,
           roomInfo.roomNo,
-          roomInfo.checkIn,
-          roomInfo.checkOut,
+          new Date(roomInfo.checkIn).toLocaleDateString(),
+          new Date(roomInfo.checkOut).toLocaleDateString(),
           roomInfo.nights,
           roomInfo.price,
           roomInfo.price,

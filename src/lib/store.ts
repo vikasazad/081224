@@ -3,6 +3,7 @@ import searchReducer from "./features/searchSlice";
 import serviceToggleReducer from "./features/serviceToggleSlice";
 import addToOrderReducer from "./features/addToOrderSlice";
 import activeFooterItemReducer from "./features/activeFooterCategory";
+import walkinReducer from "./features/walkinSlice";
 
 const store = () => {
   return configureStore({
@@ -11,6 +12,7 @@ const store = () => {
       serviceToggle: serviceToggleReducer,
       addToOrderData: addToOrderReducer,
       activeFooterItem: activeFooterItemReducer,
+      walkin: walkinReducer,
       // firebaseManagementData: firebaseManagementDataReducer,
       //     // firestoreMultipleData: firestoreMultipleDataReducer,
       //     // firebaseData: firebaseDataReducer,

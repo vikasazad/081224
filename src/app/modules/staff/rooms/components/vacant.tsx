@@ -4,19 +4,21 @@ import { Card, CardContent } from "@/components/ui/card";
 // import { Clock, User } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
 import { Badge } from "@/components/ui/badge";
-import WalkInModal from "./WalkInModal";
+import { useRouter } from "next/navigation";
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { useDispatch } from "react-redux";
+import { addRoom } from "@/lib/features/walkinSlice";
 
 const Vacant = ({ data }: { data: any; status: any }) => {
-  console.log("DATA", data);
+  // console.log("DATA", data);
   const [roomData, setRoomData] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState(null);
+  const dispatch = useDispatch();
+  const router = useRouter();
 
   useEffect(() => {
     const sortedData = Object.values(data).sort((a: any, b: any) => {
@@ -29,13 +31,8 @@ const Vacant = ({ data }: { data: any; status: any }) => {
   }, [data]);
 
   const handleWalkIn = (room: any) => {
-    setSelectedRoom(room);
-    setIsModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedRoom(null);
+    dispatch(addRoom(room));
+    router.push("/walkin");
   };
 
   return (
@@ -118,13 +115,6 @@ const Vacant = ({ data }: { data: any; status: any }) => {
             </Card>
           ))}
         </div>
-      )}
-      {isModalOpen && (
-        <WalkInModal
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          room={selectedRoom}
-        />
       )}
     </div>
   );
