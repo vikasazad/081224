@@ -25,7 +25,12 @@ export async function saveToken(token: string) {
         console.error("Error saving admin token:", error);
         return { success: false, error: "Failed to save admin token" };
       }
-    } else if (userRole === "staff" || userRole === "manager") {
+    } else if (
+      userRole === "staff" ||
+      userRole === "concierge" ||
+      userRole === "attendant" ||
+      userRole === "manager"
+    ) {
       try {
         // Step 1: Retrieve the current staff array
         const docSnap = await getDoc(docRef);
