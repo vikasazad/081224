@@ -4,9 +4,26 @@ import React, { useEffect, useState } from "react";
 import Rooms from "../modules/staff/rooms/components/room";
 import Tables from "../modules/staff/tables/components/table";
 import { handleRoomStaffInformation } from "../modules/staff/utils/clientside";
+import { useTokenManager } from "@/hooks/useTokenManager";
 
 const Page = () => {
   const [staffData, setStaffData] = useState<any>({});
+
+  // Use the token manager hook with custom options
+  const { getTokenInfo, isReady } = useTokenManager({
+    autoSaveOnMount: true, // Automatically save on mount
+    forceAfterMinutes: 60, // Force save after 60 minutes
+    skipTimeCheck: false, // Don't skip time check
+    onSuccess: (result) => {
+      if (!result.skipped) {
+        console.log("Token saved successfully from staff dashboard");
+      }
+    },
+    onError: (error) => {
+      console.error("Failed to save token from staff dashboard:", error);
+    },
+  });
+
   useEffect(() => {
     // Setup the listener when the component mounts
     const unsubscribe = handleRoomStaffInformation((result) => {
@@ -18,10 +35,21 @@ const Page = () => {
 
     // Cleanup the listener when the component unmounts
     return () => {
-      unsubscribe();
+      if (unsubscribe && typeof unsubscribe === "function") {
+        unsubscribe();
+      }
     };
   }, []);
-  console.log("staff", staffData);
+
+  // Debug: Log token info (remove in production)
+  useEffect(() => {
+    if (isReady) {
+      const info = getTokenInfo();
+      console.log("Token Info:", info);
+    }
+  }, [isReady, getTokenInfo]);
+
+  // console.log("staff", staffData);
 
   return (
     <>

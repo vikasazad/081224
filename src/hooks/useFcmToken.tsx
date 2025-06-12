@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { fetchToken, messaging } from "@/config/db/firebase";
 import NotificationPopup from "@/components/NotificationPopup";
-import { saveToken } from "@/app/modules/staff/utils/staffData";
 import { useNotificationPopup } from "./useNotificationPopup";
 
 interface NotificationContextType {
@@ -71,7 +70,7 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     string,
     any
   > | null>(null);
-  const loadToken = async (isInitialLoad = false) => {
+  const loadToken = async () => {
     if (isLoading.current) return;
 
     isLoading.current = true;
@@ -110,20 +109,11 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     setToken(fetchedToken);
     console.log("token", fetchedToken);
 
-    // Save token on initial page load
-    if (isInitialLoad) {
-      await saveToken(fetchedToken);
-      console.log("saveToken function executed on page load.");
-    }
+    // Remove automatic token saving to avoid conflicts with login flows
+    // Token saving is now handled in respective login components
 
     callCounter += 1;
     console.log("---->>", callCounter);
-
-    // Save token every 5th call
-    if (callCounter % 5 === 0) {
-      await saveToken(fetchedToken);
-      console.log("saveToken function executed on the 5th call.");
-    }
 
     isLoading.current = false;
   };

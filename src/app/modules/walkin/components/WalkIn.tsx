@@ -132,7 +132,7 @@ const WalkIn = () => {
     setErrors(formErrors);
     return Object.keys(formErrors).length === 0;
   };
-
+  console.log("room:", room);
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

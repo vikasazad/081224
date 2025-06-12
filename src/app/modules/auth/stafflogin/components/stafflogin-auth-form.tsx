@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +18,6 @@ import {
 import PasswordStrength from "@/components/password-strength";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { Icons } from "@/components/icons";
-import { staffAuth } from "@/app/modules/auth/stafflogin/utils/staffloginApi";
 
 const normalEmailPattern =
   /^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$/;
@@ -33,66 +34,62 @@ export default function AuthStaffLogin() {
     password: "",
     loginError: "",
   });
+  const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
     setErrors({ adminEmail: "", staffEmail: "", password: "", loginError: "" });
 
+    if (!adminEmail || !normalEmailPattern.test(adminEmail)) {
+      setErrors((prev) => ({
+        ...prev,
+        adminEmail: !adminEmail
+          ? "Admin email is required"
+          : "Invalid email format",
+      }));
+      setIsLoading(false);
+      return;
+    }
+    if (!staffEmail || !normalEmailPattern.test(staffEmail)) {
+      setErrors((prev) => ({
+        ...prev,
+        staffEmail: !staffEmail
+          ? "Staff email is required"
+          : "Invalid email format",
+      }));
+      setIsLoading(false);
+      return;
+    }
+    if (password.length < 8) {
+      setErrors((prev) => ({
+        ...prev,
+        password: "Password must be at least 8 characters long",
+      }));
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // This is a placeholder for your actual login logic
-      // In a real application, you would make an API call here
+      const result = await signIn("credentials", {
+        email: adminEmail,
+        staffEmail,
+        password,
+        redirect: false,
+      });
 
-      // Simulating a successful login
-      if (
-        adminEmail &&
-        staffEmail &&
-        password.length >= 8 &&
-        normalEmailPattern.test(adminEmail) &&
-        normalEmailPattern.test(staffEmail)
-      ) {
-        console.log({
-          adminEmail,
-          staffEmail,
-          password,
-        });
-
-        const loginStaff = await staffAuth({
-          adminEmail,
-          staffEmail,
-          password,
-        });
-        console.log("kajshflasdjkhflaksdf", loginStaff);
-        if (loginStaff.error) {
-          setErrors((prev) => ({
-            ...prev,
-            loginError: loginStaff.message as string,
-          }));
-        } else {
-          toast.success("Login successful");
-        }
+      if (result?.error) {
+        setErrors((prev) => ({ ...prev, loginError: "Invalid credentials." }));
+        toast.error("Invalid credentials.");
       } else {
-        // Simulating validation errors
-        const newErrors = {
-          adminEmail: "",
-          staffEmail: "",
-          password: "",
-          loginError: "",
-        };
-        if (!adminEmail) newErrors.adminEmail = "Admin email is required";
-        else if (!normalEmailPattern.test(adminEmail))
-          newErrors.adminEmail = "Invalid email format";
-        if (!staffEmail) newErrors.staffEmail = "Staff email is required";
-        else if (!normalEmailPattern.test(staffEmail))
-          newErrors.staffEmail = "Invalid email format";
-        if (password.length < 8)
-          newErrors.password = "Password must be at least 8 characters long";
-        setErrors(newErrors);
-        toast.error("Please check your inputs");
+        toast.success("Login successful");
+
+        // Navigate to staff page immediately
+        router.push("/staff");
       }
     } catch (error) {
-      console.log("error in catch", error);
-      toast.success("Login successful"); //had to be changed cause it throws the redirect error
+      console.log("Login error:", error);
+      toast.error("Error in login");
     } finally {
       setIsLoading(false);
     }
@@ -181,7 +178,7 @@ export default function AuthStaffLogin() {
               )}
             </div>
             <PasswordStrength password={password} onChange={setPassword} />
-            <Button disabled={isLoading}>
+            <Button disabled={isLoading} type="submit">
               {isLoading && (
                 <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
               )}

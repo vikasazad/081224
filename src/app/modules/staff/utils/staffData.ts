@@ -190,12 +190,14 @@ export async function getTableData() {
 }
 
 export async function saveToken(token: string) {
+  console.log("herealso");
   const session: any = await auth();
   const user = session?.user?.email;
   if (!user) {
     console.error("User email is undefined");
     return false;
   }
+  console.log("herealso2");
   const docRef = doc(db, user, "info");
   if (session?.user?.role === "admin") {
     try {
