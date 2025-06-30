@@ -1,10 +1,16 @@
 "use server";
 import { auth } from "@/auth";
 import { db } from "@/config/db/firebase";
+import { sendNotification } from "@/lib/sendNotification";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { SignJWT } from "jose";
+import {
+  sendStaffAssignmentRequest,
+  sendWhatsAppTextMessage,
+} from "./whatsapp-staff-manager";
 interface StaffMember {
   name: string;
+  contact: string;
   notificationToken: string;
   orders: string[];
 }
@@ -295,6 +301,7 @@ export async function setOfflineTable(tableData: any) {
   return false;
 }
 export async function setOfflineRoom(tableData: any) {
+  console.log("tableData", tableData);
   const session = await auth();
   const user = session?.user?.email;
 
@@ -390,12 +397,15 @@ export async function getOnlineConcierge() {
     const onlineStaff = info
       .filter(
         (staffMember: any) =>
-          staffMember.status === "online" && staffMember.role === "concierge"
+          staffMember.status === "online" &&
+          staffMember.role === "concierge" &&
+          staffMember.active !== false // Check that staff is active (true or undefined)
       )
       .map((staffMember: any) => ({
         name: staffMember.name,
         notificationToken: staffMember.notificationToken,
         orders: staffMember.orders,
+        contact: staffMember.contact,
       }));
 
     const _onlineStaff = assignAttendantSequentially(onlineStaff);
@@ -408,7 +418,8 @@ export async function getOnlineConcierge() {
 
 export async function updateOrdersForAttendant(
   attendantName: string,
-  orderId: string
+  orderId: string,
+  contact?: string
 ) {
   const session = await auth();
   const user = session?.user?.email;
@@ -477,7 +488,27 @@ export async function updateOrdersForAttendant(
     await updateDoc(docRef, {
       staff: staff,
     });
-
+    if (orderId.startsWith("BOK") && contact) {
+      await sendWhatsAppTextMessage(
+        contact,
+        `Booking ${orderId} assigned to you, Please reachout to reception to get the room details.`
+      );
+    } else if (orderId.startsWith("OR") && contact) {
+      await sendWhatsAppTextMessage(
+        contact,
+        `Order ${orderId} assigned to you, Please reachout to kitchen to get the order delivered.`
+      );
+    } else if (orderId.startsWith("IS") && contact) {
+      await sendWhatsAppTextMessage(
+        contact,
+        `Issue ${orderId} assigned to you. Please reachout to reception to get the issue resolved.`
+      );
+    } else if (orderId.startsWith("SE") && contact) {
+      await sendWhatsAppTextMessage(
+        contact,
+        `Service ${orderId} assigned to you, Please reachout to reception to get the service delivered.`
+      );
+    }
     console.log("Order attendant updated successfully");
   } catch (error) {
     console.error("Error updating orders: ", error);
@@ -813,7 +844,7 @@ export async function saveRoomData(roomInfo: any) {
       });
 
       if (_attendant) {
-        await updateOrdersForAttendant(_attendant.name, _bookingId);
+        // await updateOrdersForAttendant(_attendant.name, _bookingId);
         await removeRoomByNumber(roomInfo.roomNo, roomInfo.roomType);
         const shortUrl = await shortenURL(
           "vikumar.azad@gmail.com",
@@ -835,14 +866,32 @@ export async function saveRoomData(roomInfo: any) {
           "987-654-3210", // Hotel Contact 2
           shortUrl,
         ]);
+        //here to send whatsapp message to staff
+        // console.log("here in saveRoomData", _attendant);
+        await sendStaffAssignmentRequest(
+          _attendant.name,
+          _attendant.contact,
+          _bookingId,
+          roomInfo.name,
+          roomInfo.roomNo,
+          "room"
+        );
+        await sendNotification(
+          _attendant.notificationToken,
+          "New Walk-in Guest",
+          "A new walk-in guest has been registered. Please check the staff dashboard for more details."
+        );
       }
 
       console.log("Room data updated successfully");
+      return { success: true, data: _attendant };
     } else {
       console.error("Document does not exist");
+      return { success: false, data: null };
     }
   } catch (error) {
     console.error("Error while saving room data:", error);
+    return { success: false, data: null };
   }
 }
 
@@ -905,6 +954,61 @@ export async function sendWhatsAppMessage(
     };
   }
 }
+export async function sendTestWhatsAppMessage(phoneNumber: string) {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    console.log("phoneNumber", phoneNumber);
+    const formattedPhone = phoneNumber.replace(/\D/g, "");
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedPhone,
+          type: "interactive",
+          interactive: {
+            type: "button",
+            body: {
+              text: "Hey! Just confirming the guest has arrived. Let us know if you need help.",
+            },
+            action: {
+              buttons: [
+                {
+                  type: "reply",
+                  reply: {
+                    id: "change-button",
+                    title: "Change",
+                  },
+                },
+              ],
+            },
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("WhatsApp API Response:", data); // Add logging for debugging
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to send message");
+    }
+
+    return { success: true, message: "Message sent successfully!", data };
+  } catch (error: any) {
+    console.error("WhatsApp API Error:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
+  }
+}
 
 async function shortenURL(
   email: string,
@@ -939,7 +1043,9 @@ export async function addKitchenOrder(
   orderId: string,
   customerName: string,
   items: any[],
-  price: number
+  price: number,
+  attendantName: string,
+  attendantContact: string
 ) {
   try {
     const session = await auth();
@@ -978,6 +1084,8 @@ export async function addKitchenOrder(
       completedAt: null,
       totalAmount: price,
       preparationTimeMinutes: null,
+      attendantName: attendantName,
+      attendantContact: attendantContact,
     };
 
     // Add the new order to the kitchen orders

@@ -58,7 +58,7 @@ const getNotificationPermissionAndToken = async (): Promise<string | null> => {
 const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  let callCounter = 0;
+  // let callCounter = 0;
   const router = useRouter();
   const [notificationPermissionStatus, setNotificationPermissionStatus] =
     useState<NotificationPermission | null>(null);
@@ -70,18 +70,19 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     string,
     any
   > | null>(null);
+
   const loadToken = async () => {
     if (isLoading.current) return;
 
     isLoading.current = true;
+    if (!("Notification" in window)) {
+      isLoading.current = false;
+      return;
+    }
     const fetchedToken = await getNotificationPermissionAndToken();
 
     if (Notification.permission === "denied") {
       setNotificationPermissionStatus("denied");
-      console.info(
-        "%cPush Notifications issue - permission denied",
-        "color: green; background: #c7c7c7; padding: 8px; font-size: 20px"
-      );
       openPopup();
       isLoading.current = false;
       return;
@@ -90,16 +91,10 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!fetchedToken) {
       if (retryLoadToken.current >= 3) {
         alert("Unable to load token, refresh the browser");
-        console.info(
-          "%cPush Notifications issue - unable to load token after 3 retries",
-          "color: green; background: #c7c7c7; padding: 8px; font-size: 20px"
-        );
         isLoading.current = false;
         return;
       }
-
       retryLoadToken.current += 1;
-      console.error("An error occurred while retrieving token. Retrying...");
       isLoading.current = false;
       await loadToken();
       return;
@@ -107,14 +102,6 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     setNotificationPermissionStatus(Notification.permission);
     setToken(fetchedToken);
-    console.log("token", fetchedToken);
-
-    // Remove automatic token saving to avoid conflicts with login flows
-    // Token saving is now handled in respective login components
-
-    callCounter += 1;
-    console.log("---->>", callCounter);
-
     isLoading.current = false;
   };
 
@@ -176,6 +163,9 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if ("Notification" in window) {
+      if (Notification.permission !== "granted") {
+        openPopup();
+      }
       loadToken();
     }
   }, []);
@@ -196,6 +186,18 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [token]);
 
+  // Keep popup open until permission is granted
+  useEffect(() => {
+    if (
+      notificationPermissionStatus !== "granted" &&
+      "Notification" in window
+    ) {
+      openPopup();
+    } else if (notificationPermissionStatus === "granted") {
+      closePopup();
+    }
+  }, [notificationPermissionStatus]);
+
   return (
     <NotificationContext.Provider
       value={{
@@ -206,7 +208,7 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       }}
     >
       {children}
-      {showPopup && <NotificationPopup onProceedAnyway={closePopup} />}
+      {showPopup && <NotificationPopup />}
     </NotificationContext.Provider>
   );
 };

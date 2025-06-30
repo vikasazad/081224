@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import { SignJWT } from "jose";
-import { Copy, Eye, EyeOff } from "lucide-react";
+import { Copy, Eye, EyeOff, Download } from "lucide-react";
+import QRCode from "qrcode";
+import JSZip from "jszip";
 import {
   Card,
   CardContent,
@@ -18,6 +20,7 @@ const ConciergeQR = ({ data, user }: any) => {
   const [secretKey, setSecretKey] = useState("");
   const [tokens, setTokens] = useState<{ table: string; token: string }[]>([]);
   const [showSecret, setShowSecret] = useState(false);
+
   const generateTokens = async () => {
     if (!secretKey) {
       alert("Please enter a secret key");
@@ -44,6 +47,68 @@ const ConciergeQR = ({ data, user }: any) => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const downloadQRCode = async (url: string, roomNumber: string) => {
+    try {
+      const qrDataUrl = await QRCode.toDataURL(url, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: "#000000",
+          light: "#ffffff",
+        },
+      });
+
+      const link = document.createElement("a");
+      link.href = qrDataUrl;
+      link.download = `room-${roomNumber}-qr.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      alert("Failed to generate QR code");
+    }
+  };
+
+  const downloadAllQRCodes = async () => {
+    try {
+      const zip = new JSZip();
+
+      await Promise.all(
+        tokens.map(async ({ table, token }) => {
+          const url = `${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}${token}`;
+          const qrDataUrl = await QRCode.toDataURL(url, {
+            width: 300,
+            margin: 2,
+            color: {
+              dark: "#000000",
+              light: "#ffffff",
+            },
+          });
+
+          // Convert base64 to blob
+          const base64Data = qrDataUrl.split(",")[1];
+          const blob = await fetch(`data:image/png;base64,${base64Data}`).then(
+            (res) => res.blob()
+          );
+
+          zip.file(`room-${table}-qr.png`, blob);
+        })
+      );
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(content);
+      link.download = "room-qr-codes.zip";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error generating zip file:", error);
+      alert("Failed to generate zip file");
+    }
   };
 
   return (
@@ -97,34 +162,56 @@ const ConciergeQR = ({ data, user }: any) => {
             </div>
             <Button onClick={generateTokens}>Generate Tokens</Button>
             {tokens.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Generated Tokens:</h3>
-                {tokens.map(({ table, token }) => (
-                  <div
-                    key={table}
-                    className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 p-2 bg-muted/50 rounded-lg"
-                  >
-                    <span className="font-medium min-w-[80px]">
-                      Table {table}:
-                    </span>
-                    <code className="bg-muted p-2 rounded w-full break-all text-sm">
-                      {`${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}${token}`}
-                    </code>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={() =>
-                        copyToClipboard(
-                          `${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}${token}`
-                        )
-                      }
+              <>
+                <Button
+                  onClick={downloadAllQRCodes}
+                  className="ml-2"
+                  variant="secondary"
+                >
+                  Download All QR Codes
+                </Button>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Generated Tokens:</h3>
+                  {tokens.map(({ table, token }) => (
+                    <div
+                      key={table}
+                      className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 p-2 bg-muted/50 rounded-lg"
                     >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                      <span className="font-medium min-w-[80px]">
+                        Room {table}:
+                      </span>
+                      <code className="bg-muted p-2 rounded w-full break-all text-sm">
+                        {`${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}${token}`}
+                      </code>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() =>
+                          copyToClipboard(
+                            `${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}${token}`
+                          )
+                        }
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() =>
+                          downloadQRCode(
+                            `${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}${token}`,
+                            table
+                          )
+                        }
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}

@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { kitchenTimerConfig } from "./kitchenDashboard";
 
 interface OrderCardProps {
   order: Order;
@@ -127,8 +128,9 @@ export default function OrderCard({
           <div className="mt-3">
             <OrderTimer
               startTime={new Date(order.startedAt)}
-              duration={15}
+              duration={kitchenTimerConfig.totalPreparationMinutes}
               onAlert={handleTimerAlert}
+              order={order}
             />
             {isAlertVisible && (
               <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400 text-sm font-medium">

@@ -94,6 +94,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   const gstPercentage = "18";
   // console.log("addItems", addItems);
   useEffect(() => {
+    console.log("DATA", data);
     setRoomData(data);
   }, [data]);
 
@@ -151,9 +152,11 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
     index: number
   ) => {
     console.log("HERE.....................", orderId, attendant, index);
-    const token = availableAttendant.find(
+    const attendantData = availableAttendant.find(
       (data: any) => data.name === attendant
-    )?.notificationToken;
+    );
+    const token = attendantData?.notificationToken;
+    const contact = attendantData?.contact;
 
     // if (!token) {
     //   console.error("Attendant token not found for", attendant);
@@ -213,7 +216,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
     console.log("HERE.....................");
     console.log("updatedTableData", updatedTableData[index]);
 
-    updateOrdersForAttendant(attendant, orderId);
+    updateOrdersForAttendant(attendant, orderId, contact);
     setOfflineRoom(updatedTableData[index]);
     // Update the state with the modified data
     setRoomData(updatedTableData);
@@ -331,13 +334,19 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
           //   items,
           //   price,
           // });
-          addKitchenOrder(
+          await addKitchenOrder(
             newOrderId,
             updatedRoomData[index]?.bookingDetails?.customer?.name,
             items,
-            price
+            price,
+            assignedAttendant.name,
+            assignedAttendant.contact
           );
-          updateOrdersForAttendant(assignedAttendant.name, newOrderId);
+          updateOrdersForAttendant(
+            assignedAttendant.name,
+            newOrderId,
+            assignedAttendant.contact
+          );
         }
       } else if (items[0]?.startTime || items[0]?.endTime) {
         // Service items[0]
@@ -419,7 +428,11 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
           // const data = await setOfflineItem(updatedTableData);
           console.log("UPDATED", updatedRoomData[index]);
           setOfflineRoom(updatedRoomData[index]);
-          updateOrdersForAttendant(assignedAttendant.name, newOrderId);
+          updateOrdersForAttendant(
+            assignedAttendant.name,
+            newOrderId,
+            assignedAttendant.contact
+          );
         }
       } else if (items[0]?.issueSubtype) {
         // Issue item
@@ -474,7 +487,11 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
           // const data = await setOfflineItem(updatedTableData);
           console.log("UPDATED", updatedRoomData[index]);
           setOfflineRoom(updatedRoomData[index]);
-          updateOrdersForAttendant(assignedAttendant.name, newOrderId);
+          updateOrdersForAttendant(
+            assignedAttendant.name,
+            newOrderId,
+            assignedAttendant.contact
+          );
         }
       }
       console.log("updatedRoomData", updatedRoomData[index]);
@@ -757,7 +774,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   };
   return (
     <div className="space-y-4">
-      {roomData && (
+      {roomData.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.values(roomData).map((item: any, main) => {
             // console.log("ITEM", item);
@@ -775,7 +792,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                             <span className="text-slate-600">
                               {item.bookingDetails.customer.name}
                             </span>
-                            <span className="flex items-center gap-1 text-slate-600">
+                            <span className="flex items-center gap-1 text-slate-600 ">
                               <User className="w-4 h-4 mr-1" />
                               {item.bookingDetails.noOfGuests}
                             </span>
@@ -1796,6 +1813,10 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
               </Card>
             );
           })}
+        </div>
+      ) : (
+        <div className="flex justify-center items-center h-full">
+          <span className="text-gray-500 text-sm">No room data found</span>
         </div>
       )}
       <Dialog

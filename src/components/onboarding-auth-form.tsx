@@ -28,6 +28,7 @@ import { SignOut } from "@/lib/auth/socialLogin";
 import { registerSocialUser } from "@/lib/auth/handleAuth";
 import { OTPInput } from "./ui/otp-input";
 import { Icons } from "./icons";
+import TokenManager from "@/utils/token-manager";
 
 export default function AuthOnboarding({ user }: any) {
   const router = useRouter();
@@ -194,6 +195,11 @@ export default function AuthOnboarding({ user }: any) {
     }
   };
 
+  const handleSignOut = async () => {
+    await TokenManager.clientSideLogout(SignOut);
+    await SignOut();
+  };
+
   return (
     <>
       <div id="recaptcha-container" />
@@ -346,7 +352,7 @@ export default function AuthOnboarding({ user }: any) {
             <p className="text-sm">
               Email verified as <strong>{user?.email}</strong>
             </p>
-            <Button variant="link" onClick={SignOut}>
+            <Button variant="link" onClick={handleSignOut}>
               Use a different Email
             </Button>
           </div>

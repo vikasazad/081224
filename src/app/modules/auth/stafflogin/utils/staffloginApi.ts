@@ -29,6 +29,7 @@ export async function saveToken(token: string) {
       userRole === "staff" ||
       userRole === "concierge" ||
       userRole === "attendant" ||
+      userRole === "receptionist" ||
       userRole === "manager"
     ) {
       try {

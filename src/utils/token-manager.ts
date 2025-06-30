@@ -137,10 +137,23 @@ class TokenManager {
    * Clears the cached token (useful for logout)
    */
   static clearStoredToken(): void {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      console.log("TokenManager.clearStoredToken: Running on server, skipping");
+      return;
+    }
+
+    const hadToken = !!this.getStoredToken();
+    const hadTimestamp = !!sessionStorage.getItem(this.LAST_SAVE_KEY);
+
     sessionStorage.removeItem(this.STORAGE_KEY);
     sessionStorage.removeItem(this.LAST_SAVE_KEY);
-    console.log("Token cache cleared");
+
+    console.log("Token cache cleared:", {
+      hadToken,
+      hadTimestamp,
+      storageKey: this.STORAGE_KEY,
+      lastSaveKey: this.LAST_SAVE_KEY,
+    });
   }
 
   /**
@@ -162,6 +175,18 @@ class TokenManager {
       lastSaveTime,
       minutesSinceLastSave,
     };
+  }
+
+  /**
+   * Client-side logout utility that clears token and calls server sign out
+   */
+  static async clientSideLogout(
+    signOutFunction: () => Promise<void>
+  ): Promise<void> {
+    // Clear token from session storage on client side
+    this.clearStoredToken();
+    // Then call the server-side sign out
+    await signOutFunction();
   }
 }
 

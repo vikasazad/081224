@@ -1,5 +1,14 @@
 "use client";
 import { add } from "@/lib/firebase/firestore";
+// import {
+//   sendStaffAssignmentRequest,
+//   sendWhatsAppTextMessage,
+// } from "../modules/staff/utils/whatsapp-staff-manager";
+// import {
+//   sendTestWhatsAppMessage,
+//   sendWhatsAppMessage,
+// } from "../modules/staff/utils/staffData";
+// import { sendStaffAssignmentRequest } from "../modules/staff/utils/whatsapp-staff-manager";
 // import { update } from "@/lib/firebase/firestore";
 // import { SignJWT } from "jose";
 export default function Test() {
@@ -1923,11 +1932,27 @@ export default function Test() {
     //   "5", // Nights
     //   "₹5000", // Room Rate
     //   "₹25000", // Total Price
+    //   "0", // Discount
     //   "123-456-7890", // Hotel Contact 1
     //   "987-654-3210", // Hotel Contact 2
     //   "https://hotelbuildbility.com/concierge", // Concierge Link
     // ];
-    // const user = await sendWhatsAppMessage("918851280284", variables);
+    // const user = await sendStaffAssignmentRequest(
+    //   "918851280284",
+    //   "1234567890",
+    //   "test",
+    //   "123",
+    //   "room"
+    // );
+    // const user = await sendStaffAssignmentRequest(
+    //   "test",
+    //   "918851280284",
+    //   "1234567890", // orderId
+    //   "testCustomer", // customerName
+    //   "123", // roomNumber
+    //   "room" // assignmentType
+    // );
+    // const user = await createPaymentLink();
     const user = await add("vikumar.azad@gmail.com", analytics, "analytics");
     // const secretKey = new TextEncoder().encode("Vikas@1234");
 

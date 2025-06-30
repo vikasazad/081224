@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,13 +12,39 @@ import {
   updateOrderStatus,
   updateMenuItemsAvailability,
 } from "@/app/modules/kitchen/utils/kitchenApi";
+import {
+  sendKitchenAlertToManager,
+  sendOrderEscalationToManager,
+} from "@/app/modules/staff/utils/whatsapp-staff-manager";
 // import { generateSampleOrders } from "@/lib/sample-data";
+
+// Kitchen configuration
+const kitchenConfig = {
+  waitingAlertMinutes: 15, // Alert after 2 minutes if order hasn't been started
+};
+
+// Kitchen Timer Configuration - Customize all timing settings here
+export const kitchenTimerConfig = {
+  // Preparation timer settings
+  totalPreparationMinutes: 15, // Total time for order preparation
+  deliveryReadinessMinutes: 5, // Minutes remaining when to send delivery readiness request (5 = send at 10min mark)
+  // Alert thresholds
+  onTimeThresholdMinutes: 30, // Orders completed within this time are "on time"
+  delayedThresholdMinutes: 30, // Orders taking longer than this are "delayed"
+  // Escalation settings
+  escalationTimeoutMinutes: 40, // Total time (waiting + preparation) before escalating to manager
+};
 
 export default function KitchenDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<any>([]);
   const [activeTab, setActiveTab] = useState<string>("orders");
   const [filterType, setFilterType] = useState<string | null>(null);
+  const [alertedOrders, setAlertedOrders] = useState<Set<string>>(new Set());
+  const [escalatedOrders, setEscalatedOrders] = useState<Set<string>>(
+    new Set()
+  );
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const unsubscribe = getKitchenAndMenuData((data) => {
@@ -36,7 +61,119 @@ export default function KitchenDashboard() {
     };
   }, []);
 
-  // Calculate dashboard statistics
+  // Function to check for orders waiting too long
+  const checkForWaitingOrders = React.useCallback(async () => {
+    const now = new Date().getTime();
+    const alertThreshold = kitchenConfig.waitingAlertMinutes * 60 * 1000; // 2 minutes in milliseconds
+
+    for (const order of Object.values(orders)) {
+      if (
+        order.status === OrderStatus.New &&
+        !alertedOrders.has(order.id) &&
+        order.createdAt
+      ) {
+        const orderCreatedTime = new Date(order.createdAt).getTime();
+        const waitingTime = now - orderCreatedTime;
+
+        if (waitingTime >= alertThreshold) {
+          try {
+            // Mark order as alerted to prevent duplicate alerts
+            setAlertedOrders((prev) => new Set(prev).add(order.id));
+
+            // Send alert to manager using the centralized function
+            await sendKitchenAlertToManager(
+              order.id,
+              order.customerName,
+              order.totalAmount,
+              order.items,
+              Math.floor(waitingTime / 60000)
+            );
+
+            console.log(
+              `Kitchen alert sent for order ${order.id} after ${Math.floor(
+                waitingTime / 60000
+              )} minutes`
+            );
+          } catch (error) {
+            console.error(`Failed to send alert for order ${order.id}:`, error);
+          }
+        }
+      }
+    }
+  }, [orders, alertedOrders]);
+
+  // Function to check for orders needing escalation
+  const checkForEscalatedOrders = React.useCallback(async () => {
+    const now = new Date().getTime();
+    const escalationThreshold =
+      kitchenTimerConfig.escalationTimeoutMinutes * 60 * 1000; // Convert to milliseconds
+
+    for (const order of Object.values(orders)) {
+      // Check orders that are not completed and not already escalated
+      if (
+        (order.status === OrderStatus.New ||
+          order.status === OrderStatus.InPreparation) &&
+        !escalatedOrders.has(order.id) &&
+        order.createdAt
+      ) {
+        const orderCreatedTime = new Date(order.createdAt).getTime();
+        const totalTime = now - orderCreatedTime;
+
+        if (totalTime >= escalationThreshold) {
+          try {
+            // Mark order as escalated to prevent duplicate alerts
+            setEscalatedOrders((prev) => new Set(prev).add(order.id));
+
+            // Send escalation alert to manager
+            await sendOrderEscalationToManager(
+              order.id,
+              order.customerName,
+              order.totalAmount,
+              order.items,
+              order.status,
+              Math.floor(totalTime / 60000)
+            );
+
+            console.log(
+              `Order escalation sent for order ${order.id} after ${Math.floor(
+                totalTime / 60000
+              )} minutes total time`
+            );
+          } catch (error) {
+            console.error(
+              `Failed to send escalation for order ${order.id}:`,
+              error
+            );
+          }
+        }
+      }
+    }
+  }, [orders, escalatedOrders]);
+
+  // Set up alert checking interval
+  useEffect(() => {
+    // Only set up interval if there are orders to check
+    if (Object.keys(orders).length > 0) {
+      intervalRef.current = setInterval(() => {
+        checkForWaitingOrders();
+        checkForEscalatedOrders();
+      }, 30000); // Check every 30 seconds
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [
+    orders,
+    alertedOrders,
+    escalatedOrders,
+    checkForWaitingOrders,
+    checkForEscalatedOrders,
+  ]);
+
+  // Calculate dashboard statistics using configurable thresholds
   const totalOrders = Object.keys(orders).length;
   const completedOnTime = Object.values(orders).filter(
     (order) =>
@@ -45,7 +182,7 @@ export default function KitchenDashboard() {
       order.startedAt &&
       new Date(order.completedAt).getTime() -
         new Date(order.startedAt).getTime() <=
-        15 * 60 * 1000
+        kitchenTimerConfig.onTimeThresholdMinutes * 60 * 1000
   ).length;
 
   const delayedOrders = Object.values(orders).filter(
@@ -55,7 +192,7 @@ export default function KitchenDashboard() {
       order.startedAt &&
       new Date(order.completedAt).getTime() -
         new Date(order.startedAt).getTime() >
-        15 * 60 * 1000
+        kitchenTimerConfig.delayedThresholdMinutes * 60 * 1000
   ).length;
 
   // Filter orders based on selected stat
@@ -72,7 +209,7 @@ export default function KitchenDashboard() {
           order.startedAt
             ? new Date(order.completedAt).getTime() -
                 new Date(order.startedAt).getTime() <=
-              15 * 60 * 1000
+              kitchenTimerConfig.onTimeThresholdMinutes * 60 * 1000
             : false
         );
       case "delayed":
@@ -82,7 +219,7 @@ export default function KitchenDashboard() {
           order.startedAt
             ? new Date(order.completedAt).getTime() -
                 new Date(order.startedAt).getTime() >
-              15 * 60 * 1000
+              kitchenTimerConfig.delayedThresholdMinutes * 60 * 1000
             : false
         );
       default:
@@ -103,8 +240,25 @@ export default function KitchenDashboard() {
       // Determine which timestamps to update
       if (newStatus === OrderStatus.InPreparation) {
         startedAt = now;
+        // Remove from alerted orders when preparation starts
+        setAlertedOrders((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(orderId);
+          return newSet;
+        });
       } else if (newStatus === OrderStatus.Completed) {
         completedAt = now;
+        // Remove from both alerted and escalated orders when completed
+        setAlertedOrders((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(orderId);
+          return newSet;
+        });
+        setEscalatedOrders((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(orderId);
+          return newSet;
+        });
       }
 
       // Update Firestore
@@ -177,6 +331,14 @@ export default function KitchenDashboard() {
         <p className="text-muted-foreground">
           Manage orders, track preparation times, and update menu availability
         </p>
+        {/* Timer Configuration Display */}
+        <div className="text-xs text-muted-foreground">
+          Timer Config: {kitchenTimerConfig.totalPreparationMinutes}min total |
+          Delivery alert at{" "}
+          {kitchenTimerConfig.totalPreparationMinutes -
+            kitchenTimerConfig.deliveryReadinessMinutes}
+          min | Escalation at {kitchenTimerConfig.escalationTimeoutMinutes}min
+        </div>
       </div>
 
       {/* Dashboard Statistics */}

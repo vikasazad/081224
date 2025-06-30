@@ -124,12 +124,15 @@ export function getOnlineStaffFromFirestore(callback: any) {
       const onlineStaff = info
         .filter(
           (staffMember: any) =>
-            staffMember.status === "online" && staffMember.role === "concierge"
+            staffMember.status === "online" &&
+            staffMember.role === "concierge" &&
+            staffMember.active
         )
         .map((staffMember: any) => ({
           name: staffMember.name,
           notificationToken: staffMember.notificationToken,
           orders: staffMember.orders,
+          contact: staffMember.contact,
         }));
 
       callback(onlineStaff);

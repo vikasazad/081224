@@ -5,7 +5,7 @@ import { ChevronDown, Users, DollarSign, Clock, Settings } from "lucide-react";
 import { format } from "date-fns";
 
 const HotelRoomHistory = ({ data }: any) => {
-  console.log(data);
+  console.log("data", data);
   const [isExpanded, setIsExpanded] = useState<Set<string>>(new Set());
   const [expandedOrder, setExpandedOrder] = useState<Set<string>>(new Set());
   const [expandedService, setExpandedService] = useState<Set<string>>(
@@ -58,7 +58,6 @@ const HotelRoomHistory = ({ data }: any) => {
       </div>
     );
   };
-
   const PaymentDetailsTable = ({ payment }: { payment: any }) => (
     <div className="bg-gray-50 p-4 rounded-lg space-y-4">
       <h4 className="font-medium text-sm">Payment Details</h4>
@@ -109,7 +108,6 @@ const HotelRoomHistory = ({ data }: any) => {
       </div>
     </div>
   );
-
   function formatDateRange(checkIn: any, checkOut: any) {
     const options: any = { month: "short", day: "numeric" }; // Define formatting options
     const checkInDate = new Date(checkIn);
@@ -121,7 +119,6 @@ const HotelRoomHistory = ({ data }: any) => {
     const year = checkInDate.getFullYear(); // Get the year from check-in
     return `${checkInFormatted} - ${checkOutFormatted}, ${year}`;
   }
-
   const toggleOrderExpansion = (orderId: string) => {
     setExpandedOrder((prevExpandedOrders) => {
       const newExpandedOrders = new Set(prevExpandedOrders);
@@ -178,9 +175,15 @@ const HotelRoomHistory = ({ data }: any) => {
                   <div className="flex items-center gap-4">
                     <Users className="h-5 w-5 text-gray-500" />
                     <div className="text-left">
-                      <p className="font-medium">
-                        {data.data?.bookingDetails?.customer?.name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">
+                          {data.data?.bookingDetails?.customer?.name}
+                        </p>
+                        <p className="font-medium">
+                          {`(${data.data?.bookingDetails?.customer?.phone})`}
+                        </p>
+                      </div>
+
                       <p className="text-sm text-gray-500">
                         {formatDateRange(
                           data.data?.bookingDetails?.checkIn,
@@ -206,7 +209,51 @@ const HotelRoomHistory = ({ data }: any) => {
               </button>
 
               {isExpanded.has(data.data?.bookingDetails?.bookingId) && (
-                <div className="px-4 pt-2 pb-4 space-y-6">
+                <div className="px-4   pt-2 pb-4 space-y-6">
+                  {/* Additional Booking Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                    <div>
+                      <span className="font-semibold">Booking ID: </span>
+                      <span>
+                        {data.data?.bookingDetails?.bookingId ?? "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold">No. of Guests: </span>
+                      <span>
+                        {data.data?.bookingDetails?.noOfGuests ?? "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold">
+                        Nights: {data.data?.bookingDetails?.nights}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold">Attendant: </span>
+                      <span>
+                        {data.data?.bookingDetails?.attendant ?? "N/A"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-semibold">Inclusions: </span>
+                      <span>
+                        {Array.isArray(data.data?.bookingDetails?.inclusions)
+                          ? data.data?.bookingDetails?.inclusions.join(", ")
+                          : data.data?.bookingDetails?.inclusions ?? "N/A"}
+                      </span>
+                    </div>
+                    {data.data?.bookingDetails?.specialRequirements && (
+                      <div>
+                        <span className="font-semibold">
+                          Special Requirements:{" "}
+                          {data.data?.bookingDetails?.specialRequirements ??
+                            "N/A"}
+                        </span>{" "}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Room Service Order Section */}
                   {data.data?.diningDetails?.orders.map(
                     (el: any, i: number) => (

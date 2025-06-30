@@ -35,65 +35,71 @@ const History = ({ data, room }: { data: any; room: any }) => {
   return (
     <div className="max-w-4xl  p-6 space-y-4">
       {!historyFlag &&
-        Object.values(data.rooms).map((el: any, index) => {
-          // console.log("h1", el);
+        Object.values(data.rooms)
+          .sort((a: any, b: any) => a.roomType.localeCompare(b.roomType))
+          .map((el: any, index) => {
+            // console.log("h1", el);
 
-          return (
-            <Card key={index} className="shadow-sm">
-              <div
-                className="cursor-pointer"
-                onClick={() =>
-                  setExpandedCategory(expandedCategory === index ? null : index)
-                }
-              >
-                <CardHeader className="bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <CardTitle className="text-xl">
-                        {formatKey(el.roomType)}
-                      </CardTitle>
-                      {/* <p className="text-sm text-gray-500">
+            return (
+              <Card key={index} className="shadow-sm">
+                <div
+                  className="cursor-pointer"
+                  onClick={() =>
+                    setExpandedCategory(
+                      expandedCategory === index ? null : index
+                    )
+                  }
+                >
+                  <CardHeader className="bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <CardTitle className="text-xl">
+                          {formatKey(el.roomType)}
+                        </CardTitle>
+                        {/* <p className="text-sm text-gray-500">
                         {category.description}
                       </p> */}
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="font-semibold">₹{el.price}</span>
+                        <ChevronDown
+                          className={`h-5 w-5 transition-transform ${
+                            expandedCategory === index
+                              ? "transform rotate-180"
+                              : ""
+                          }`}
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-semibold">₹{el.price}</span>
-                      <ChevronDown
-                        className={`h-5 w-5 transition-transform ${
-                          expandedCategory === index
-                            ? "transform rotate-180"
-                            : ""
-                        }`}
-                      />
-                    </div>
-                  </div>
-                </CardHeader>
-              </div>
+                  </CardHeader>
+                </div>
 
-              {expandedCategory === index && (
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {el.roomNo.map((room: any, roomIndex: number) => (
-                      <button
-                        key={roomIndex}
-                        onClick={() => onRoomSelect(room, el.roomType)}
-                        className="p-4 border rounded-lg hover:border-blue-500 transition-colors text-left space-y-2"
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">Room {room}</span>
-                          <Badge className={`capitalize ${room}`}>{room}</Badge>
-                        </div>
-                        <div className="text-sm text-blue-600 hover:text-blue-800">
-                          View History →
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          );
-        })}
+                {expandedCategory === index && (
+                  <CardContent className="p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {el.roomNo.map((room: any, roomIndex: number) => (
+                        <button
+                          key={roomIndex}
+                          onClick={() => onRoomSelect(room, el.roomType)}
+                          className="p-4 border rounded-lg hover:border-blue-500 transition-colors text-left space-y-2"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Room {room}</span>
+                            <Badge className={`capitalize ${room}`}>
+                              {room}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-blue-600 hover:text-blue-800">
+                            View History →
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
       {historyFlag && <HotelRoomHistory data={historyData} />}
     </div>
   );

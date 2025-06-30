@@ -23,6 +23,8 @@ export interface Order {
   startedAt?: string;
   completedAt?: string;
   totalAmount: number;
+  attendantName?: string;
+  attendantContact?: string;
 }
 
 // Menu item interface

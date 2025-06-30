@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pencil } from "lucide-react";
+// import { sendNotification } from "@/lib/sendNotification";
 
 const WalkIn = () => {
   const router = useRouter();
@@ -191,8 +192,12 @@ const WalkIn = () => {
 
       console.log("roomInfo:", roomInfo);
 
-      await saveRoomData(roomInfo);
-      router.push("/staff");
+      const res: any = await saveRoomData(roomInfo);
+      if (res?.success) {
+        router.push("/staff");
+      } else {
+        toast.error("Failed to save room data");
+      }
     } catch (error) {
       toast.error("Verification failed");
       console.error("Error in handleOtpSubmit:", error);

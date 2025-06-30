@@ -27,7 +27,7 @@ export default function Rooms({ data }: { data: any }) {
               </TabsList>
 
               {!data ? (
-                <p>Loading........</p>
+                <p className="px-auto">Loading........</p>
               ) : (
                 <>
                   <TabsContent value="ongoing" className="space-y-4 py-4">

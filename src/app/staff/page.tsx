@@ -60,7 +60,7 @@ const Page = () => {
           </div>
         </div>
         {!staffData ? (
-          <p className="px-6">Loading........</p>
+          <p className="px-auto">Loading........</p>
         ) : (
           <Tabs defaultValue="room" className="space-y-4 ">
             <TabsList className="mx-4 md:mx-8">

@@ -26,7 +26,7 @@ export async function sendNotification(
   message: string
 ) {
   // console.log(":::::::::::::::::::::", process.env.FIREBASE_ADMIN_CREDENTIALS);
-  // console.log(":::::::::::::::::::::", token, title, message);
+  console.log(":::::::::::::::::::::", token, title, message);
   const payload: Message = {
     token,
     notification: {

@@ -481,21 +481,23 @@ const HotelOverview = ({ data }: { data: any }) => {
         <>
           {roomData && (
             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-              {Object.values(roomData).map((data: any, i: number) => (
-                <Card
-                  key={i}
-                  onClick={() => categoryClick(data)}
-                  className="cursor-pointer"
-                >
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-xl font-bold">
-                      <div className="flex items-center justify-between">
-                        <BedDouble className="mr-3" /> {data.roomType}
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-              ))}
+              {Object.values(roomData)
+                .sort((a: any, b: any) => a.roomType.localeCompare(b.roomType))
+                .map((data: any, i: number) => (
+                  <Card
+                    key={i}
+                    onClick={() => categoryClick(data)}
+                    className="cursor-pointer"
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                      <CardTitle className="text-xl font-bold">
+                        <div className="flex items-center justify-between">
+                          <BedDouble className="mr-3" /> {data.roomType}
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                ))}
             </div>
           )}
           <div>

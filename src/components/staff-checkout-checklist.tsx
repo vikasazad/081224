@@ -67,6 +67,7 @@ const ChecklistDialog = ({
   const [filteredItems, setFilteredItems] = useState<any[]>([]);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [note, setNote] = useState("");
+  const [quickSubmit, setQuickSubmit] = useState(false);
   useEffect(() => {
     if (data) setAddItems(data);
   }, [data]);
@@ -110,45 +111,16 @@ const ChecklistDialog = ({
   };
 
   const handleSubmit = () => {
+    console.log("checkedItems clicked from the checkbox");
     const checkedChecklistItems = Object.keys(checkedItems).filter(
       (key) => checkedItems[key]
     );
 
-    // Case 1: No checklist items are checked
-    if (checkedChecklistItems.length === 0) {
+    // Quick submit case: bypass all checklist validation  // Case 1: No checklist items are checked
+    if (quickSubmit || checkedChecklistItems.length === 0) {
       info({
-        checkedItems: [],
-        selectedItems,
-        note,
-        payment: {
-          transctionId: "",
-          paymentStatus: "pending",
-          mode: "",
-          paymentId: "",
-          price: gst
-            ? Number(calculateTotal()) + Number(calculateTax(gst))
-            : calculateTotal(),
-          subtotal: calculateTotal(),
-          priceAfterDiscount: gst
-            ? calculateTotal() + calculateTax(gst)
-            : calculateTotal(),
-          timeOfTransaction: "",
-          gst: {
-            gstAmount: gst ? calculateTax(gst) : 0,
-            gstPercentage: gst,
-            cgstAmount: "",
-            cgstPercentage: "",
-            sgstAmount: "",
-            sgstPercentage: "",
-          },
-          discount: {
-            type: "none",
-            amount: 0,
-            code: "",
-          },
-        },
+        flag: true, // Quick submit
         location: roomNumber,
-        flag: true, // No items checked
       });
       onClose();
       return;
@@ -198,7 +170,6 @@ const ChecklistDialog = ({
       location: roomNumber,
       flag: true, // All criteria met
     });
-
     onClose();
   };
 
@@ -336,6 +307,16 @@ const ChecklistDialog = ({
           </div>
         </div>
         <DialogFooter>
+          <div className="flex items-center space-x-2 mr-auto">
+            <Checkbox
+              id="quick-submit"
+              checked={quickSubmit}
+              onCheckedChange={(checked) => setQuickSubmit(checked as boolean)}
+            />
+            <Label htmlFor="quick-submit" className="text-sm">
+              Quick submit (no issues)
+            </Label>
+          </div>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
