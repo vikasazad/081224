@@ -185,13 +185,12 @@ const WalkIn = () => {
         checkIn: new Date(guestDetails.checkIn).toISOString(),
         checkOut: new Date(guestDetails.checkOut).toISOString(),
         nights: nights,
+        images: room.images,
         paymentMode: Object.keys(guestDetails.paymentMode)
           .filter((mode) => guestDetails.paymentMode[mode])
           .join(", "),
       };
-
       console.log("roomInfo:", roomInfo);
-
       const res: any = await saveRoomData(roomInfo);
       if (res?.success) {
         router.push("/staff");
