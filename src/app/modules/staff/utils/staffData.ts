@@ -766,6 +766,7 @@ export async function saveRoomData(roomInfo: any) {
         noOfRoom: roomInfo.numberOfRooms,
         inclusions: roomInfo.inclusions || "",
         nights: roomInfo.nights,
+        images: roomInfo.images,
         specialRequirements: roomInfo.specialRequirements || "",
         payment: {
           paymentStatus: "paid",
