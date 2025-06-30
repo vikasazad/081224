@@ -1,5 +1,3 @@
-// app/api/payment-link/route.ts
-
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 
