@@ -555,6 +555,15 @@ export async function handleAssignmentResponse(
         success: true,
         message: "Staff marked inactive, manager notified",
       };
+    } else if (action === "request" && parts[1] === "resolved") {
+      // Handle "Request resolved" response for delivery readiness
+      const assignment = await getPendingAssignment(orderId);
+      if (!assignment) {
+        return { success: false, message: "Assignment not found" };
+      }
+      await removeCompletedRequest(orderId, assignment.roomNumber);
+      await removePendingAssignment(orderId);
+      return { success: true, message: "Request resolved" };
     }
 
     return { success: false, message: "Unknown action" };
@@ -832,6 +841,36 @@ async function markStaffActive(phoneNumber: string) {
     }
   } catch (error) {
     console.error("Error marking staff active:", error);
+  }
+}
+
+/**
+ * remove completed request
+ */
+
+async function removeCompletedRequest(orderId: string, roomNumber: string) {
+  const docRef = doc(db, "vikumar.azad@gmail.com", "hotel");
+  const docSnap = await getDoc(docRef);
+  const data = docSnap.data()?.live?.rooms;
+  const room = data.find(
+    (el: any) => el.bookingDetails?.location === roomNumber
+  );
+  console.log("room", room);
+  if (room) {
+    const roomIndex = data.findIndex(
+      (el: any) => el.bookingDetails?.location === roomNumber
+    );
+
+    const updatedData = [...data];
+    if (!updatedData[roomIndex].bookingDetails.requests) {
+      updatedData[roomIndex].bookingDetails.requests = {};
+    }
+
+    delete updatedData[roomIndex].bookingDetails.requests[orderId];
+
+    await updateDoc(docRef, {
+      "live.rooms": updatedData,
+    });
   }
 }
 
