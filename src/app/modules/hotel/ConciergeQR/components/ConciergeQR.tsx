@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ConciergeQR = ({ data, user }: any) => {
+  console.log("DATA", user);
   const [secretKey, setSecretKey] = useState("");
   const [tokens, setTokens] = useState<{ table: string; token: string }[]>([]);
   const [showSecret, setShowSecret] = useState(false);
@@ -32,9 +33,10 @@ const ConciergeQR = ({ data, user }: any) => {
       data.map(async (tableNo: any) => {
         const payload = {
           email: user,
-          tableNo,
+          roomNo: tableNo,
+          phone: "",
           tag: "hotel",
-          tax: { gstPercentage: "" },
+          tax: { gstPercentage: "18" },
         };
         const token = await new SignJWT(payload)
           .setProtectedHeader({ alg: "HS256" })
