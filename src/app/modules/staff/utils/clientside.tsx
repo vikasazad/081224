@@ -43,8 +43,8 @@ export function handleRoomStaffInformation(
               result.hotelOverview.status = live.roomsData.status;
 
               live.rooms.forEach((item: any) => {
-                if (item.checkOut) {
-                  const checkOutTime = new Date(item.checkOut);
+                if (item?.bookingDetails?.checkOut) {
+                  const checkOutTime = new Date(item.bookingDetails.checkOut);
                   if (
                     checkOutTime.toDateString() === new Date().toDateString()
                   ) {

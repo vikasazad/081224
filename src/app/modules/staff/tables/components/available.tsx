@@ -23,26 +23,28 @@ const Available = ({ data }: { data: any; status: any }) => {
     <div className="space-y-4">
       {tableData && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.values(tableData).map((item: any, main) => (
-            <Card key={main}>
-              <CardContent className="px-4 py-0">
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger>
-                      <div className="flex justify-between items-center w-full">
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl font-bold">
-                            {`T-${item.location}`}
-                          </span>
-                          <Badge variant="outline">{item.capacity}</Badge>
+          {Object.values(tableData)
+            .sort((a: any, b: any) => a.location.localeCompare(b.location))
+            .map((item: any, main) => (
+              <Card key={main}>
+                <CardContent className="px-4 py-0">
+                  <Accordion type="single" collapsible>
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger>
+                        <div className="flex justify-between items-center w-full">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl font-bold">
+                              {`T-${item.location}`}
+                            </span>
+                            <Badge variant="outline">{item.capacity}</Badge>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <StatusChip status={item.status} />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <StatusChip status={item.status} />
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      {/* <div className="flex items-baseline justify-between">
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        {/* <div className="flex items-baseline justify-between">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock size={16} />
@@ -72,12 +74,12 @@ const Available = ({ data }: { data: any; status: any }) => {
                           </p>
                         </div>
                       </div> */}
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
-          ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </CardContent>
+              </Card>
+            ))}
         </div>
       )}
     </div>

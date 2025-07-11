@@ -35,7 +35,7 @@ const ConciergeQR = ({ data, user }: any) => {
           email: user,
           roomNo: tableNo,
           phone: "",
-          tag: "hotel",
+          tag: "concierge",
           tax: { gstPercentage: "18" },
         };
         const token = await new SignJWT(payload)

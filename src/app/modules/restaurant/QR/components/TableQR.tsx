@@ -34,10 +34,16 @@ const QR = ({ data, user }: any) => {
           email: user,
           tableNo,
           tag: "restaurant",
+          phone: "",
           tax: { gstPercentage: "" },
         };
+
+        // Set TTL to 60 minutes (hardcoded backend value)
+        // const expirationTime = Math.floor(Date.now() / 1000) + 1 * 60;
+
         const token = await new SignJWT(payload)
           .setProtectedHeader({ alg: "HS256" })
+          // .setExpirationTime(expirationTime)
           .sign(encodedSecretKey);
         return { table: tableNo, token };
       })
