@@ -455,6 +455,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
           attendantToken: assignedAttendant
             ? assignedAttendant.notificationToken
             : "",
+          attendantContact: assignedAttendant ? assignedAttendant.contact : "",
         };
 
         updatedRoomData[index] = {
@@ -637,6 +638,8 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
             updatedRoomData[index].diningDetails.orders[
               orderIndex
             ].timeOfFullfilment = new Date().toString();
+            updatedRoomData[index].diningDetails.orders[orderIndex].status =
+              status;
 
             // Check payment status and set final status accordingly
           } else if (status.toLocaleLowerCase() === "paid") {

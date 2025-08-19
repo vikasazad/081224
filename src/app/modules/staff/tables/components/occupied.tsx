@@ -34,7 +34,12 @@ import { Separator } from "@/components/ui/separator";
 
 import { PlusCircle, MoreVertical, User, IndianRupee } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
-import { getTableData, setOfflineTable } from "../../utils/staffData";
+import {
+  addKitchenOrder,
+  getTableData,
+  setOfflineTable,
+  updateOrdersForAttendant,
+} from "../../utils/staffData";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -52,8 +57,11 @@ import {
   setAttendent,
   setHistory,
   setTables,
-  updateOrdersForAttendant,
 } from "../utils/tableApi";
+
+const generateRandomOrderNumber = () => {
+  return Math.floor(1000 + Math.random() * 9000).toString();
+};
 export default function Occupied({ data, status }: { data: any; status: any }) {
   const [tableData, setTableData] = useState<any>([]);
   const [addItems, setAddItems] = useState<any>([]);
@@ -93,6 +101,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
   }, []);
 
   const handleCategorySearchChange = (e: any) => {
+    console.log("addItems", addItems);
     const search = e.target.value;
     setCategorySearchTerm(search);
 
@@ -101,22 +110,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
         categorySelect === "Food"
           ? addItems.foodMenuItems
           : categorySelect === "Issue"
-          ? [
-              { name: "General Cleanliness" },
-              { name: "Bathroom" },
-              { name: "Floors and Carpets" },
-              { name: "Wi-Fi" },
-              { name: "External Noise" },
-              { name: "Internal Noise" },
-              { name: "Odors" },
-              { name: "Insects or Pests" },
-              { name: "Personal Items" },
-              { name: "Service" },
-              { name: "Chairs" },
-              { name: "Staff" },
-              { name: "Food" },
-              { name: "Payment" },
-            ]
+          ? addItems.hotelTableIssues
           : [];
 
       const filtered = arr.filter((item: any) =>
@@ -138,43 +132,111 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     attendant: string,
     index: number
   ) => {
-    setTableData((prevTableData: any) => {
-      const updatedTableData = [...prevTableData];
+    console.log("HERE.....................", orderId, attendant, index);
+    const attendantData = availableAttendant.find(
+      (data: any) => data.name === attendant
+    );
+    const token = attendantData?.notificationToken;
+    const contact = attendantData?.contact;
+    console.log("attendantData", attendantData);
 
-      // Find the order and update its attendant
+    // if (!token) {
+    //   console.error("Attendant token not found for", attendant);
+    //   return;
+    // }
+
+    // Copy the current room data for modification
+    const updatedTableData = [...tableData];
+    console.log("orderId", orderId.startsWith("RES:"));
+    // Perform changes based on the order ID prefix
+    if (orderId.startsWith("RES:")) {
+      // Update booking details
+      console.log("HERE.....................");
+      updatedTableData[index].diningDetails.attendant =
+        attendantData?.name || "";
+      updatedTableData[index].diningDetails.attendantToken = token || "";
+      updatedTableData[index].diningDetails.attendantContact = contact || "";
+    } else if (orderId.startsWith("OR:")) {
+      // Update dining details and its orders
       const orderIndex = updatedTableData[index].diningDetails.orders.findIndex(
         (order: any) => order.orderId === orderId
       );
-
-      const token = availableAttendant.find(
-        (data: any) => data.name === attendant
-      );
-
       if (orderIndex !== -1) {
         updatedTableData[index].diningDetails.attendant = attendant;
-        updatedTableData[index].diningDetails.attendantToken =
-          token.notificationToken;
+        updatedTableData[index].diningDetails.attendantToken = token;
         updatedTableData[index].diningDetails.orders[orderIndex].attendant =
           attendant;
         updatedTableData[index].diningDetails.orders[
           orderIndex
-        ].attendantToken = attendant;
-        if (
-          updatedTableData[index].diningDetails.orders[orderIndex].payment
-            .paymentStatus === "paid"
-        ) {
-          updatedTableData[index].transctions[orderIndex].attendant = attendant;
-          updatedTableData[index].transctions[orderIndex].attendantToken =
-            token.notificationToken;
-        }
-        updateOrdersForAttendant(attendant, orderId);
-        setAttendent(updatedTableData);
+        ].attendantToken = token;
+        updatedTableData[index].diningDetails.orders[
+          orderIndex
+        ].attendantContact = contact;
       }
+    } else if (orderId.startsWith("IS:")) {
+      // Update issuesReported
+      if (updatedTableData[index].issuesReported) {
+        const issueKeys = Object.keys(updatedTableData[index].issuesReported);
+        for (const key of issueKeys) {
+          if (updatedTableData[index].issuesReported[key].issueId === orderId) {
+            updatedTableData[index].issuesReported[key].attendant = attendant;
+            updatedTableData[index].issuesReported[key].attendantToken = token;
+            updatedTableData[index].issuesReported[key].attendantContact =
+              contact;
+            break;
+          }
+        }
+      }
+    } else {
+      console.error("Unrecognized orderId prefix for", orderId);
+      return;
+    }
 
-      console.log("updatedTableData", updatedTableData);
+    console.log("updatedTableData..........", updatedTableData);
+    console.log("HERE.....................");
+    console.log("updatedTableData", updatedTableData[index]);
 
-      return updatedTableData;
-    });
+    updateOrdersForAttendant(attendant, orderId, contact);
+    setAttendent(updatedTableData);
+    setTableData(updatedTableData);
+
+    // setTableData((prevTableData: any) => {
+    //   const updatedTableData = [...prevTableData];
+
+    //   // Find the order and update its attendant
+    //   const orderIndex = updatedTableData[index].diningDetails.orders.findIndex(
+    //     (order: any) => order.orderId === orderId
+    //   );
+
+    //   const token = availableAttendant.find(
+    //     (data: any) => data.name === attendant
+    //   );
+
+    //   if (orderIndex !== -1) {
+    //     updatedTableData[index].diningDetails.attendant = attendant;
+    //     updatedTableData[index].diningDetails.attendantToken =
+    //       token.notificationToken;
+    //     updatedTableData[index].diningDetails.orders[orderIndex].attendant =
+    //       attendant;
+    //     updatedTableData[index].diningDetails.orders[
+    //       orderIndex
+    //     ].attendantToken = attendant;
+    //     if (
+    //       updatedTableData[index].diningDetails.orders[orderIndex].payment
+    //         .paymentStatus === "paid"
+    //     ) {
+    //       updatedTableData[index].transctions[orderIndex].attendant = attendant;
+    //       updatedTableData[index].transctions[orderIndex].attendantToken =
+    //         token.notificationToken;
+    //     }
+    //     updateOrdersForAttendant(attendant, orderId);
+    //     setAttendent(updatedTableData);
+    //   }
+
+    //   console.log("updatedTableData", updatedTableData);
+
+    //   return updatedTableData;
+    // });
   };
 
   console.log(tableData);
@@ -186,19 +248,25 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     if (items[0].quantity) {
       const assignedAttendant: any =
         assignAttendantSequentially(availableAttendant);
-      const newOrderId = `OR:${
+      const newOrderId = `OR:R-${
         tableData[index].diningDetails.location
-      }:${new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      })}`;
+      }:${generateRandomOrderNumber()}`;
       setAddedType("food");
       updatedTableData[index] = {
         ...updatedTableData[index],
         diningDetails: {
           ...updatedTableData[index].diningDetails,
           attendant: assignedAttendant ? assignedAttendant.name : "Unassigned",
+          attendantToken: assignedAttendant
+            ? assignedAttendant.notificationToken
+            : "",
+          location:
+            updatedTableData[index]?.diningDetails?.location || "Not Available",
+          noOfGuests:
+            updatedTableData[index]?.diningDetails?.noOfGuests ||
+            "Not Available",
+          timeOfRequest: new Date().toISOString(),
+          timeOfFullfilment: "",
           orders: [
             ...(updatedTableData[index].diningDetails?.orders || []),
             {
@@ -256,50 +324,107 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
         setavailableAttendant(updatedAttendants);
       }
       if (tableData[index]) {
-        const token =
-          tableData[index]?.diningDetails.customer.notificationToken;
-        if (token) {
-          console.log("token", token);
-          sendNotification(
-            token,
-            "Item Added to Order!",
-            "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
-          );
-        }
+        // const token =
+        //   tableData[index]?.diningDetails.customer.notificationToken;
+        // if (token) {
+        //   console.log("token", token);
+        //   sendNotification(
+        //     token,
+        //     "Item Added to Order!",
+        //     "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
+        //   );
+        // }
 
         // const data = await setOfflineItem(updatedTableData);
         console.log("UPDATED", updatedTableData[index]);
         setOfflineTable(updatedTableData[index]);
         updateOrdersForAttendant(assignedAttendant.name, newOrderId);
+        const price = gstPercentage
+          ? (await calculateOrderTotal(items)) +
+            (await calculateTax(items, gstPercentage))
+          : await calculateOrderTotal(items);
+        await addKitchenOrder(
+          newOrderId,
+          updatedTableData[index]?.diningDetails?.customer?.name,
+          items,
+          price,
+          assignedAttendant.name,
+          assignedAttendant.contact
+        );
+        updateOrdersForAttendant(
+          assignedAttendant.name,
+          newOrderId,
+          assignedAttendant.contact
+        );
       }
     } else if (items[0].issueSubtype) {
       // Issue item
+      const assignedAttendant: any =
+        assignAttendantSequentially(availableAttendant);
+      const newOrderId = `IS:R-${
+        tableData[index].diningDetails.location
+      }:${generateRandomOrderNumber()}`;
       setAddedType("issue");
       const newIssue = {
-        issueId: `IS:${new Date().getTime()}`,
+        issueId: newOrderId,
         name: items[0].name,
-        issueSubtype: items[0].issueSubtype,
+        category: items[0].issueSubtype,
         description: issueDescription
           ? issueDescription
           : "No description provided",
-        reportTime: new Date(),
+        reportTime: new Date().toISOString(),
         status: "Assigned",
-        attendant: "Attendant Name",
+        attendant: assignedAttendant ? assignedAttendant.name : "Unassigned",
+        attendantToken: assignedAttendant
+          ? assignedAttendant.notificationToken
+          : "",
+        attendantContact: assignedAttendant ? assignedAttendant.contact : "",
       };
 
       updatedTableData[index] = {
         ...updatedTableData[index],
         issuesReported: {
           ...updatedTableData[index].issuesReported,
-          [items[0].name.toLowerCase().replace(/\s+/g, "_")]: newIssue,
+          [items[0].name]: newIssue,
         },
       };
+
+      if (availableAttendant) {
+        const updatedAttendants = availableAttendant.map((staff: any) =>
+          staff.name === assignedAttendant.name
+            ? { ...staff, orders: [...staff.orders, newOrderId] }
+            : staff
+        );
+        setavailableAttendant(updatedAttendants);
+      }
+      if (tableData[index]) {
+        // const token = roomData[index]?.diningDetails.customer.notificationToken;
+        // if (token) {
+        //   console.log("token", token);
+        //   sendNotification(
+        //     token,
+        //     "Item Added to Order!",
+        //     "Hi, the item you requested has been added to your order and will be served shortly. Thank you for your patience!"
+        //   );
+        // }
+
+        // const data = await setOfflineItem(updatedTableData);
+        console.log("UPDATED", updatedTableData[index]);
+        setOfflineTable(updatedTableData[index]);
+        updateOrdersForAttendant(
+          assignedAttendant.name,
+          newOrderId,
+          assignedAttendant.contact
+        );
+      }
     }
+    console.log("updatedTableData", updatedTableData[index]);
 
     setTableData(updatedTableData);
     setSelectedCategoryItems([]);
     setCategorySearchTerm("");
     setIssueDescription("");
+    // setIsAddDialogOpen(false);
   };
 
   // console.log("first", availableAttendant);
@@ -309,21 +434,84 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     orderId: string,
     index: number
   ) => {
-    console.log(status, orderId, index);
-    if (status.toLocaleLowerCase() === "paid") {
+    console.log("roomData", status, orderId, index);
+    if (status === "Paid" || status === "Completed") {
       setCurrentStatusChange({ status, orderId, index });
       setOpenPaymentConfirmation(true);
-    } else if (status.toLocaleLowerCase() === "served") {
+    } else if (status === "Served") {
       if (tableData[index]) {
         const token =
           tableData[index]?.diningDetails.customer.notificationToken;
-        console.log(token);
+        console.log("TOKEN", token);
         updateStatus(status, orderId, index);
-        sendNotification(
-          token,
-          "Your Food is Ready!",
-          "your food is prepared and will be served to your table shortly. Sit back, relax, and Bon appétit!"
+        if (token) {
+          sendNotification(
+            token,
+            "Your Food is Ready!",
+            "your food is prepared and will be served to your table shortly. Sit back, relax, and Bon appétit!"
+          );
+        }
+      }
+    } else if (status === "Accepted") {
+      if (tableData[index]) {
+        const token =
+          tableData[index]?.diningDetails.customer.notificationToken;
+        const name = tableData[index]?.diningDetails.customer.name;
+        const data = Object.values(tableData[index]?.diningDetails.orders).map(
+          (item: any) => {
+            if (item.serviceId === orderId) return item.serviceName;
+          }
         );
+
+        updateStatus(status, orderId, index);
+        if (token) {
+          sendNotification(
+            token,
+            "Service Request Accepted!",
+            `Hi ${name}, your request for ${data} has been accepted. Our team will be with you shortly to provide the service. Thank you for your patience!`
+          );
+        }
+      }
+    } else if (status === "Denied") {
+      if (tableData[index]) {
+        const token =
+          tableData[index]?.diningDetails.customer.notificationToken;
+        const name = tableData[index]?.diningDetails.customer.name;
+        const data = Object.values(tableData[index]?.diningDetails.orders).map(
+          (item: any) => {
+            if (item.serviceId === orderId) return item.serviceName;
+          }
+        );
+        updateStatus(status, orderId, index);
+        if (token) {
+          sendNotification(
+            token,
+            "Service Request Denied!",
+            `Hi ${name}, we regret to inform you that your request for ${data} has been denied. Please feel free to reach out to our staff for further assistance or to explore other available options. We apologize for any inconvenience caused!`
+          );
+        }
+      }
+    } else if (status === "Cancelled") {
+      if (tableData[index]) {
+        const token =
+          tableData[index]?.diningDetails.customer.notificationToken;
+        const name = tableData[index]?.diningDetails.customer.name;
+        let headline, message;
+        if (orderId.startsWith("IS")) {
+          headline = "Issue cancelled sucessfully";
+          message = "Your registered issue is cancelled successfully";
+        }
+        const data = Object.values(tableData[index]?.diningDetails.orders).map(
+          (item: any) => {
+            if (item.serviceId === orderId) return item.serviceName;
+          }
+        );
+        headline = "Service Request Cancelled Sucessfully!";
+        message = `Hi ${name}, Your request for ${data} has been cancelled. Please feel free to reach out to our staff for further assistance or to explore other available options.`;
+        updateStatus(status, orderId, index);
+        if (token) {
+          sendNotification(token, headline, message);
+        }
       }
     } else {
       updateStatus(status, orderId, index);
@@ -334,7 +522,45 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     setTableData((prevTableData: any) => {
       const updatedTableData: any = [...prevTableData];
 
-      if (orderId.startsWith("OR") || orderId.startsWith("BOK")) {
+      if (orderId.startsWith("RES")) {
+        console.log("here in ros", orderId, status);
+        const orderIndex = updatedTableData[
+          index
+        ].diningDetails.orders.findIndex(
+          (order: any) => order.orderId === orderId
+        );
+        if (orderIndex !== -1) {
+          if (status.toLocaleLowerCase() === "served") {
+            console.log("here1");
+            // Set fulfillment time first
+            updatedTableData[index].diningDetails.timeOfFullfilment =
+              new Date().toISOString();
+            updatedTableData[index].diningDetails.orders[
+              orderIndex
+            ].timeOfFullfilment = new Date().toISOString();
+            updatedTableData[index].diningDetails.orders[orderIndex].status =
+              status;
+
+            // Check payment status and set final status accordingly
+          } else if (status.toLocaleLowerCase() === "paid") {
+            console.log("here3");
+            updatedTableData[index].diningDetails.orders[orderIndex].status =
+              status;
+            updatedTableData[index].diningDetails.orders[orderIndex].payment = {
+              ...updatedTableData[index].diningDetails.orders[orderIndex]
+                .payment,
+              mode: "cash",
+              paymentId: "cash",
+              paymentStatus: "paid",
+              timeOfTransaction: new Date().toISOString(),
+              transctionId: "cash",
+            };
+          } else {
+            updatedTableData[index].diningDetails.orders[orderIndex].status =
+              status;
+          }
+        }
+      } else if (orderId.startsWith("OR")) {
         const orderIndex = updatedTableData[
           index
         ].diningDetails.orders.findIndex(
@@ -344,14 +570,11 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
           updatedTableData[index].diningDetails.orders[orderIndex].status =
             status;
           if (status.toLocaleLowerCase() === "served") {
-            if (
-              updatedTableData[index].diningDetails.orders[orderIndex].payment
-                .paymentStatus === "paid"
-            ) {
-              updateStatus("paid", orderId, index);
-            } else {
-              updateStatus("Pending", orderId, index);
-            }
+            updatedTableData[index].diningDetails.timeOfFullfilment =
+              new Date().toString();
+            updatedTableData[index].diningDetails.orders[
+              orderIndex
+            ].timeOfFullfilment = new Date().toISOString();
           }
           if (status.toLocaleLowerCase() === "paid") {
             updatedTableData[index].diningDetails.orders[orderIndex].payment = {
@@ -370,6 +593,8 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
         for (const issueType in issuesReported) {
           if (issuesReported[issueType].issueId === orderId) {
             issuesReported[issueType].status = status;
+            issuesReported[issueType].timeOfFullfilment =
+              new Date().toISOString();
             break;
           }
         }
@@ -379,8 +604,61 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
     });
 
     console.log("tableData", tableData);
-    if (status.toLocaleLowerCase() === "served") setTables(tableData);
     if (status.toLocaleLowerCase() === "paid") setTables(tableData);
+    if (status.toLocaleLowerCase() === "served") setTables(tableData);
+    if (status.toLocaleLowerCase() === "cancelled") setTables(tableData);
+    if (status.toLocaleLowerCase() === "fixed") setTables(tableData);
+
+    // setTableData((prevTableData: any) => {
+    //   const updatedTableData: any = [...prevTableData];
+
+    //   if (orderId.startsWith("OR") || orderId.startsWith("BOK")) {
+    //     const orderIndex = updatedTableData[
+    //       index
+    //     ].diningDetails.orders.findIndex(
+    //       (order: any) => order.orderId === orderId
+    //     );
+    //     if (orderIndex !== -1) {
+    //       updatedTableData[index].diningDetails.orders[orderIndex].status =
+    //         status;
+    //       if (status.toLocaleLowerCase() === "served") {
+    //         if (
+    //           updatedTableData[index].diningDetails.orders[orderIndex].payment
+    //             .paymentStatus === "paid"
+    //         ) {
+    //           updateStatus("paid", orderId, index);
+    //         } else {
+    //           updateStatus("Pending", orderId, index);
+    //         }
+    //       }
+    //       if (status.toLocaleLowerCase() === "paid") {
+    //         updatedTableData[index].diningDetails.orders[orderIndex].payment = {
+    //           ...updatedTableData[index].diningDetails.orders[orderIndex]
+    //             .payment, // Preserve existing fields
+    //           mode: "cash",
+    //           paymentId: "cash",
+    //           paymentStatus: "paid",
+    //           timeOfTransaction: new Date().toISOString(),
+    //           transctionId: "cash",
+    //         };
+    //       }
+    //     }
+    //   } else if (orderId.startsWith("IS")) {
+    //     const issuesReported = updatedTableData[index].issuesReported;
+    //     for (const issueType in issuesReported) {
+    //       if (issuesReported[issueType].issueId === orderId) {
+    //         issuesReported[issueType].status = status;
+    //         break;
+    //       }
+    //     }
+    //   }
+
+    //   return updatedTableData;
+    // });
+
+    // console.log("tableData", tableData);
+    // if (status.toLocaleLowerCase() === "served") setTables(tableData);
+    // if (status.toLocaleLowerCase() === "paid") setTables(tableData);
   };
 
   const handleFinalSubmit = (item: any, main: number) => {
@@ -468,16 +746,8 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                       <SelectValue placeholder="Select category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem
-                                        value="Food"
-                                        disabled={addedType === "issue"}
-                                      >
-                                        Food
-                                      </SelectItem>
-                                      <SelectItem
-                                        value="Issue"
-                                        disabled={addedType === "food"}
-                                      >
+                                      <SelectItem value="Food">Food</SelectItem>
+                                      <SelectItem value="Issue">
                                         Issue
                                       </SelectItem>
                                     </SelectContent>
@@ -511,7 +781,23 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                               <TableCell>{item.name}</TableCell>
                                               {categorySelect === "Food" && (
                                                 <TableCell>
-                                                  {item.quantity}
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="text-sm text-muted-foreground">
+                                                      {item.quantity}
+                                                    </span>
+                                                    <Input
+                                                      type="number"
+                                                      min="1"
+                                                      defaultValue="1"
+                                                      className="w-20"
+                                                      onChange={(e) => {
+                                                        item.count =
+                                                          parseInt(
+                                                            e.target.value
+                                                          ) || 1;
+                                                      }}
+                                                    />
+                                                  </div>
                                                 </TableCell>
                                               )}
                                               {categorySelect === "Food" && (
@@ -529,11 +815,18 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                                                   checked={selectedCategoryItems.includes(
                                                     item
                                                   )}
-                                                  onCheckedChange={() =>
+                                                  onCheckedChange={() => {
+                                                    if (
+                                                      categorySelect === "Food"
+                                                    ) {
+                                                      if (!item.count) {
+                                                        item.count = 1;
+                                                      }
+                                                    }
                                                     handleCategoryItemSelect(
                                                       item
-                                                    )
-                                                  }
+                                                    );
+                                                  }}
                                                 />
                                               </TableCell>
                                             </TableRow>

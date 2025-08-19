@@ -147,7 +147,7 @@ export async function getTableData() {
     return false;
   }
   try {
-    const docRef = doc(db, user, "restaurant");
+    const docRef = doc(db, user, "hotel");
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const data: any = {

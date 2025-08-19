@@ -11,6 +11,7 @@ import History from "../modules/restaurant/history/components/History";
 import Tranasactions from "../modules/restaurant/transaction/components/Transactions";
 import TableQR from "../modules/restaurant/QR/components/TableQR";
 import { auth } from "@/auth";
+import Settings from "../modules/restaurant/releaseTable/components/Settings";
 
 export default async function Dashboard() {
   const session = await auth();
@@ -18,7 +19,7 @@ export default async function Dashboard() {
   const data = await getTableData();
   const menu = await getMenuData();
   const qr = await getQRData();
-  // console.log("DATA", data);
+  console.log("DATA", data);
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="space-y-4 p-2 mx-8">
@@ -34,6 +35,7 @@ export default async function Dashboard() {
           <TabsTrigger value="history">History</TabsTrigger>
           <TabsTrigger value="tranasactions">Tranasactions</TabsTrigger>
           <TabsTrigger value="qr">TableQR</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
         <TabsContent value="table" className="space-y-4">
           <Table data={data} />
@@ -50,6 +52,9 @@ export default async function Dashboard() {
         </TabsContent>
         <TabsContent value="qr" className="space-y-4">
           <TableQR data={qr} user={user} />
+        </TabsContent>
+        <TabsContent value="settings" className="space-y-4">
+          <Settings />
         </TabsContent>
       </Tabs>
     </div>
