@@ -1,59 +1,83 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Ongoing from "./ongoing";
 import DayCheckOut from "./dayCheckOut";
 import DayCheckIn from "./dayCheckIn";
 import Vacant from "./vacant";
+import { Button } from "@/components/ui/button";
 // import Maintenance from "./maintenance";
 
 export default function Rooms({ data }: { data: any }) {
+  const [statusFilter, setStatusFilter] = useState("ongoing");
   const room = data;
   // console.log("ROOM", room);
   return (
-    <Card className="mx-4 md:mx-8">
-      <CardContent className="p-4">
-        <div className="w-full bg-white rounded-lg">
-          <div className="">
-            <Tabs defaultValue="ongoing" className=" pt-2">
-              <TabsList className="m-0">
-                <TabsTrigger value="ongoing">Ongoing</TabsTrigger>
-                <TabsTrigger value="todayCheckOut">Today CheckOut</TabsTrigger>
-                <TabsTrigger value="todayCheckIn">Today CheckIn</TabsTrigger>
-                <TabsTrigger value="vacant">Vacant</TabsTrigger>
-                {/* <TabsTrigger value="maintenance">Maintenance</TabsTrigger> */}
-              </TabsList>
+    <>
+      <div className="flex flex-wrap gap-2 mt-4 mx-2">
+        <Button
+          variant={statusFilter === "ongoing" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("ongoing")}
+          className="text-xs sm:text-sm"
+        >
+          Ongoing
+        </Button>
+        <Button
+          variant={statusFilter === "checkout" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("checkout")}
+          className="text-xs sm:text-sm"
+        >
+          <span className="hidden sm:inline">Today </span>CheckOut
+        </Button>
+        <Button
+          variant={statusFilter === "checkin" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("checkin")}
+          className="text-xs sm:text-sm"
+        >
+          <span className="hidden sm:inline">Today </span>CheckIn
+        </Button>
+        <Button
+          variant={statusFilter === "vacant" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("vacant")}
+          className="text-xs sm:text-sm"
+        >
+          Vacant
+        </Button>
+      </div>
 
-              {!data ? (
-                <p className="px-auto">Loading........</p>
-              ) : (
-                <>
-                  <TabsContent value="ongoing" className="space-y-4 py-4">
-                    <Ongoing data={room.ongoing} status={room.status} />
-                  </TabsContent>
-                  <TabsContent value="todayCheckOut" className="space-y-4 py-4">
-                    <DayCheckOut
-                      data={room.todayCheckOut}
-                      status={room.status}
-                    />
-                  </TabsContent>
-                  <TabsContent value="todayCheckIn" className="space-y-4 py-4">
-                    <DayCheckIn data={room.todayCheckIn} status={room.status} />
-                  </TabsContent>
-                  <TabsContent value="vacant" className="space-y-4 py-4">
-                    <Vacant data={room.vacant} status={room.status} />
-                  </TabsContent>
-                  {/* <TabsContent value="maintenance" className="space-y-4 py-4">
-                    <Maintenance data={room.maintenance} status={room.status} />
-                  </TabsContent> */}
-                </>
-              )}
-            </Tabs>
+      <Card className="w-full mx-2">
+        <CardContent className="p-4">
+          <div className="w-full bg-white rounded-lg">
+            {!data ? (
+              <div className="flex justify-center items-center h-full">
+                <span className="text-gray-500 text-sm">
+                  Loading..............
+                </span>
+              </div>
+            ) : (
+              <>
+                {statusFilter === "ongoing" && (
+                  <Ongoing data={room.ongoing} status={room.status} />
+                )}
+                {statusFilter === "checkout" && (
+                  <DayCheckOut data={room.todayCheckOut} status={room.status} />
+                )}
+                {statusFilter === "checkin" && (
+                  <DayCheckIn data={room.todayCheckIn} status={room.status} />
+                )}
+                {statusFilter === "vacant" && (
+                  <Vacant data={room.vacant} status={room.status} />
+                )}
+              </>
+            )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </>
   );
 }

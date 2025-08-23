@@ -5,6 +5,9 @@ import Rooms from "../modules/staff/rooms/components/room";
 import Tables from "../modules/staff/tables/components/table";
 import { handleRoomStaffInformation } from "../modules/staff/utils/clientside";
 import { useTokenManager } from "@/hooks/useTokenManager";
+import Delivery from "../modules/staff/delivery/components/delivery";
+import Takeaway from "../modules/staff/takeaway/components/takeaway";
+import { Clock, Truck, MapPin, UtensilsCrossed } from "lucide-react";
 
 const Page = () => {
   const [staffData, setStaffData] = useState<any>({});
@@ -62,16 +65,36 @@ const Page = () => {
         {!staffData ? (
           <p className="px-auto">Loading........</p>
         ) : (
-          <Tabs defaultValue="room" className="space-y-4 ">
-            <TabsList className="mx-4 md:mx-8">
-              <TabsTrigger value="room">Rooms</TabsTrigger>
-              <TabsTrigger value="table">Tables</TabsTrigger>
+          <Tabs defaultValue="room" className="space-y-4 mx-8">
+            <TabsList className="w-full h-10 grid  grid-cols-4">
+              <TabsTrigger value="room" className="flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                <span className="hidden sm:inline">Rooms</span>
+              </TabsTrigger>
+              <TabsTrigger value="table" className="flex items-center gap-2">
+                <UtensilsCrossed className="w-4 h-4" />
+                <span className="hidden sm:inline">Tables</span>
+              </TabsTrigger>
+              <TabsTrigger value="delivery" className="flex items-center gap-2">
+                <Truck className="w-4 h-4" />
+                <span className="hidden sm:inline">Delivery</span>
+              </TabsTrigger>
+              <TabsTrigger value="takeaway" className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span className="hidden sm:inline">Takeaway</span>
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="room" className="space-y-4">
               <Rooms data={staffData.hotelOverview} />
             </TabsContent>
             <TabsContent value="table" className="space-y-4">
               <Tables data={staffData.restaurantOverview} />
+            </TabsContent>
+            <TabsContent value="delivery" className="space-y-4">
+              <Delivery data={staffData.deliveryOverview} />
+            </TabsContent>
+            <TabsContent value="takeaway" className="space-y-4">
+              <Takeaway data={staffData.takeawayOverview} />
             </TabsContent>
           </Tabs>
         )}

@@ -33,14 +33,19 @@ export function handleRoomStaffInformation(
                 cleaning: [],
                 status: {},
               },
+              deliveryOverview: [],
+              takeawayOverview: [],
             };
 
             if (docSnapHotel.exists()) {
               const reservation = docSnapHotel.data().reservation;
               const live = docSnapHotel.data().live;
+              result.deliveryOverview = docSnapHotel.data().delivery;
+              result.takeawayOverview = docSnapHotel.data().takeaway;
               result.hotelOverview.todayCheckIn = reservation;
               result.hotelOverview.ongoing = live.rooms;
               result.hotelOverview.status = live.roomsData.status;
+             
 
               live.rooms.forEach((item: any) => {
                 if (item?.bookingDetails?.checkOut) {

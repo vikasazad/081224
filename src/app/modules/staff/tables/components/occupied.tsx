@@ -692,7 +692,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
 
   return (
     <div className="space-y-4">
-      {tableData && (
+      {tableData.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.values(tableData).map((item: any, main) => (
             <Card key={main}>
@@ -1151,6 +1151,10 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
               </CardContent>
             </Card>
           ))}
+        </div>
+      ) : (
+        <div className="flex justify-center items-center h-full">
+          <span className="text-gray-500 text-sm">No table data found</span>
         </div>
       )}
       <Dialog

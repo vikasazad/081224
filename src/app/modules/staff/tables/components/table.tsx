@@ -1,52 +1,72 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Occupied from "./occupied";
 import Reserved from "./reserved";
 import Available from "./available";
+import { Button } from "@/components/ui/button";
 // import Cleaning from "./cleaning";
 
 export default function Tables({ data }: { data: any }) {
   const table = data;
+  const [statusFilter, setStatusFilter] = useState("occupied");
   console.log("Table", table);
 
   return (
-    <Card className="mx-4 md:mx-8 ">
-      <CardContent className="p-1 md:p-4">
-        <div className="w-full bg-white rounded-lg">
-          <div className="">
-            <Tabs defaultValue="occupied" className=" pt-2">
-              <TabsList className="m-0">
-                <TabsTrigger value="occupied">Occupied</TabsTrigger>
-                <TabsTrigger value="reserved">Reserved</TabsTrigger>
-                <TabsTrigger value="available">Available</TabsTrigger>
-                {/* <TabsTrigger value="cleaning">Cleaning</TabsTrigger> */}
-              </TabsList>
+    <>
+      <div className="flex flex-wrap gap-2 mt-4 mx-2">
+        <Button
+          variant={statusFilter === "occupied" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("occupied")}
+          className="text-xs sm:text-sm"
+        >
+          Occupied
+        </Button>
+        <Button
+          variant={statusFilter === "reserved" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("reserved")}
+          className="text-xs sm:text-sm"
+        >
+          Reserved
+        </Button>
+        <Button
+          variant={statusFilter === "available" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("available")}
+          className="text-xs sm:text-sm"
+        >
+          Available
+        </Button>
+      </div>
 
-              {!data ? (
-                <p>Loading........</p>
-              ) : (
-                <>
-                  <TabsContent value="occupied" className="space-y-4 py-4">
-                    <Occupied data={table.occupied} status={table.status} />
-                  </TabsContent>
-                  <TabsContent value="reserved" className="space-y-4 py-4">
-                    <Reserved data={table.reserved} status={table.status} />
-                  </TabsContent>
-                  <TabsContent value="available" className="space-y-4 py-4">
-                    <Available data={table.available} status={table.status} />
-                  </TabsContent>
-                  {/* <TabsContent value="cleaning" className="space-y-4 py-4">
-                    <Cleaning data={table.cleaning} status={table.status} />
-                  </TabsContent> */}
-                </>
-              )}
-            </Tabs>
+      <Card className="w-full mx-2">
+        <CardContent className="p-4">
+          <div className="w-full bg-white rounded-lg">
+            {!data ? (
+              <div className="flex justify-center items-center h-full">
+                <span className="text-gray-500 text-sm">
+                  Loading..............
+                </span>
+              </div>
+            ) : (
+              <>
+                {statusFilter === "occupied" && (
+                  <Occupied data={table.occupied} status={table.status} />
+                )}
+                {statusFilter === "reserved" && (
+                  <Reserved data={table.reserved} status={table.status} />
+                )}
+                {statusFilter === "available" && (
+                  <Available data={table.available} status={table.status} />
+                )}
+              </>
+            )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </>
   );
 }
