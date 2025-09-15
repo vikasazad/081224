@@ -64,7 +64,7 @@ import { sendNotification } from "@/lib/sendNotification";
 import {
   assignAttendantSequentially,
   getOnlineStaffFromFirestore,
-  setHistoryRoom,
+  // setHistoryRoom,
   setRooms,
 } from "../../tables/utils/tableApi";
 import { cn } from "@/lib/utils";
