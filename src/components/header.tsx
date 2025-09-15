@@ -56,7 +56,7 @@ export function Header({ staff }: HeaderProps) {
   const navItems = [...(staff ? staffNavItems : baseNavItems)];
 
   return (
-    <div className=" top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-8">
+    <div className="no-print top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-8">
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Image
           src="/Blogo.svg"

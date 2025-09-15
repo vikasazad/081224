@@ -21,8 +21,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { Search, X } from "lucide-react";
+import { IndianRupee, Search, X } from "lucide-react";
 import { toast } from "sonner";
+import { calculateTax } from "@/app/modules/staff/utils/clientside";
 const checklistItems = [
   {
     name: "Room Cleanliness: Is the room is not clean or not in good condition?",
@@ -51,14 +52,14 @@ const ChecklistDialog = ({
   open,
   onClose,
   roomNumber,
-  gst,
+  tax,
 }: {
   data: any;
   info: any;
   open: any;
   onClose: any;
   roomNumber: string;
-  gst: string;
+  tax: string;
 }) => {
   const [addItems, setAddItems] = useState<any>([]);
   const [checkedItems, setCheckedItems] = useState<any>({});
@@ -72,6 +73,7 @@ const ChecklistDialog = ({
     if (data) setAddItems(data);
   }, [data]);
   const handleChecklistItemChange = (index: any) => {
+    console.log("index", index);
     setCheckedItems((prev: any) => {
       const newCheckedItems = { ...prev, [index]: !prev[index] };
 
@@ -92,32 +94,34 @@ const ChecklistDialog = ({
     }
   };
   const handleItemSelect = (item: any) => {
+    console.log("item", item);
     setSelectedItems((prev) =>
       prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
     );
   };
+
   const calculateTotal = () => {
     return selectedItems.reduce((total, item) => total + Number(item.price), 0);
   };
-  const calculateTax = (tax: string) => {
-    // console.log("Calculating Tax...", order);
-    const total = calculateTotal();
-    // console.log("Order Total for Tax Calculation:", total);
+  // const calculateTax = (tax: string) => {
+  //   // console.log("Calculating Tax...", order);
+  //   const total = calculateTotal();
+  //   // console.log("Order Total for Tax Calculation:", total);
 
-    const roundedTax = Math.round((total * parseFloat(tax)) / 100);
-    // console.log(`Calculated Tax (${tax}%):`, roundedTax);
+  //   const roundedTax = Math.round((total * parseFloat(tax)) / 100);
+  //   // console.log(`Calculated Tax (${tax}%):`, roundedTax);
 
-    return roundedTax;
-  };
+  //   return roundedTax;
+  // };
 
   const handleSubmit = () => {
-    console.log("checkedItems clicked from the checkbox");
     const checkedChecklistItems = Object.keys(checkedItems).filter(
       (key) => checkedItems[key]
     );
 
     // Quick submit case: bypass all checklist validation  // Case 1: No checklist items are checked
-    if (quickSubmit || checkedChecklistItems.length === 0) {
+    if (quickSubmit && checkedChecklistItems.length === 0) {
+      console.log("here1");
       info({
         flag: true, // Quick submit
         location: roomNumber,
@@ -128,38 +132,38 @@ const ChecklistDialog = ({
 
     // Case 2: Checklist items are checked but no note is added
     if (checkedChecklistItems.length > 0 && !note.trim()) {
+      console.log("here2");
       toast.error("Please add a note before submitting.");
       return;
     }
 
     // Case 3: Checklist items are checked and a note is provided
+    const gst = calculateTax(
+      calculateTotal(),
+      calculateTotal(),
+      "services",
+      tax
+    );
+    const total = calculateTotal() + gst?.gstAmount;
     info({
-      checkedItems: checkedChecklistItems.map(
+      checkedItems: checkedChecklistItems?.map(
         (el: any) => checklistItems[el].name
       ),
-      selectedItems,
       note,
+      selectedItems,
       payment: {
         transctionId: "",
         paymentStatus: "pending",
         mode: "",
         paymentId: "",
-        price: gst
-          ? Number(calculateTotal()) + Number(calculateTax(gst))
-          : calculateTotal(),
+        price: calculateTotal(),
         subtotal: calculateTotal(),
-        priceAfterDiscount: gst
-          ? calculateTotal() + calculateTax(gst)
-          : calculateTotal(),
+        priceAfterDiscount: "",
         timeOfTransaction: "",
         gst: {
-          gstAmount: gst ? calculateTax(gst) : 0,
-          gstPercentage: gst,
-          cgstAmount: "",
-          cgstPercentage: "",
-          sgstAmount: "",
-          sgstPercentage: "",
+          ...gst,
         },
+        totalPrice: total,
         discount: {
           type: "none",
           amount: 0,
@@ -170,6 +174,35 @@ const ChecklistDialog = ({
       location: roomNumber,
       flag: true, // All criteria met
     });
+
+    // console.log("checkedChecklistItems", {
+    //   checkedItems: checkedChecklistItems?.map(
+    //     (el: any) => checklistItems[el].name
+    //   ),
+    //   note,
+    //   selectedItems,
+    //   payment: {
+    //     transctionId: "",
+    //     paymentStatus: "pending",
+    //     mode: "",
+    //     paymentId: "",
+    //     price: calculateTotal(),
+    //     subtotal: calculateTotal(),
+    //     priceAfterDiscount: "",
+    //     timeOfTransaction: "",
+    //     ...gst,
+    //     totalPrice: total,
+    //     discount: {
+    //       type: "none",
+    //       amount: 0,
+    //       code: "",
+    //     },
+    //   },
+
+    //   location: roomNumber,
+    //   flag: true, // All criteria met);
+    // });
+
     onClose();
   };
 
@@ -299,11 +332,25 @@ const ChecklistDialog = ({
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
-            <div className="text-right">
-              <p className="text-lg font-semibold mr-2">
-                Total Amount: ₹{calculateTotal()}
-              </p>
-            </div>
+            {(() => {
+              const gst = calculateTax(
+                calculateTotal(),
+                calculateTotal(),
+                "services",
+                tax
+              );
+
+              const total = calculateTotal() + gst?.gstAmount;
+
+              return (
+                <div className="text-right">
+                  <p className="flex items-center justify-end text-lg font-semibold mr-2">
+                    Total Amount: <IndianRupee className="w-4 h-4 mr-1" />
+                    {total}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
         </div>
         <DialogFooter>

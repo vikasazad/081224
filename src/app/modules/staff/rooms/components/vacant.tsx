@@ -12,9 +12,16 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { useDispatch } from "react-redux";
-import { addRoom } from "@/lib/features/walkinSlice";
+import { addGstTax, addRoom } from "@/lib/features/walkinSlice";
 
-const Vacant = ({ data }: { data: any; status: any }) => {
+const Vacant = ({
+  data,
+  businessInfo,
+}: {
+  data: any;
+  status: any;
+  businessInfo: any;
+}) => {
   // console.log("DATA", data);
   const [roomData, setRoomData] = useState([]);
   const dispatch = useDispatch();
@@ -31,7 +38,9 @@ const Vacant = ({ data }: { data: any; status: any }) => {
   }, [data]);
 
   const handleWalkIn = (room: any) => {
+    console.log("room", room);
     dispatch(addRoom(room));
+    dispatch(addGstTax(businessInfo?.gstTax));
     router.push("/walkin");
   };
 
@@ -44,7 +53,7 @@ const Vacant = ({ data }: { data: any; status: any }) => {
               key={main}
               className="rounded-xl shadow-md border border-gray-200"
             >
-              <CardContent className="p-4">
+              <CardContent className="px-4 py-0">
                 <Accordion type="single" collapsible>
                   <AccordionItem value="item-1">
                     <AccordionTrigger>

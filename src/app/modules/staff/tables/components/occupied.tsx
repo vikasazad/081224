@@ -50,19 +50,30 @@ import {
 import { sendNotification } from "@/lib/sendNotification";
 import {
   assignAttendantSequentially,
-  calculateFinalAmount,
-  calculateOrderTotal,
-  calculateTax,
   getOnlineStaffFromFirestore,
   setAttendent,
   setHistory,
   setTables,
 } from "../utils/tableApi";
+import {
+  calculateOrderTotal,
+  calculateTax,
+  calculateFinalAmount,
+} from "../../utils/clientside";
 
 const generateRandomOrderNumber = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
-export default function Occupied({ data, status }: { data: any; status: any }) {
+export default function Occupied({
+  data,
+  status,
+  businessInfo,
+}: {
+  data: any;
+  status: any;
+  businessInfo: any;
+}) {
+  console.log("businessInfo", businessInfo);
   const [tableData, setTableData] = useState<any>([]);
   const [addItems, setAddItems] = useState<any>([]);
   const [categorySelect, setCategorySelect] = useState("Food");
@@ -77,7 +88,7 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
   const [openFinalSubmitConfirmation, setOpenFinalSubmitConfirmation] =
     useState(false);
   const [finalSubmitData, setFinalSubmitData] = useState<any>(null);
-  const gstPercentage = "";
+  const [openDialogIndex, setOpenDialogIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setTableData(data);
@@ -252,6 +263,9 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
         tableData[index].diningDetails.location
       }:${generateRandomOrderNumber()}`;
       setAddedType("food");
+      const price = calculateOrderTotal(items);
+      const gst = calculateTax(price, price, "restaurant", businessInfo.gstTax);
+      const totalPrice = price + gst.gstAmount;
       updatedTableData[index] = {
         ...updatedTableData[index],
         diningDetails: {
@@ -289,23 +303,14 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                   code: "",
                 },
                 gst: {
-                  gstAmount: gstPercentage
-                    ? calculateTax(items, gstPercentage)
-                    : "",
-                  gstPercentage: gstPercentage || "",
-                  cgstAmount: "",
-                  cgstPercentage: "",
-                  sgstAmount: "",
-                  sgstPercentage: "",
+                  ...gst,
                 },
-                subtotal: calculateOrderTotal(items),
+                subtotal: price,
                 mode: "",
                 paymentId: "",
                 paymentStatus: "pending",
-                price: gstPercentage
-                  ? calculateOrderTotal(items) +
-                    calculateTax(items, gstPercentage)
-                  : calculateOrderTotal(items),
+                price: price,
+                totalPrice: totalPrice,
                 priceAfterDiscount: "",
                 timeOfTransaction: "",
                 transctionId: "",
@@ -339,15 +344,12 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
         console.log("UPDATED", updatedTableData[index]);
         setOfflineTable(updatedTableData[index]);
         updateOrdersForAttendant(assignedAttendant.name, newOrderId);
-        const price = gstPercentage
-          ? (await calculateOrderTotal(items)) +
-            (await calculateTax(items, gstPercentage))
-          : await calculateOrderTotal(items);
+
         await addKitchenOrder(
           newOrderId,
           updatedTableData[index]?.diningDetails?.customer?.name,
           items,
-          price,
+          totalPrice,
           assignedAttendant.name,
           assignedAttendant.contact
         );
@@ -715,7 +717,12 @@ export default function Occupied({ data, status }: { data: any; status: any }) {
                         </div>
                         <div className="flex items-center gap-3 ">
                           <div>
-                            <Dialog>
+                            <Dialog
+                              open={openDialogIndex === main}
+                              onOpenChange={(isOpen) =>
+                                setOpenDialogIndex(isOpen ? main : null)
+                              }
+                            >
                               <DialogTrigger asChild>
                                 <div
                                   className="flex items-center gap-1 px-2 py-1 border rounded-md"

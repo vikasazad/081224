@@ -1,32 +1,75 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { persistStore, persistReducer } from "redux-persist";
+import { combineReducers } from "@reduxjs/toolkit";
 import searchReducer from "./features/searchSlice";
 import serviceToggleReducer from "./features/serviceToggleSlice";
 import addToOrderReducer from "./features/addToOrderSlice";
 import activeFooterItemReducer from "./features/activeFooterCategory";
 import walkinReducer from "./features/walkinSlice";
+import invoiceReducer from "./features/invoiceSlice";
+
+// Create a custom storage that works with SSR
+const createNoopStorage = () => {
+  return {
+    getItem() {
+      return Promise.resolve(null);
+    },
+    setItem(_: string, value: any) {
+      return Promise.resolve(value);
+    },
+    removeItem() {
+      return Promise.resolve();
+    },
+  };
+};
+
+// Use localStorage if available, otherwise use noop storage
+const storage =
+  typeof window !== "undefined"
+    ? require("redux-persist/lib/storage").default
+    : createNoopStorage();
+
+// Persist configuration for auth slice
+const authPersistConfig = {
+  key: "invoiceData",
+  storage,
+  whitelist: ["invoice"], // Only persist these fields
+};
+
+// Combine all reducers
+const rootReducer = combineReducers({
+  searchTerm: searchReducer,
+  serviceToggle: serviceToggleReducer,
+  addToOrderData: addToOrderReducer,
+  activeFooterItem: activeFooterItemReducer,
+  walkin: walkinReducer,
+  invoiceData: persistReducer(authPersistConfig, invoiceReducer),
+  // firebaseManagementData: firebaseManagementDataReducer,
+  //     // firestoreMultipleData: firestoreMultipleDataReducer,
+  //     // firebaseData: firebaseDataReducer,
+  //     // listData: listReducer,
+  //     // activeFooterItem: activeFooterItemReducer,
+  //     // botToOrderData: botToOrderReducer,
+  //     // botChat: botChatReducer,
+  //     // afterOrderData: afterOrderReducer,
+  //     // adminRestaurantInfo: adminRestaurantInfoReducer,
+});
 
 const store = () => {
-  return configureStore({
-    reducer: {
-      searchTerm: searchReducer,
-      serviceToggle: serviceToggleReducer,
-      addToOrderData: addToOrderReducer,
-      activeFooterItem: activeFooterItemReducer,
-      walkin: walkinReducer,
-      // firebaseManagementData: firebaseManagementDataReducer,
-      //     // firestoreMultipleData: firestoreMultipleDataReducer,
-      //     // firebaseData: firebaseDataReducer,
-      //     // listData: listReducer,
-      //     // activeFooterItem: activeFooterItemReducer,
-      //     // botToOrderData: botToOrderReducer,
-      //     // botChat: botChatReducer,
-      //     // afterOrderData: afterOrderReducer,
-      //     // adminRestaurantInfo: adminRestaurantInfoReducer,
-    },
+  const store = configureStore({
+    reducer: rootReducer,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: {
+          ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
+        },
+      }),
   });
+
+  const persistor = persistStore(store);
+  return { store, persistor };
 };
-export type AppStore = ReturnType<typeof store>;
-// Infer the `RootState` and `AppDispatch` types from the store itself
+export type AppStore = ReturnType<typeof store>["store"];
 export type RootState = ReturnType<AppStore["getState"]>;
 export type AppDispatch = AppStore["dispatch"];
 

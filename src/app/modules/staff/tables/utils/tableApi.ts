@@ -12,95 +12,95 @@ interface StaffMember {
   orders: string[];
 }
 
-export const calculateOrderTotal = (order: any) => {
-  // console.log("Calculating Order Total...", order);
-  const Total =
-    order.reduce((total: number, orderItem: any) => {
-      return total + Number(orderItem.price);
-    }, 0) || 0;
+// export const calculateOrderTotal = (order: any) => {
+//   // console.log("Calculating Order Total...", order);
+//   const Total =
+//     order.reduce((total: number, orderItem: any) => {
+//       return total + Number(orderItem.price);
+//     }, 0) || 0;
 
-  // console.log("Total  Amount:", Total);
+//   // console.log("Total  Amount:", Total);
 
-  return Total;
-};
+//   return Total;
+// };
 
-export const calculateTax = (order: any, tax: string) => {
-  // console.log("Calculating Tax...", order);
-  const total = calculateOrderTotal(order);
-  // console.log("Order Total for Tax Calculation:", total);
+// export const calculateTax = (order: any, tax: string) => {
+//   // console.log("Calculating Tax...", order);
+//   const total = calculateOrderTotal(order);
+//   // console.log("Order Total for Tax Calculation:", total);
 
-  const roundedTax = Math.round((total * parseFloat(tax)) / 100);
-  // console.log(`Calculated Tax (${tax}%):`, roundedTax);
+//   const roundedTax = Math.round((total * parseFloat(tax)) / 100);
+//   // console.log(`Calculated Tax (${tax}%):`, roundedTax);
 
-  return roundedTax;
-};
+//   return roundedTax;
+// };
 
-export const calculateFinalAmount = (item: any) => {
-  // console.log("Calculating Final Amount...", item);
+// export const calculateFinalAmount = (item: any) => {
+//   // console.log("Calculating Final Amount...", item);
 
-  let bookingTotal = 0;
-  if (item.bookingDetails?.location) {
-    if (item.bookingDetails?.payment?.paymentStatus === "pending") {
-      const gstAmount = Number(
-        item.bookingDetails.payment?.gst?.gstAmount || "0"
-      );
-      bookingTotal = Number(item.bookingDetails?.payment?.price) + gstAmount;
-    }
-  }
+//   let bookingTotal = 0;
+//   if (item.bookingDetails?.location) {
+//     if (item.bookingDetails?.payment?.paymentStatus === "pending") {
+//       const gstAmount = Number(
+//         item.bookingDetails.payment?.gst?.gstAmount || "0"
+//       );
+//       bookingTotal = Number(item.bookingDetails?.payment?.price) + gstAmount;
+//     }
+//   }
 
-  // console.log("Total Pending Booking Amount:", bookingTotal);
+//   // console.log("Total Pending Booking Amount:", bookingTotal);
 
-  // Calculate pending payments for diningDetails
-  const diningTotal =
-    item.diningDetails?.orders
-      ?.map((order: any) => {
-        if (order.payment.paymentStatus === "pending") {
-          // console.log("Pending Dining Order Found:", order);
-          const itemsTotal = order.items.reduce((total: number, item: any) => {
-            // console.log("Pending Dining Item Price:", item.price);
-            return total + parseFloat(item.price || "0");
-          }, 0);
+//   // Calculate pending payments for diningDetails
+//   const diningTotal =
+//     item.diningDetails?.orders
+//       ?.map((order: any) => {
+//         if (order.payment.paymentStatus === "pending") {
+//           // console.log("Pending Dining Order Found:", order);
+//           const itemsTotal = order.items.reduce((total: number, item: any) => {
+//             // console.log("Pending Dining Item Price:", item.price);
+//             return total + parseFloat(item.price || "0");
+//           }, 0);
 
-          const gstAmount = parseFloat(order.payment?.gst?.gstAmount || "0");
-          // console.log("Dining GST Amount:", gstAmount);
+//           const gstAmount = parseFloat(order.payment?.gst?.gstAmount || "0");
+//           // console.log("Dining GST Amount:", gstAmount);
 
-          const orderTotal = itemsTotal + gstAmount;
-          // console.log("Dining Order Total (Pending):", orderTotal);
-          return orderTotal;
-        }
-        return 0;
-      })
-      .reduce((sum: number, value: number) => sum + value, 0) || 0;
+//           const orderTotal = itemsTotal + gstAmount;
+//           // console.log("Dining Order Total (Pending):", orderTotal);
+//           return orderTotal;
+//         }
+//         return 0;
+//       })
+//       .reduce((sum: number, value: number) => sum + value, 0) || 0;
 
-  // console.log("Total Pending Dining Amount:", diningTotal);
+//   // console.log("Total Pending Dining Amount:", diningTotal);
 
-  // Calculate pending payments for servicesUsed
-  const servicesTotal =
-    item?.servicesUsed
-      ?.filter(
-        (service: any) =>
-          service.payment.paymentStatus === "pending" &&
-          service.status !== "Cancelled"
-      )
-      .reduce((total: number, service: any) => {
-        const price = parseFloat(service.payment?.price || "0");
-        const gstAmount = parseFloat(service.payment?.gst?.gstAmount || "0");
-        return total + price + gstAmount;
-      }, 0) || 0;
+//   // Calculate pending payments for servicesUsed
+//   const servicesTotal =
+//     item?.servicesUsed
+//       ?.filter(
+//         (service: any) =>
+//           service.payment.paymentStatus === "pending" &&
+//           service.status !== "Cancelled"
+//       )
+//       .reduce((total: number, service: any) => {
+//         const price = parseFloat(service.payment?.price || "0");
+//         const gstAmount = parseFloat(service.payment?.gst?.gstAmount || "0");
+//         return total + price + gstAmount;
+//       }, 0) || 0;
 
-  // console.log("Total Pending Services Amount:", servicesTotal);
+//   // console.log("Total Pending Services Amount:", servicesTotal);
 
-  const checklistTotal =
-    item?.checklist?.payment?.paymentStatus === "pending"
-      ? item?.checklist?.payment?.price
-      : 0;
+//   const checklistTotal =
+//     item?.checklist?.payment?.paymentStatus === "pending"
+//       ? item?.checklist?.payment?.price
+//       : 0;
 
-  // Return the combined total
-  const combinedFinalAmount =
-    diningTotal + servicesTotal + bookingTotal + checklistTotal;
-  // console.log("Combined Final Amount:", combinedFinalAmount);
-  return combinedFinalAmount;
-};
+//   // Return the combined total
+//   const combinedFinalAmount =
+//     diningTotal + servicesTotal + bookingTotal + checklistTotal;
+//   // console.log("Combined Final Amount:", combinedFinalAmount);
+//   return combinedFinalAmount;
+// };
 
 export function getOnlineStaffFromFirestore(callback: any) {
   const docRef = doc(db, "vikumar.azad@gmail.com", "info");

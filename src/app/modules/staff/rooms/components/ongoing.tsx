@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,12 +38,17 @@ import {
   User,
   Clock,
   IndianRupee,
+  X,
+  FileText,
+  Dot,
+  PhoneCall,
 } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
 import {
   addKitchenOrder,
-  calculateTax,
+  generateInvoiceObject,
   getRoomData,
+  sendInvoiceWhatsapp,
   setOfflineRoom,
   updateOrdersForAttendant,
 } from "../../utils/staffData";
@@ -58,20 +63,48 @@ import {
 import { sendNotification } from "@/lib/sendNotification";
 import {
   assignAttendantSequentially,
-  calculateFinalAmount,
-  calculateOrderTotal,
   getOnlineStaffFromFirestore,
   setHistoryRoom,
   setRooms,
 } from "../../tables/utils/tableApi";
 import { cn } from "@/lib/utils";
-
+import {
+  calculateOrderTotal,
+  calculateTax,
+  calculateFinalAmount,
+} from "../../utils/clientside";
+import { setInvoiceData } from "@/lib/features/invoiceSlice";
+import { useDispatch } from "react-redux";
+import { Icons } from "@/components/icons";
+// gst = {
+//   room: {
+//     "upto 7500/night": 12,
+//     "above 7500/night": 18,
+//   },
+//   dining: {
+//     "upto 7500/night": 5,
+//     "above 7500/night": 18,
+//   },
+//   service: {
+//     all: 18,
+//   },
+// };
 // Function to generate a 4-digit random number
 const generateRandomOrderNumber = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
-export default function Ongoing({ data, status }: { data: any; status: any }) {
+export default function Ongoing({
+  data,
+  status,
+  businessInfo,
+}: {
+  data: any;
+  status: any;
+  businessInfo: any;
+}) {
+  // const router = useRouter();
+  const dispatch = useDispatch();
   const [roomData, setRoomData] = useState<any>([]);
   const [addItems, setAddItems] = useState<any>([]);
   const [categorySelect, setCategorySelect] = useState("Food");
@@ -79,9 +112,8 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   const [issueDescription, setIssueDescription] = useState("");
   const [categoryItems, setCategoryItems] = useState([]);
   const [selectedCategoryItems, setSelectedCategoryItems] = useState<any[]>([]);
-  const [openPaymentConfirmation, setOpenPaymentConfirmation] = useState(false);
-  const [currentStatusChange, setCurrentStatusChange] = useState<any>(null);
-  const [checklistOpen, setChecklistOpen] = useState(false);
+
+  const [checklistOpen, setChecklistOpen] = useState<number | null>(null);
   const [addedType, setAddedType] = useState<
     "food" | "issue" | "service" | null
   >(null);
@@ -90,8 +122,18 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   const [openFinalSubmitConfirmation, setOpenFinalSubmitConfirmation] =
     useState(false);
   const [finalSubmitData, setFinalSubmitData] = useState<any>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const gstPercentage = "18";
+  const [openDialogIndex, setOpenDialogIndex] = useState<number | null>(null);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    open: boolean;
+    status: string;
+    orderId: string;
+    index: number;
+  }>({
+    open: false,
+    status: "",
+    orderId: "",
+    index: 0,
+  });
   // console.log("addItems", addItems);
   useEffect(() => {
     console.log("DATA", data);
@@ -223,6 +265,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   };
 
   const handleAdd = async (items: any[], index: number) => {
+    console.log("index", index);
     if (items.length > 0) {
       console.log("AAAAAAAA", items);
       const updatedRoomData: any = [...roomData];
@@ -234,6 +277,10 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
           roomData[index].bookingDetails.location
         }:${generateRandomOrderNumber()}`;
         setAddedType("food");
+
+        const price = calculateOrderTotal(items);
+        const gst = calculateTax(price, price, "dining", businessInfo.gstTax);
+        const totalPrice = price + gst.gstAmount;
         updatedRoomData[index] = {
           ...updatedRoomData[index],
           diningDetails: {
@@ -275,23 +322,14 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                     code: "",
                   },
                   gst: {
-                    gstAmount: gstPercentage
-                      ? await calculateTax(items, gstPercentage)
-                      : "",
-                    gstPercentage: gstPercentage || "",
-                    cgstAmount: "",
-                    cgstPercentage: "",
-                    sgstAmount: "",
-                    sgstPercentage: "",
+                    ...gst,
                   },
-                  subtotal: await calculateOrderTotal(items),
+                  subtotal: price,
                   mode: "",
                   paymentId: "",
                   paymentStatus: "pending",
-                  price: gstPercentage
-                    ? (await calculateOrderTotal(items)) +
-                      (await calculateTax(items, gstPercentage))
-                    : await calculateOrderTotal(items),
+                  price: price,
+                  totalPrice: totalPrice,
                   priceAfterDiscount: "",
                   timeOfTransaction: "",
                   transctionId: "",
@@ -323,10 +361,10 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
           // const data = await setOfflineItem(updatedTableData);
           console.log("UPDATED", updatedRoomData[index]);
           setOfflineRoom(updatedRoomData[index]);
-          const price = gstPercentage
-            ? (await calculateOrderTotal(items)) +
-              (await calculateTax(items, gstPercentage))
-            : await calculateOrderTotal(items);
+          // const price = gstPercentage
+          //   ? (await calculateOrderTotal(items)) +
+          //     (await calculateTax(items, gstPercentage))
+          //   : await calculateOrderTotal(items);
 
           // console.log("ADD KITCHEN ORDER", {
           //   newOrderId,
@@ -338,7 +376,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
             newOrderId,
             updatedRoomData[index]?.bookingDetails?.customer?.name,
             items,
-            price,
+            totalPrice,
             assignedAttendant.name,
             assignedAttendant.contact
           );
@@ -356,6 +394,13 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
         const newOrderId = `SE:R-${
           roomData[index].bookingDetails.location
         }:${generateRandomOrderNumber()}`;
+        const gst = calculateTax(
+          parseFloat(items[0].price),
+          parseFloat(items[0].price),
+          "services",
+          businessInfo.gstTax
+        );
+        const totalPrice = parseFloat(items[0].price) + gst.gstAmount;
         const newService = {
           serviceId: newOrderId,
           serviceName: items[0].name,
@@ -376,23 +421,14 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
               code: "",
             },
             gst: {
-              gstAmount: gstPercentage
-                ? await calculateTax(items, gstPercentage)
-                : "",
-              gstPercentage: gstPercentage || "",
-              cgstAmount: "",
-              cgstPercentage: "",
-              sgstAmount: "",
-              sgstPercentage: "",
+              ...gst,
             },
-            subtotal: await calculateOrderTotal(items),
+            subtotal: parseFloat(items[0].price),
             mode: "",
             paymentId: "",
             paymentStatus: "pending",
-            price: gstPercentage
-              ? (await calculateOrderTotal(items)) +
-                (await calculateTax(items, gstPercentage))
-              : await calculateOrderTotal(items),
+            price: parseFloat(items[0].price),
+            totalPrice: totalPrice,
             priceAfterDiscount: "",
             timeOfTransaction: "",
             transctionId: "",
@@ -501,7 +537,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
       setSelectedCategoryItems([]);
       setCategorySearchTerm("");
       setIssueDescription("");
-      setIsAddDialogOpen(false);
+      setOpenDialogIndex(null);
     }
   };
 
@@ -512,8 +548,12 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
   ) => {
     console.log("roomData", status, orderId, index);
     if (status === "Paid" || status === "Completed") {
-      setCurrentStatusChange({ status, orderId, index });
-      setOpenPaymentConfirmation(true);
+      setConfirmationDialog({
+        open: true,
+        status,
+        orderId,
+        index,
+      });
     } else if (status === "Served") {
       if (roomData[index]) {
         const token =
@@ -593,6 +633,40 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
       updateStatus(status, orderId, index);
     }
   };
+
+  const closeConfirmationDialog = useCallback(() => {
+    setConfirmationDialog({
+      open: false,
+      status: "",
+      orderId: "",
+      index: 0,
+    });
+  }, []);
+
+  // Handle escape key to close dialog
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && confirmationDialog.open) {
+        closeConfirmationDialog();
+      }
+    };
+
+    if (confirmationDialog.open) {
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
+    }
+  }, [confirmationDialog.open, closeConfirmationDialog]);
+
+  const handleConfirmation = useCallback(
+    (confirmed: boolean) => {
+      if (confirmed) {
+        const { status, orderId, index } = confirmationDialog;
+        updateStatus(status, orderId, index);
+      }
+      closeConfirmationDialog();
+    },
+    [confirmationDialog, closeConfirmationDialog]
+  );
 
   const updateStatus = (status: any, orderId: any, index: any) => {
     setRoomData((prevTableData: any) => {
@@ -749,7 +823,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
     setRoomData(updatedRoomData);
   };
 
-  const handleFinalSubmit = (item: any, main: number) => {
+  const handleFinalSubmit = async (item: any, main: number) => {
     console.log("clicked", item, main);
     const total = calculateFinalAmount(item);
 
@@ -757,30 +831,96 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
       setOpenFinalSubmitConfirmation(true);
       setFinalSubmitData({ item, main, type: "payment_pending" });
     } else {
+      const invoice = `INV${Math.floor(
+        1000000 + Math.random() * 9000000
+      ).toString()}`;
       setOpenFinalSubmitConfirmation(true);
-      setFinalSubmitData({ item, main, type: "close_table" });
+      const invoiceObject = await generateInvoiceObject(
+        item,
+        businessInfo,
+        invoice
+      );
+      console.log("invoiceObject", invoiceObject);
+      setFinalSubmitData({ item, main, type: "close_table", invoiceObject });
     }
   };
 
-  const handleTableClose = () => {
+  const handleRoomClose = async () => {
     console.log("finalSubmitData", finalSubmitData);
+
+    // Generate and upload invoice if invoice object exists
+    if (finalSubmitData?.invoiceObject) {
+      try {
+        const { processAndUploadInvoice } = await import(
+          "@/lib/firebase/invoice-storage"
+        );
+        const downloadURL = await processAndUploadInvoice(
+          finalSubmitData?.invoiceObject
+        );
+        console.log(
+          "Invoice uploaded successfully. Download URL:",
+          downloadURL
+        );
+        if (downloadURL) {
+          const res = await sendInvoiceWhatsapp(
+            downloadURL,
+            finalSubmitData?.item?.bookingDetails?.customer?.phone,
+            finalSubmitData?.item?.bookingDetails?.customer?.name,
+            finalSubmitData?.item?.bookingDetails?.bookingId,
+            new Date(
+              finalSubmitData?.item?.bookingDetails?.checkIn
+            ).toLocaleDateString("en-US", {
+              weekday: "short",
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }),
+            businessInfo?.businessName
+          );
+          console.log("res", res);
+        }
+      } catch (error) {
+        console.error("Failed to upload invoice:", error);
+      }
+    }
+
     // const type =
     //   finalSubmitData.item.diningDetails.capicity === "2"
     //     ? "twoseater"
     //     : finalSubmitData.item.diningDetails.capicity === "4"
     //     ? "fourseater"
     //     : "sixseater";
-    setHistoryRoom(
-      finalSubmitData.item,
-      finalSubmitData.item.bookingDetails.roomType
-    );
+    // setHistoryRoom(
+    //   finalSubmitData.item,
+    //   finalSubmitData.item.bookingDetails.roomType
+    // );
   };
+
+  const handleInvoice = async (item: any, main: number) => {
+    console.log("clicked", item, main);
+    const invoice = `INV${Math.floor(
+      1000000 + Math.random() * 9000000
+    ).toString()}`;
+    console.log("invoice", invoice);
+    const invoiceObject = await generateInvoiceObject(
+      item,
+      businessInfo,
+      invoice
+    );
+    console.log("invoiceObject", invoiceObject);
+    // const invoice = await generateInvoice(invoiceObject);
+    // console.log("invoice", invoice);
+
+    dispatch(setInvoiceData({ invoice, data: invoiceObject }));
+    window.open(`/invoice/${invoice}`, "_blank");
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-10">
       {roomData.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.values(roomData).map((item: any, main) => {
-            // console.log("ITEM", item);
+          {roomData.map((item: any, main: number) => {
+            // console.log("ITEM", main);
             return (
               <Card key={main}>
                 <CardContent className="px-4 py-0">
@@ -788,29 +928,51 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                     <AccordionItem value="item-1">
                       <AccordionTrigger>
                         <div className="flex justify-between items-center w-full">
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl font-bold">
-                              R-{item.bookingDetails.location}
-                            </span>
-                            <span className="text-slate-600">
-                              {item.bookingDetails.customer.name}
-                            </span>
-                            <span className="flex items-center gap-1 text-slate-600 ">
-                              <User className="w-4 h-4 mr-1" />
-                              {item.bookingDetails.noOfGuests}
-                            </span>
+                          <div className="flex items-center gap-1">
+                            <div className="flex flex-col items-start">
+                              <div className="flex items-center gap-3">
+                                <span className="text-lg font-bold">
+                                  R-{item.bookingDetails.location}
+                                </span>
+                                <StatusChip
+                                  status={item.bookingDetails.status}
+                                />
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-600">
+                                  {item.bookingDetails.customer.name}
+                                </span>
+                                <Dot className="w-4 h-4" />
+                                <span className="flex items-center gap-1 text-slate-600 cursor-pointer">
+                                  <User className="w-4 h-4 mr-1" />
+                                  {item.bookingDetails.noOfGuests}
+                                </span>
+                              </div>
+                            </div>
                           </div>
+
                           <div className="flex items-center gap-3">
                             <div>
                               <Dialog
-                                open={isAddDialogOpen}
-                                onOpenChange={setIsAddDialogOpen}
+                                open={openDialogIndex === main}
+                                onOpenChange={(isOpen) => {
+                                  if (!item.checklist?.flag) {
+                                    setOpenDialogIndex(isOpen ? main : null);
+                                  }
+                                }}
                               >
                                 <DialogTrigger asChild>
                                   <div
-                                    className="flex items-center gap-1 px-2 py-1 border rounded-md"
+                                    className={cn(
+                                      "flex items-center gap-1 px-2 py-1 border rounded-md",
+                                      item.checklist?.flag &&
+                                        "opacity-50 cursor-not-allowed"
+                                    )}
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      if (!item.checklist?.flag) {
+                                        console.log("clicked", main);
+                                      }
                                     }}
                                   >
                                     <PlusCircle size={16} />
@@ -830,6 +992,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                       onValueChange={(value) =>
                                         setCategorySelect(value)
                                       }
+                                      disabled={addedType !== null}
                                     >
                                       <SelectTrigger>
                                         <SelectValue placeholder="Select category" />
@@ -968,6 +1131,9 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                       onClick={() => {
                                         handleAdd(selectedCategoryItems, main);
                                       }}
+                                      disabled={
+                                        selectedCategoryItems.length === 0
+                                      }
                                     >
                                       Add
                                     </Button>
@@ -975,7 +1141,25 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                 </DialogContent>
                               </Dialog>
                             </div>
-                            <StatusChip status={item.bookingDetails.status} />
+                            <div
+                              className="flex items-center gap-1 p-1 bg-black text-white rounded-md cursor-pointer"
+                              onClick={() => {
+                                handleInvoice(item, main);
+                                // handleInvoice();
+                              }}
+                            >
+                              <FileText className="w-4 h-4" />
+                              <span> Invoice</span>
+                            </div>
+                            <div className="flex items-center gap-1 py-1 px-2 bg-black text-white rounded-md cursor-pointer">
+                              <PhoneCall
+                                className="w-4 h-4"
+                                onClick={() => {
+                                  window.location.href = `tel:${item.bookingDetails.customer.phone}`;
+                                }}
+                              />
+                              <span> Call</span>
+                            </div>
                           </div>
                         </div>
                       </AccordionTrigger>
@@ -1096,6 +1280,28 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                       </div>
                                     </div>
                                     <Separator />
+                                    {bookingDetails.payment.discount.code.trim() !==
+                                      "" && (
+                                      <div className="flex justify-between items-center">
+                                        <div>
+                                          <span className="font-medium">
+                                            Discount{" "}
+                                            <Badge variant="outline">
+                                              {
+                                                bookingDetails.payment.discount
+                                                  .code
+                                              }
+                                            </Badge>
+                                          </span>
+                                        </div>
+                                        <span className="text-green-600 font-semibold">
+                                          - ₹
+                                          {bookingDetails.payment.price -
+                                            bookingDetails.payment
+                                              .priceAfterDiscount}
+                                        </span>
+                                      </div>
+                                    )}
                                     <div className="flex justify-between items-center">
                                       <div>
                                         <span className="font-medium">
@@ -1149,8 +1355,9 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                           </Badge>
                                         )}
                                       </div>
-                                      <span className="text-green-600 font-semibold">
-                                        ₹{bookingDetails.payment.price}
+                                      <span className="text-green-600 font-semibold flex items-center gap-1">
+                                        <IndianRupee className="w-3 h-3" />
+                                        {bookingDetails.payment.totalPrice}
                                       </span>
                                     </div>
                                   </div>
@@ -1307,8 +1514,9 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                         </Badge>
                                       )}
                                     </div>
-                                    <span className="text-green-600 font-semibold">
-                                      ₹{order.payment.price}
+                                    <span className="text-green-600 font-semibold flex items-center gap-1">
+                                      <IndianRupee className="w-3 h-3" />
+                                      {order.payment.totalPrice}
                                     </span>
                                   </div>
                                 </div>
@@ -1476,8 +1684,9 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                         </Badge>
                                       )}
                                     </div>
-                                    <span className="text-green-600 font-semibold">
-                                      ₹{service.payment.price}
+                                    <span className="text-green-600 font-semibold flex items-center gap-1">
+                                      <IndianRupee className="w-3 h-3" />
+                                      {service.payment.totalPrice}
                                     </span>
                                   </div>
                                 </div>
@@ -1712,7 +1921,7 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                     )}
                                   </div>
                                   <span className="text-green-600 font-semibold">
-                                    ₹{item.checklist?.payment?.price}
+                                    ₹{item.checklist?.payment?.totalPrice}
                                   </span>
                                 </div>
                               </div>
@@ -1785,14 +1994,16 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                                 variant="outline"
                                 className="flex items-center gap-2"
                                 size="sm"
-                                onClick={() => setChecklistOpen(true)}
+                                onClick={() => setChecklistOpen(main)}
                               >
                                 Checkout
                               </Button>
                               <Button
                                 className="flex items-center gap-2"
                                 size="sm"
-                                disabled={!submitFlag}
+                                disabled={
+                                  submitFlag ? false : !item.checklist?.flag
+                                }
                                 onClick={() => handleFinalSubmit(item, main)}
                               >
                                 Submit
@@ -1803,10 +2014,10 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
                           <ChecklistDialog
                             data={addItems}
                             info={handleCheckListInfo}
-                            open={checklistOpen}
-                            onClose={() => setChecklistOpen(false)}
+                            open={checklistOpen === main}
+                            onClose={() => setChecklistOpen(null)}
                             roomNumber={item.bookingDetails.location}
-                            gst={gstPercentage}
+                            tax={businessInfo.gstTax}
                           />
                         </div>
                       </AccordionContent>
@@ -1822,42 +2033,6 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
           <span className="text-gray-500 text-sm">No room data found</span>
         </div>
       )}
-      <Dialog
-        open={openPaymentConfirmation}
-        onOpenChange={setOpenPaymentConfirmation}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Cash Payment</DialogTitle>
-            <DialogDescription>
-              This action can only be done if the payment is in cash. Do you
-              confirm that the payment has been received in cash?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenPaymentConfirmation(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (currentStatusChange) {
-                  updateStatus(
-                    currentStatusChange.status,
-                    currentStatusChange.orderId,
-                    currentStatusChange.index
-                  );
-                }
-                setOpenPaymentConfirmation(false);
-              }}
-            >
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog
         open={openFinalSubmitConfirmation}
@@ -1885,28 +2060,93 @@ export default function Ongoing({ data, status }: { data: any; status: any }) {
             )}
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpenFinalSubmitConfirmation(false)}
-            >
-              Cancel
-            </Button>
-            {finalSubmitData?.type === "close_table" && (
+            {finalSubmitData?.type === "payment_pending" && (
               <Button
-                onClick={() => {
-                  // Logic to close the table
-                  // You might want to implement a method to remove the table or mark it as closed
-                  console.log("tableClosed");
-                  setOpenFinalSubmitConfirmation(false);
-                  handleTableClose();
-                }}
+                variant="outline"
+                onClick={() => setOpenFinalSubmitConfirmation(false)}
               >
-                Confirm Close
+                Cancel
               </Button>
+            )}
+            {finalSubmitData?.type === "close_table" ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setOpenFinalSubmitConfirmation(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    // Logic to close the table
+                    // You might want to implement a method to remove the table or mark it as closed
+                    console.log("tableClosed");
+                    setOpenFinalSubmitConfirmation(false);
+                    handleRoomClose();
+                  }}
+                >
+                  Confirm Close
+                </Button>
+              </>
+            ) : (
+              <Icons.spinner className="mr-2 mt-2 h-4 w-4 animate-spin" />
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Custom Status Update Confirmation Dialog */}
+      {confirmationDialog.open && (
+        <div
+          className="fixed top-0 left-0 right-0 bottom-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          style={{ margin: 0, padding: 0 }}
+          onClick={() => handleConfirmation(false)}
+        >
+          <div
+            className="relative w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 text-left shadow-xl transition-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                Confirm Status Update
+              </h3>
+              <div className="mt-2">
+                <p className="text-sm text-gray-500">
+                  This action can only be done if the payment is in cash. Do you
+                  confirm that the payment has been received in cash?
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-6 flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => handleConfirmation(false)}
+                className="px-4 py-2"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleConfirmation(true)}
+                className="px-4 py-2"
+              >
+                Confirm
+              </Button>
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={() => handleConfirmation(false)}
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <X className="w-4 h-4" />
+              <span className="sr-only">Close</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

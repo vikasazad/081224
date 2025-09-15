@@ -85,10 +85,16 @@ const Page = () => {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="room" className="space-y-4">
-              <Rooms data={staffData.hotelOverview} />
+              <Rooms
+                data={staffData.hotelOverview}
+                businessInfo={staffData.businessInfo}
+              />
             </TabsContent>
             <TabsContent value="table" className="space-y-4">
-              <Tables data={staffData.restaurantOverview} />
+              <Tables
+                data={staffData.restaurantOverview}
+                businessInfo={staffData.businessInfo}
+              />
             </TabsContent>
             <TabsContent value="delivery" className="space-y-4">
               <Delivery data={staffData.deliveryOverview} />

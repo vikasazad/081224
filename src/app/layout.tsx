@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { useRef, useEffect } from "react";
 import { AppStore } from "@/lib/store";
 import store from "@/lib/store";
+import { PersistGate } from "redux-persist/integration/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +17,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const storeRef = useRef<AppStore>();
+  const storeRef = useRef<{ store: AppStore; persistor: any }>();
   if (!storeRef.current) {
     storeRef.current = store();
   }
@@ -41,13 +42,22 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Provider store={storeRef.current}>
-          <AuthWrapper>
-            <GlobalNotificationProvider>
-              <Toaster />
-              {children}
-            </GlobalNotificationProvider>
-          </AuthWrapper>
+        <Provider store={storeRef.current.store}>
+          <PersistGate
+            loading={
+              <div className="flex justify-center items-center h-screen">
+                <div className="text-lg font-medium">Loading...</div>
+              </div>
+            }
+            persistor={storeRef.current.persistor}
+          >
+            <AuthWrapper>
+              <GlobalNotificationProvider>
+                <Toaster />
+                {children}
+              </GlobalNotificationProvider>
+            </AuthWrapper>
+          </PersistGate>
         </Provider>
       </body>
     </html>

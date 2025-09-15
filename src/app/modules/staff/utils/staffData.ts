@@ -15,6 +15,240 @@ interface StaffMember {
   orders: string[];
 }
 
+export const generateInvoiceObject = async (
+  roomData: any,
+  businessInfo: any,
+  invoice: string
+) => {
+  let booking,
+    customer,
+    diningOrders,
+    services,
+    checklist = {};
+  // const transactions = roomData.transactions || [];
+
+  if (roomData.bookingDetails?.location?.trim() !== "") {
+    const payment: any = {
+      discount: {
+        amount: roomData.bookingDetails?.payment?.discount?.amount || 0,
+        code: roomData.bookingDetails?.payment?.discount?.code || "",
+        type: roomData.bookingDetails?.payment?.discount?.type || "",
+      },
+      gst: {
+        gstAmount: roomData.bookingDetails?.payment?.gst?.gstAmount || 0,
+        gstPercentage:
+          roomData.bookingDetails?.payment?.gst?.gstPercentage || 0,
+        cgstAmount: roomData.bookingDetails?.payment?.gst?.cgstAmount || 0,
+        cgstPercentage:
+          roomData.bookingDetails?.payment?.gst?.cgstPercentage || 0,
+        sgstAmount: roomData.bookingDetails?.payment?.gst?.sgstAmount || 0,
+        sgstPercentage:
+          roomData.bookingDetails?.payment?.gst?.sgstPercentage || 0,
+      },
+      price: roomData.bookingDetails?.payment?.price || 0,
+      subtotal: roomData.bookingDetails?.payment?.subtotal || 0,
+      totalPrice: roomData.bookingDetails?.payment?.totalPrice || 0,
+      bookingId: roomData.bookingDetails?.bookingId || "",
+      nights: roomData.bookingDetails?.nights || 0,
+      checkIn: roomData.bookingDetails?.checkIn || "",
+      checkOut: roomData.bookingDetails?.checkOut || "",
+      noOfGuests: roomData.bookingDetails?.noOfGuests || 0,
+    };
+    booking = {
+      ...payment,
+    };
+  }
+
+  if (roomData.bookingDetails?.customer?.name) {
+    customer = {
+      name: roomData.bookingDetails?.customer?.name,
+    };
+  }
+
+  if (roomData.diningDetails?.orders?.length > 0) {
+    const payment: any = {
+      discount: 0,
+      gst: {
+        gstAmount: 0,
+        gstPercentage: 0,
+        cgstAmount: 0,
+        cgstPercentage: 0,
+        sgstAmount: 0,
+        sgstPercentage: 0,
+      },
+      price: 0,
+      subtotal: 0,
+      totalPrice: 0,
+      pendingAmount: 0,
+    };
+    roomData.diningDetails?.orders.forEach((item: any) => {
+      console.log("item", item);
+      if (item.payment.paymentStatus === "pending") {
+        payment.pendingAmount += item.payment?.price || 0;
+      }
+      payment.discount += item.payment?.discount?.amount || 0;
+      payment.gst.gstAmount += item.payment?.gst?.gstAmount || 0;
+      payment.gst.gstPercentage = item.payment?.gst?.gstPercentage || 0;
+      payment.gst.cgstAmount += item.payment?.gst?.cgstAmount || 0;
+      payment.gst.cgstPercentage = item.payment?.gst?.cgstPercentage || 0;
+      payment.gst.sgstAmount += item.payment?.gst?.sgstAmount || 0;
+      payment.gst.sgstPercentage = item.payment?.gst?.sgstPercentage || 0;
+      payment.price += item.payment?.price || 0;
+      payment.subtotal += item.payment?.subtotal || 0;
+      payment.totalPrice += item.payment?.totalPrice || 0;
+    });
+    diningOrders = {
+      ...payment,
+    };
+  }
+  if (roomData.servicesUsed?.length > 0) {
+    const payment: any = {
+      discount: 0,
+      gst: {
+        gstAmount: 0,
+        gstPercentage: 0,
+        cgstAmount: 0,
+        cgstPercentage: 0,
+        sgstAmount: 0,
+        sgstPercentage: 0,
+      },
+      price: 0,
+      subtotal: 0,
+      totalPrice: 0,
+      pendingAmount: 0,
+    };
+    roomData.servicesUsed?.forEach((item: any) => {
+      if (item.payment.paymentStatus === "pending") {
+        payment.pendingAmount += item.payment?.price || 0;
+      }
+      payment.discount += item.payment?.discount?.amount || 0;
+      payment.gst.gstAmount += item.payment?.gst?.gstAmount || 0;
+      payment.gst.gstPercentage = item.payment?.gst?.gstPercentage || 0;
+      payment.gst.cgstAmount += item.payment?.gst?.cgstAmount || 0;
+      payment.gst.cgstPercentage = item.payment?.gst?.cgstPercentage || 0;
+      payment.gst.sgstAmount += item.payment?.gst?.sgstAmount || 0;
+      payment.gst.sgstPercentage = item.payment?.gst?.sgstPercentage || 0;
+      payment.price += item.payment?.price || 0;
+      payment.subtotal += item.payment?.subtotal || 0;
+      payment.totalPrice += item.payment?.totalPrice || 0;
+    });
+    services = {
+      ...payment,
+    };
+  }
+
+  if (!!roomData.checklist) {
+    const payment: any = {
+      discount: {
+        amount: roomData.checklist?.payment?.discount?.amount || 0,
+        code: roomData.checklist?.payment?.discount?.code || "",
+        type: roomData.checklist?.payment?.discount?.type || "",
+      },
+      gst: {
+        gstAmount: roomData.checklist?.payment?.gst?.gstAmount || 0,
+        gstPercentage: roomData.checklist?.payment?.gst?.gstPercentage || 0,
+        cgstAmount: roomData.checklist?.payment?.gst?.cgstAmount || 0,
+        cgstPercentage: roomData.checklist?.payment?.gst?.cgstPercentage || 0,
+        sgstAmount: roomData.checklist?.payment?.gst?.sgstAmount || 0,
+        sgstPercentage: roomData.checklist?.payment?.gst?.sgstPercentage || 0,
+      },
+      price: roomData.checklist?.payment?.price || 0,
+      subtotal: roomData.checklist?.payment?.subtotal || 0,
+      totalPrice: roomData.checklist?.payment?.totalPrice || 0,
+      pendingAmount: 0,
+    };
+    if (roomData.checklist?.payment?.paymentStatus === "pending") {
+      payment.pendingAmount += roomData.checklist?.payment?.price || 0;
+    }
+    checklist = {
+      ...payment,
+    };
+  }
+
+  // Calculate totals
+  const billItems: any = {
+    booking,
+    diningOrders,
+    services,
+    checklist,
+  };
+
+  // Room booking charges
+
+  const invoiceObject = {
+    business: {
+      name: businessInfo.businessName,
+      gst: businessInfo.gst,
+      pan: businessInfo.panNo,
+      cin: businessInfo.cin,
+      email: businessInfo.email,
+      phone: businessInfo.phone,
+      invoiceNo: invoice,
+      date: new Date().toLocaleDateString("en-US", {
+        weekday: "short", // Thu
+        day: "2-digit", // 08
+        month: "short", // May
+        year: "numeric", // 2025
+      }),
+      bookingId: booking?.bookingId || "",
+    },
+    customer,
+    stayDetails: {
+      nights: booking?.nights || 0,
+      checkIn: new Date(booking?.checkIn).toLocaleDateString("en-US", {
+        weekday: "short", // Thu
+        day: "2-digit", // 08
+        month: "short", // May
+        year: "numeric", // 2025
+      }),
+      checkOut: new Date(booking?.checkOut).toLocaleDateString("en-US", {
+        weekday: "short", // Thu
+        day: "2-digit", // 08
+        month: "short", // May
+        year: "numeric", // 2025
+      }),
+      noOfGuests: booking?.noOfGuests || 0,
+    },
+    billItems,
+    totals: {
+      pendingAmount:
+        (billItems.booking?.pendingAmount || 0) +
+        (billItems.diningOrders?.pendingAmount || 0) +
+        (billItems.services?.pendingAmount || 0) +
+        (billItems.checklist?.pendingAmount || 0),
+      subtotal:
+        (billItems.booking?.subtotal || 0) +
+        (billItems.diningOrders?.subtotal || 0) +
+        (billItems.services?.subtotal || 0) +
+        (billItems.checklist?.subtotal || 0),
+      gst:
+        (billItems.booking?.gst?.gstAmount || 0) +
+        (billItems.diningOrders?.gst?.gstAmount || 0) +
+        (billItems.services?.gst?.gstAmount || 0) +
+        (billItems.checklist?.gst?.gstAmount || 0),
+      cgst:
+        (billItems.booking?.gst?.cgstAmount || 0) +
+        (billItems.diningOrders?.gst?.cgstAmount || 0) +
+        (billItems.services?.gst?.cgstAmount || 0) +
+        (billItems.checklist?.gst?.cgstAmount || 0),
+      sgst:
+        (billItems.booking?.gst?.sgstAmount || 0) +
+        (billItems.diningOrders?.gst?.sgstAmount || 0) +
+        (billItems.services?.gst?.sgstAmount || 0) +
+        (billItems.checklist?.gst?.sgstAmount || 0),
+      grandTotal:
+        (billItems.booking?.totalPrice || 0) +
+        (billItems.diningOrders?.totalPrice || 0) +
+        (billItems.services?.totalPrice || 0) +
+        (billItems.checklist?.totalPrice || 0),
+    },
+  };
+
+  // console.log("invoiceObject", invoiceObject);
+
+  return invoiceObject;
+};
+
 export const calculateOrderTotal = async (order: any) => {
   const itemsTotal = order.reduce(
     (total: number, item: any) => total + parseFloat(item.price),
@@ -24,11 +258,11 @@ export const calculateOrderTotal = async (order: any) => {
   return itemsTotal;
 };
 
-export const calculateTax = async (order: any, tax: string) => {
-  const total = await calculateOrderTotal(order);
-  const rounded = Math.round((total * Number(tax)) / 100);
-  return rounded;
-};
+// export const calculateTax = async (order: any, tax: string) => {
+//   const total = await calculateOrderTotal(order);
+//   const rounded = Math.round((total * Number(tax)) / 100);
+//   return rounded;
+// };
 
 export const calculateFinalAmount = async (item: any) => {
   const final = item.diningDetails.orders.map((data: any) => {
@@ -728,6 +962,22 @@ export async function setAttendent(tableData: any) {
 //   }
 // }
 
+export async function findCoupon(couponCode: string) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  const docRef = doc(db, user, "info");
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data().hotel?.hotelDiscount || [];
+    const coupon = data.find((coupon: any) => coupon.code === couponCode);
+    return coupon;
+  }
+}
+
 export async function saveRoomData(roomInfo: any) {
   try {
     const session = await auth();
@@ -776,7 +1026,8 @@ export async function saveRoomData(roomInfo: any) {
           price: roomInfo.price,
           priceAfterDiscount: roomInfo.priceAfterDiscount || "",
           paymentType: "single",
-          subtotal: roomInfo.price,
+          subtotal: roomInfo.subtotal,
+          totalPrice: roomInfo.totalPrice,
           gst: {
             gstAmount: roomInfo.gstAmount || "",
             gstPercentage: roomInfo.gstPercentage || "",
@@ -786,9 +1037,9 @@ export async function saveRoomData(roomInfo: any) {
             sgstPercentage: roomInfo.sgstPercentage || "",
           },
           discount: {
-            type: roomInfo.discountType || "",
-            amount: roomInfo.discountAmount || "",
-            code: roomInfo.discountCode || "",
+            type: roomInfo.discount?.type || "",
+            amount: roomInfo.discount?.amount || "",
+            code: roomInfo.discount?.code || "",
           },
         },
       },
@@ -807,7 +1058,8 @@ export async function saveRoomData(roomInfo: any) {
             paymentId: roomInfo.paymentId,
             timeOfTransaction: new Date().toISOString(),
             price: roomInfo.price,
-            subtotal: roomInfo.price,
+            subtotal: roomInfo.subtotal,
+            totalPrice: roomInfo.totalPrice,
             priceAfterDiscount: roomInfo.priceAfterDiscount || "",
             gst: {
               gstAmount: roomInfo.gstAmount || "",
@@ -818,9 +1070,9 @@ export async function saveRoomData(roomInfo: any) {
               sgstPercentage: roomInfo.sgstPercentage || "",
             },
             discount: {
-              type: roomInfo.discountType || "",
-              amount: roomInfo.discountAmount || "",
-              code: roomInfo.discountCode || "",
+              type: roomInfo.discount?.type || "",
+              amount: roomInfo.discount?.amount || "",
+              code: roomInfo.discount?.code || "",
             },
           },
         },
@@ -897,6 +1149,146 @@ export async function saveRoomData(roomInfo: any) {
 }
 
 export async function sendWhatsAppMessage(
+  phoneNumber: string,
+  name: string,
+  variables: string[]
+) {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    console.log("phoneNumber", phoneNumber, name, variables);
+    const formattedPhone = phoneNumber.replace(/\D/g, "");
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: "booking1",
+            language: { code: "en_US" },
+            components: [
+              {
+                type: "header",
+                parameters: [{ type: "text", text: name }], // Reservation number as header
+              },
+              {
+                type: "body",
+                parameters: variables.map((value) => ({
+                  type: "text",
+                  text: String(value),
+                })),
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("WhatsApp API Response:", data); // Add logging for debugging
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to send message");
+    }
+
+    return { success: true, message: "Message sent successfully!", data };
+  } catch (error: any) {
+    console.error("WhatsApp API Error:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
+  }
+}
+export async function sendInvoiceWhatsapp(
+  invoiceURL: string,
+  phoneNumber: string,
+  name: string,
+  bookingId: string,
+  date: string,
+  businessName: string
+) {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    console.log(
+      "phoneNumber",
+      phoneNumber,
+      name,
+      date,
+      businessName,
+      invoiceURL
+    );
+    const formattedPhone = `91${phoneNumber}`;
+
+    // Create variables array for the room_bill template (5 variables as per template requirement)
+    const variables = [name, bookingId, businessName, date, businessName];
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: "room_bill",
+            language: { code: "en_US" },
+            components: [
+              {
+                type: "header",
+                parameters: [
+                  {
+                    type: "document",
+                    document: {
+                      link: invoiceURL,
+                      filename: "invoice.pdf",
+                    },
+                  },
+                ],
+              },
+              {
+                type: "body",
+                parameters: variables.map((value) => ({
+                  type: "text",
+                  text: String(value),
+                })),
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("WhatsApp API Response:", data);
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to send message");
+    }
+
+    return { success: true, message: "Message sent successfully!", data };
+  } catch (error: any) {
+    console.error("WhatsApp API Error:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
+  }
+}
+
+export async function sendCheckOutWhatsAppMessage(
   phoneNumber: string,
   name: string,
   variables: string[]

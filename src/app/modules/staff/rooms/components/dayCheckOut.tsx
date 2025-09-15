@@ -42,7 +42,6 @@ import {
 import StatusChip from "@/components/ui/StatusChip";
 import {
   addKitchenOrder,
-  calculateTax,
   getRoomData,
   setOfflineRoom,
   updateOrdersForAttendant,
@@ -58,12 +57,15 @@ import {
 import { sendNotification } from "@/lib/sendNotification";
 import {
   assignAttendantSequentially,
-  calculateFinalAmount,
-  calculateOrderTotal,
   getOnlineStaffFromFirestore,
   setHistoryRoom,
   setRooms,
 } from "../../tables/utils/tableApi";
+import {
+  calculateOrderTotal,
+  calculateTax,
+  calculateFinalAmount,
+} from "../../utils/clientside";
 import { cn } from "@/lib/utils";
 
 // Function to generate a 4-digit random number
@@ -74,9 +76,11 @@ const generateRandomOrderNumber = () => {
 export default function DayCheckOut({
   data,
   status,
+  businessInfo,
 }: {
   data: any;
   status: any;
+  businessInfo: any;
 }) {
   const [roomData, setRoomData] = useState<any>([]);
   const [addItems, setAddItems] = useState<any>([]);
@@ -87,7 +91,7 @@ export default function DayCheckOut({
   const [selectedCategoryItems, setSelectedCategoryItems] = useState<any[]>([]);
   const [openPaymentConfirmation, setOpenPaymentConfirmation] = useState(false);
   const [currentStatusChange, setCurrentStatusChange] = useState<any>(null);
-  const [checklistOpen, setChecklistOpen] = useState(false);
+  const [checklistOpen, setChecklistOpen] = useState<number | null>(null);
   const [addedType, setAddedType] = useState<
     "food" | "issue" | "service" | null
   >(null);
@@ -96,8 +100,8 @@ export default function DayCheckOut({
   const [openFinalSubmitConfirmation, setOpenFinalSubmitConfirmation] =
     useState(false);
   const [finalSubmitData, setFinalSubmitData] = useState<any>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const gstPercentage = "18";
+  const [openDialogIndex, setOpenDialogIndex] = useState<number | null>(null);
+
   // console.log("addItems", addItems);
   useEffect(() => {
     console.log("DATA", data);
@@ -229,6 +233,7 @@ export default function DayCheckOut({
   };
 
   const handleAdd = async (items: any[], index: number) => {
+    console.log("index", index);
     if (items.length > 0) {
       console.log("AAAAAAAA", items);
       const updatedRoomData: any = [...roomData];
@@ -240,6 +245,10 @@ export default function DayCheckOut({
           roomData[index].bookingDetails.location
         }:${generateRandomOrderNumber()}`;
         setAddedType("food");
+
+        const price = calculateOrderTotal(items);
+        const gst = calculateTax(price, price, "dining", businessInfo.gstTax);
+        const totalPrice = price + gst.gstAmount;
         updatedRoomData[index] = {
           ...updatedRoomData[index],
           diningDetails: {
@@ -281,23 +290,14 @@ export default function DayCheckOut({
                     code: "",
                   },
                   gst: {
-                    gstAmount: gstPercentage
-                      ? await calculateTax(items, gstPercentage)
-                      : "",
-                    gstPercentage: gstPercentage || "",
-                    cgstAmount: "",
-                    cgstPercentage: "",
-                    sgstAmount: "",
-                    sgstPercentage: "",
+                    ...gst,
                   },
-                  subtotal: await calculateOrderTotal(items),
+                  subtotal: price,
                   mode: "",
                   paymentId: "",
                   paymentStatus: "pending",
-                  price: gstPercentage
-                    ? (await calculateOrderTotal(items)) +
-                      (await calculateTax(items, gstPercentage))
-                    : await calculateOrderTotal(items),
+                  price: price,
+                  totalPrice: totalPrice,
                   priceAfterDiscount: "",
                   timeOfTransaction: "",
                   transctionId: "",
@@ -329,10 +329,10 @@ export default function DayCheckOut({
           // const data = await setOfflineItem(updatedTableData);
           console.log("UPDATED", updatedRoomData[index]);
           setOfflineRoom(updatedRoomData[index]);
-          const price = gstPercentage
-            ? (await calculateOrderTotal(items)) +
-              (await calculateTax(items, gstPercentage))
-            : await calculateOrderTotal(items);
+          // const price = gstPercentage
+          //   ? (await calculateOrderTotal(items)) +
+          //     (await calculateTax(items, gstPercentage))
+          //   : await calculateOrderTotal(items);
 
           // console.log("ADD KITCHEN ORDER", {
           //   newOrderId,
@@ -344,7 +344,7 @@ export default function DayCheckOut({
             newOrderId,
             updatedRoomData[index]?.bookingDetails?.customer?.name,
             items,
-            price,
+            totalPrice,
             assignedAttendant.name,
             assignedAttendant.contact
           );
@@ -362,6 +362,13 @@ export default function DayCheckOut({
         const newOrderId = `SE:R-${
           roomData[index].bookingDetails.location
         }:${generateRandomOrderNumber()}`;
+        const gst = calculateTax(
+          parseFloat(items[0].price),
+          parseFloat(items[0].price),
+          "services",
+          businessInfo.gstTax
+        );
+        const totalPrice = parseFloat(items[0].price) + gst.gstAmount;
         const newService = {
           serviceId: newOrderId,
           serviceName: items[0].name,
@@ -382,23 +389,14 @@ export default function DayCheckOut({
               code: "",
             },
             gst: {
-              gstAmount: gstPercentage
-                ? await calculateTax(items, gstPercentage)
-                : "",
-              gstPercentage: gstPercentage || "",
-              cgstAmount: "",
-              cgstPercentage: "",
-              sgstAmount: "",
-              sgstPercentage: "",
+              ...gst,
             },
-            subtotal: await calculateOrderTotal(items),
+            subtotal: parseFloat(items[0].price),
             mode: "",
             paymentId: "",
             paymentStatus: "pending",
-            price: gstPercentage
-              ? (await calculateOrderTotal(items)) +
-                (await calculateTax(items, gstPercentage))
-              : await calculateOrderTotal(items),
+            price: parseFloat(items[0].price),
+            totalPrice: totalPrice,
             priceAfterDiscount: "",
             timeOfTransaction: "",
             transctionId: "",
@@ -461,6 +459,7 @@ export default function DayCheckOut({
           attendantToken: assignedAttendant
             ? assignedAttendant.notificationToken
             : "",
+          attendantContact: assignedAttendant ? assignedAttendant.contact : "",
         };
 
         updatedRoomData[index] = {
@@ -506,7 +505,7 @@ export default function DayCheckOut({
       setSelectedCategoryItems([]);
       setCategorySearchTerm("");
       setIssueDescription("");
-      setIsAddDialogOpen(false);
+      setOpenDialogIndex(null);
     }
   };
 
@@ -806,8 +805,10 @@ export default function DayCheckOut({
                           <div className="flex items-center gap-3">
                             <div>
                               <Dialog
-                                open={isAddDialogOpen}
-                                onOpenChange={setIsAddDialogOpen}
+                                open={openDialogIndex === main}
+                                onOpenChange={(isOpen) =>
+                                  setOpenDialogIndex(isOpen ? main : null)
+                                }
                               >
                                 <DialogTrigger asChild>
                                   <div
@@ -1788,7 +1789,7 @@ export default function DayCheckOut({
                                 variant="outline"
                                 className="flex items-center gap-2"
                                 size="sm"
-                                onClick={() => setChecklistOpen(true)}
+                                onClick={() => setChecklistOpen(main)}
                               >
                                 Checkout
                               </Button>
@@ -1806,10 +1807,10 @@ export default function DayCheckOut({
                           <ChecklistDialog
                             data={addItems}
                             info={handleCheckListInfo}
-                            open={checklistOpen}
-                            onClose={() => setChecklistOpen(false)}
+                            open={checklistOpen === main}
+                            onClose={() => setChecklistOpen(null)}
                             roomNumber={item.bookingDetails.location}
-                            gst={gstPercentage}
+                            tax={businessInfo.gstTax}
                           />
                         </div>
                       </AccordionContent>

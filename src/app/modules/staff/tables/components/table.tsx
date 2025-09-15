@@ -8,7 +8,13 @@ import Available from "./available";
 import { Button } from "@/components/ui/button";
 // import Cleaning from "./cleaning";
 
-export default function Tables({ data }: { data: any }) {
+export default function Tables({
+  data,
+  businessInfo,
+}: {
+  data: any;
+  businessInfo: any;
+}) {
   const table = data;
   const [statusFilter, setStatusFilter] = useState("occupied");
   console.log("Table", table);
@@ -54,7 +60,11 @@ export default function Tables({ data }: { data: any }) {
             ) : (
               <>
                 {statusFilter === "occupied" && (
-                  <Occupied data={table.occupied} status={table.status} />
+                  <Occupied
+                    data={table.occupied}
+                    status={table.status}
+                    businessInfo={businessInfo}
+                  />
                 )}
                 {statusFilter === "reserved" && (
                   <Reserved data={table.reserved} status={table.status} />
