@@ -104,12 +104,13 @@ async function decryptFlowData(
 
     // Use Node.js built-in GCM decryption
     const algorithm = "aes-128-gcm";
-    const decipher = (crypto as any).createDecipherGCM(algorithm, aesKey);
-    decipher.setIV(initialVector);
+    const decipher = crypto.createDecipheriv(algorithm, aesKey, initialVector);
     decipher.setAuthTag(authTag);
 
-    const decrypted = decipher.update(ciphertext);
-    decipher.final();
+    const decrypted = Buffer.concat([
+      decipher.update(ciphertext),
+      decipher.final(),
+    ]);
 
     const decryptedString = decrypted.toString("utf8");
     return JSON.parse(decryptedString);
@@ -130,12 +131,13 @@ function encryptFlowResponse(
     const flippedIV = Buffer.from(initialVector.map((byte) => ~byte));
 
     const algorithm = "aes-128-gcm";
-    const cipher = (crypto as any).createCipherGCM(algorithm, aesKey);
-    cipher.setIV(flippedIV);
+    const cipher = crypto.createCipheriv(algorithm, aesKey, flippedIV);
 
     const jsonResponse = JSON.stringify(response);
-    const encrypted = cipher.update(jsonResponse, "utf8");
-    cipher.final();
+    const encrypted = Buffer.concat([
+      cipher.update(jsonResponse, "utf8"),
+      cipher.final(),
+    ]);
 
     const authTag = cipher.getAuthTag();
     const encryptedWithTag = Buffer.concat([encrypted, authTag]);
