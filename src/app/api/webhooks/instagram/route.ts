@@ -75,12 +75,15 @@ export async function POST(req: NextRequest) {
   try {
     // Handle incoming WhatsApp messages
     if (body.entry && body.entry[0] && body.entry[0].changes) {
-      if(body?.action === "ping"){
-        return {
-          data:{
-            status: "active"
-          }
-        }
+      if (body?.action === "ping") {
+        return NextResponse.json(
+          {
+            data: {
+              status: "active",
+            },
+          },
+          { status: 200 }
+        );
       }
       const changes = body.entry[0].changes[0];
 
