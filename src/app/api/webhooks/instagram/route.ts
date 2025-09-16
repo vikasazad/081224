@@ -251,7 +251,7 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
   console.log("Processing data exchange for:", data.action);
 
   return {
-    screen: "SUCCESS_SCREEN",
+    screen: "ORDERID",
     data: {
       message: "Data exchange successful",
       timestamp: new Date().toISOString(),
