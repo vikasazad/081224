@@ -42,12 +42,125 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/config/db/firebase";
 
 const VERIFY_TOKEN = "verify_token";
 
 // Environment variables for encryption
 const PRIVATE_KEY = process.env.WHATSAPP_PRIVATE_KEY;
-const PASSPHRASE = process.env.WHATSAPP_PASSPHRASE;
+
+// Issue categories for different order types
+const hotelIssueCategories = {
+  "General Cleanliness": [
+    "Dust on surfaces",
+    "Dirty floors",
+    "Unclean windows",
+    "Trash not emptied",
+    "Overall room cleanliness",
+  ],
+  Bathroom: [
+    "Dirty toilet",
+    "Unclean shower/bathtub",
+    "Dirty sink",
+    "Towels not clean",
+    "Bathroom floor dirty",
+    "Mirror dirty",
+  ],
+  Bedding: [
+    "Dirty sheets",
+    "Stained pillows",
+    "Uncomfortable mattress",
+    "Missing pillows/blankets",
+    "Bed not made properly",
+  ],
+  "Floors and Carpets": [
+    "Stained carpet",
+    "Dirty hardwood/tile",
+    "Carpet needs vacuuming",
+    "Floor sticky or wet",
+    "Carpet odor",
+  ],
+  "Air Conditioning/Heating": [
+    "AC not working",
+    "Room too hot",
+    "Room too cold",
+    "Strange noises from AC",
+    "AC remote not working",
+  ],
+  "Wi-Fi Connection": [
+    "No internet connection",
+    "Slow internet speed",
+    "Connection keeps dropping",
+    "Cannot connect to network",
+    "Password not working",
+  ],
+  "Television/Entertainment": [
+    "TV not turning on",
+    "No signal/channels",
+    "Remote control not working",
+    "Sound issues",
+    "Screen problems",
+  ],
+  Housekeeping: [
+    "Room not cleaned",
+    "Missed cleaning schedule",
+    "Items moved/missing",
+    "Cleaning supplies left behind",
+    "Requested items not provided",
+  ],
+  "Noise Issues": [
+    "Loud neighbors",
+    "Street noise",
+    "Construction noise",
+    "HVAC noise",
+    "Other disturbances",
+  ],
+  "Safety Concerns": [
+    "Door lock issues",
+    "Window lock problems",
+    "Smoke detector issues",
+    "Electrical safety concerns",
+    "Other safety issues",
+  ],
+  "Other Hotel Issues": [
+    "Elevator problems",
+    "Key card not working",
+    "Phone not working",
+    "Lighting issues",
+    "Other concerns",
+  ],
+};
+
+// Food order issues
+const foodIssues = [
+  "Wrong Order Delivered",
+  "Missing Items",
+  "Food Quality Issues",
+  "Cold Food",
+  "Late Delivery",
+  "Incorrect Billing",
+  "Allergic Reaction",
+  "Portion Size Issues",
+  "Spilled Food",
+  "Other Food Issues",
+];
+
+// Service-related issues
+const serviceIssues = [
+  "Service Not Available",
+  "Poor Service Quality",
+  "Staff Unprofessional",
+  "Long Wait Time",
+  "Booking/Reservation Issues",
+  "Equipment Not Working",
+  "Facility Closed Unexpectedly",
+  "Incorrect Billing/Charges",
+  "Service Not as Described",
+  "Cleanliness Issues",
+  "Safety Concerns",
+  "Other Service Problems",
+];
 
 // Interfaces for Flow requests/responses
 interface EncryptedFlowPayload {
@@ -63,11 +176,50 @@ interface DecryptedFlowData {
   flow_token?: string;
 }
 
+async function getOrderId(roomNo: string) {
+  try {
+    const docRef = doc(db, "vikumar.azad@gmail.com", "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const hotelData = docSnap.data()?.live?.rooms;
+      const roomData = hotelData?.find(
+        (room: any) => room.bookingDetails?.location === roomNo
+      );
+      const orderIds: string[] = [];
+      if (roomData) {
+        if (roomData?.bookingDetails?.location) {
+          orderIds.push(roomData?.bookingDetails?.bookingId);
+        }
+        if (roomData?.diningDetails?.orders) {
+          roomData?.diningDetails?.orders?.forEach((order: any) => {
+            orderIds.push(order.orderId);
+          });
+        }
+
+        if (roomData?.servicesUsed) {
+          roomData?.servicesUsed?.forEach((service: any) => {
+            orderIds.push(service.serviceId);
+          });
+        }
+      }
+      return orderIds;
+    } else {
+      console.error("Hotel document does not exist");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error getting hotel data:", error);
+    return false;
+  }
+}
+
 // Decrypt WhatsApp Flow payload
 async function decryptFlowData(
   payload: EncryptedFlowPayload
 ): Promise<DecryptedFlowData> {
-  if (!PRIVATE_KEY || !PASSPHRASE) {
+  // Add this temporary debug code before line 76:
+  if (!PRIVATE_KEY) {
     throw new Error("Missing encryption keys in environment variables");
   }
 
@@ -77,7 +229,7 @@ async function decryptFlowData(
       key: PRIVATE_KEY,
       format: "pem",
       type: "pkcs1",
-      passphrase: PASSPHRASE,
+      passphrase: "",
     });
 
     const encryptedAESKeyBuffer = Buffer.from(
@@ -163,7 +315,7 @@ async function handleFlowRequest(
       key: PRIVATE_KEY!,
       format: "pem",
       type: "pkcs1",
-      passphrase: PASSPHRASE!,
+      passphrase: "",
     });
 
     const encryptedAESKeyBuffer = Buffer.from(
@@ -198,14 +350,46 @@ async function handleFlowRequest(
         response = await handleDataExchange(decryptedData);
         break;
 
-      case "INIT":
-        // Handle flow initialization
+      case "complete":
+        // Handle flow completion
+        console.log(
+          "Flow completed with data:",
+          JSON.stringify(decryptedData, null, 2)
+        );
         response = {
-          screen: "WELCOME_SCREEN",
           data: {
-            welcome_message: "Welcome to our service!",
+            status: "completed",
           },
         };
+        break;
+
+      case "INIT":
+        // Handle flow initialization
+        const orderIds = await getOrderId(decryptedData?.flow_token || "");
+        if (orderIds && Array.isArray(orderIds)) {
+          response = {
+            screen: "ORDERID",
+            data: {
+              orderId: orderIds.map((id) => ({
+                id: id,
+                title: id,
+              })),
+            },
+          };
+        } else {
+          // Fallback if getOrderId fails
+          response = {
+            screen: "ORDERID",
+            data: {
+              orderId: [
+                {
+                  id: "No orders found",
+                  title: "No orders found",
+                },
+              ],
+            },
+          };
+        }
         break;
 
       default:
@@ -246,12 +430,148 @@ async function handleFlowRequest(
 
 // Handle data exchange requests for Flows
 async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
-  // This is where you'll implement your Flow logic
-  // For now, return a basic response
   console.log("Processing data exchange for:", data.action);
+  console.log("Screen:", data.screen);
+  console.log("Data payload:", data.data);
 
+  // Check if we're on ORDERID screen
+  if (data.screen === "ORDERID") {
+    const { orderId, from } = data.data || {};
+
+    // If from dropdown, just return success (do nothing)
+    if (from === "dropdown") {
+      console.log("Dropdown selection, returning success");
+      return {
+        screen: data.screen,
+        data: {
+          message: "Data exchange successful",
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+
+    // If from buttonClick, determine next screen based on orderId prefix
+    if (from === "buttonClick" && orderId) {
+      console.log("Button click with orderId:", orderId);
+
+      // Check if orderId starts with BOK (Hotel booking)
+      if (orderId.startsWith("BOK")) {
+        // Return hotel issues screen
+        const hotelIssuesList = Object.keys(hotelIssueCategories).map(
+          (key) => ({
+            id: key,
+            title: key,
+          })
+        );
+
+        return {
+          screen: "HOTELISSUES",
+          data: {
+            hotelIssues: hotelIssuesList,
+            issueSubtype: [], // Will be populated when main issue is selected
+            isHotelIssues: false, // Initially false until main issue selected
+          },
+        };
+      }
+
+      // Check if orderId starts with OR (Food order) or SE (Service)
+      if (orderId.startsWith("OR") || orderId.startsWith("SE")) {
+        const issuesList = orderId.startsWith("OR")
+          ? foodIssues.map((issue) => ({ id: issue, title: issue }))
+          : serviceIssues.map((issue) => ({ id: issue, title: issue }));
+
+        return {
+          screen: "OTHERISSUES",
+          data: {
+            otherIssues: issuesList,
+            isOtherIssue: false, // Initially false until issue selected
+          },
+        };
+      }
+    }
+  }
+
+  // Handle HOTELISSUES screen data exchange
+  if (data.screen === "HOTELISSUES") {
+    const { from } = data.data || {};
+
+    // If from dropdown1 (issue selection), populate issueSubtype dropdown
+    if (from === "dropdown1") {
+      const { issue } = data.data || {};
+      const subtypes =
+        hotelIssueCategories[issue as keyof typeof hotelIssueCategories] || [];
+      const issueSubtypeList = subtypes.map((subtype) => ({
+        id: subtype,
+        title: subtype,
+      }));
+
+      console.log("Hotel issue selected, returning subtypes for:", issue);
+      return {
+        screen: data.screen,
+        data: {
+          issueSubtype: issueSubtypeList,
+          isHotelIssues: true, // Enable subtype dropdown and textarea
+        },
+      };
+    }
+
+    // If from dropdown2 (subtype selection), return success
+    if (from === "dropdown2") {
+      console.log("Hotel issue subtype selected, returning success");
+      return {
+        screen: data.screen,
+        data: {
+          message: "Data exchange successful",
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+
+    // If from buttonClick, go to complete screen
+    if (from === "buttonClick") {
+      console.log("Hotel issue form submitted via button click");
+      return {
+        screen: "COMPLETE",
+        data: {
+          message: "Data exchange successful",
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  // Handle OTHERISSUES screen data exchange
+  if (data.screen === "OTHERISSUES") {
+    const { from } = data.data || {};
+
+    // If from dropdown, return success
+    if (from === "dropdown") {
+      console.log("Other issue selected from dropdown, returning success");
+      return {
+        screen: data.screen,
+        data: {
+          message: "Data exchange successful",
+          timestamp: new Date().toISOString(),
+          isOtherIssue: true,
+        },
+      };
+    }
+
+    // If from buttonClick, go to complete screen
+    if (from === "buttonClick") {
+      console.log("Other issue form submitted via button click");
+      return {
+        screen: "COMPLETE",
+        data: {
+          message: "Data exchange successful",
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  // Default response for unhandled cases
   return {
-    screen: "ORDERID",
     data: {
       message: "Data exchange successful",
       timestamp: new Date().toISOString(),
