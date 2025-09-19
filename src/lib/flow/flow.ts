@@ -324,7 +324,13 @@ export async function handleFlowRequest(
             data: {
               orderId: orderIds.map((id) => ({
                 id: id,
-                title: id,
+                title: id.startsWith("BOK")
+                  ? `${id} - Hotel`
+                  : id.startsWith("OR")
+                  ? `${id} - Food`
+                  : id.startsWith("SE")
+                  ? `${id} - Service`
+                  : id,
               })),
             },
           };
