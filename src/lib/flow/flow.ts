@@ -405,6 +405,7 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
     // If from buttonClick, determine next screen based on orderId prefix
     if (from === "buttonClick" && orderId) {
       console.log("Button click with orderId:", orderId);
+      await saveOrderId(orderId);
 
       // Check if orderId starts with BOK (Hotel booking)
       if (orderId.startsWith("BOK")) {
@@ -419,6 +420,7 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
         return {
           screen: "HOTELISSUES",
           data: {
+            orderId: orderId,
             hotelIssues: hotelIssuesList,
             issueSubtype: [], // Will be populated when main issue is selected
             isHotelIssues: false, // Initially false until main issue selected
@@ -435,6 +437,7 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
         return {
           screen: "OTHERISSUES",
           data: {
+            orderId: orderId,
             otherIssues: issuesList,
             isOtherIssue: false, // Initially false until issue selected
           },
@@ -456,7 +459,6 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
         id: subtype,
         title: subtype,
       }));
-
       console.log("Hotel issue selected, returning subtypes for:", issue);
       return {
         screen: data.screen,
@@ -529,4 +531,8 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
       timestamp: new Date().toISOString(),
     },
   };
+}
+
+async function saveOrderId(orderId: string) {
+  console.log("Saving orderId:", orderId);
 }
