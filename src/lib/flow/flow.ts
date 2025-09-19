@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/config/db/firebase";
 import { NextResponse } from "next/server";
 // Environment variables for encryption
@@ -405,7 +405,6 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
     // If from buttonClick, determine next screen based on orderId prefix
     if (from === "buttonClick" && orderId) {
       console.log("Button click with orderId:", orderId);
-      await saveOrderId(orderId);
 
       // Check if orderId starts with BOK (Hotel booking)
       if (orderId.startsWith("BOK")) {
@@ -483,6 +482,12 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
 
     // If from buttonClick, go to complete screen
     if (from === "buttonClick") {
+      const finaldata: any = {
+        ...data?.data,
+        roomNo: data?.flow_token,
+        time: new Date().toISOString(),
+      };
+      await saveHotelIssue(finaldata);
       console.log("Hotel issue form submitted via button click");
       return {
         screen: "COMPLETE",
@@ -514,6 +519,12 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
     // If from buttonClick, go to complete screen
     if (from === "buttonClick") {
       console.log("Other issue form submitted via button click");
+      const finaldata: any = {
+        ...data?.data,
+        roomNo: data?.flow_token,
+        time: new Date().toISOString(),
+      };
+      await saveHotelIssue(finaldata);
       return {
         screen: "COMPLETE",
         data: {
@@ -533,6 +544,32 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
   };
 }
 
-async function saveOrderId(orderId: string) {
-  console.log("Saving orderId:", orderId);
+async function saveHotelIssue(data: any) {
+  console.log("Saving hotel issue:", data);
+  try {
+    const docRef = doc(db, "vikumar.azad@gmail.com", "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const rooms = docSnap.data().live.rooms;
+      const updatedRooms = rooms.map((item: any) => {
+        if (item.bookingDetails?.location === data.roomNo) {
+          return {
+            ...item,
+            bookingDetails: {
+              ...item.bookingDetails,
+              feedback: [...(item.bookingDetails.feedback || []), data],
+            },
+          };
+        }
+        return item;
+      });
+
+      await updateDoc(docRef, {
+        "live.rooms": updatedRooms,
+      });
+    }
+  } catch (error) {
+    console.error("Error saving hotel issue:", error);
+  }
 }
