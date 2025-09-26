@@ -799,7 +799,7 @@ export default function Ongoing({
     if (status.toLocaleLowerCase() === "cancelled") setRooms(roomData);
   };
 
-  const handleCheckListInfo = (data: any) => {
+  const handleCheckListInfo = async (data: any) => {
     // Clone the roomData to make changes
     console.log("DATA", data);
 
@@ -819,8 +819,11 @@ export default function Ongoing({
     });
     console.log("roomData", updatedRoomData);
     // Save the updated data into state
-    setOfflineRoom(updatedRoomData[index]);
-    setRoomData(updatedRoomData);
+    await setOfflineRoom(updatedRoomData[index]);
+    await setRoomData(updatedRoomData);
+    // here we send the message on whatsapp for review
+    
+
   };
 
   const handleFinalSubmit = async (item: any, main: number) => {
