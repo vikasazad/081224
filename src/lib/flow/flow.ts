@@ -579,3 +579,92 @@ async function saveHotelIssue(data: any) {
     console.error("Error saving hotel issue:", error);
   }
 }
+
+/**
+ * Sends a WhatsApp Flow to a specific phone number
+ * @param phoneNumber - The recipient's phone number (with country code)
+ * @param flowData - Optional custom flow data, uses default if not provided
+ * @returns Promise<boolean> - Success status of the operation
+ */
+export async function sendWhatsAppFlow(
+  phoneNumber: string,
+  guestName: string,
+  roomNo: string
+): Promise<boolean> {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    console.log("Sending WhatsApp Flow to:", phoneNumber);
+    const formattedPhone = phoneNumber.replace(/\D/g, "");
+    console.log("Sending WhatsApp Flow to:", formattedPhone);
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: "feedback_message",
+            language: { code: "en_US" },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  {
+                    type: "text",
+                    text: String(guestName),
+                  },
+                ],
+              },
+              {
+                type: "button",
+                sub_type: "quick_reply",
+                index: "0",
+                parameters: [
+                  {
+                    type: "text",
+                    text: "I'm happy so far",
+                  },
+                ],
+              },
+              {
+                type: "button",
+                sub_type: "flow",
+                index: "1",
+                parameters: [
+                  {
+                    type: "action",
+                    action: {
+                      flow_token: roomNo,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.messages && data.messages[0]) {
+      const messageId = data.messages[0].id;
+      console.log("WhatsApp  sent successfully. Message ID:", messageId);
+      return true;
+    } else {
+      console.error("Failed to send WhatsApp Flow:", data);
+      throw new Error(data.error?.message || "Failed to send flow");
+    }
+  } catch (error: any) {
+    console.error("WhatsApp  API Error:", error);
+    return false;
+  }
+}
