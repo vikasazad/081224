@@ -102,7 +102,13 @@ export default auth((req) => {
   console.log("=============", req.auth);
 
   // Check if the request is for the webhook
+
   const { nextUrl } = req;
+
+  if (nextUrl.pathname === "/api/cron") {
+    console.log("Bypassing auth/redirect for Vercel cron job.");
+    return; // Allow the request to proceed directly to the handler
+  }
   if (nextUrl.pathname.startsWith("/api/webhooks/instagram")) {
     return; // Let it go through without auth or redirects
   }
