@@ -911,7 +911,8 @@ export default function DayCheckOut({
           "@/lib/firebase/invoice-storage"
         );
         const downloadURL = await processAndUploadInvoice(
-          finalSubmitData?.invoiceObject
+          finalSubmitData?.invoiceObject,
+          "room"
         );
         console.log(
           "Invoice uploaded successfully. Download URL:",
