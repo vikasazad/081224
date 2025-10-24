@@ -83,7 +83,6 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (Notification.permission === "denied") {
       setNotificationPermissionStatus("denied");
-      openPopup();
       isLoading.current = false;
       return;
     }
@@ -163,9 +162,6 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if ("Notification" in window) {
-      if (Notification.permission !== "granted") {
-        openPopup();
-      }
       loadToken();
     }
   }, []);
@@ -188,15 +184,19 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Keep popup open until permission is granted
   useEffect(() => {
-    if (
-      notificationPermissionStatus !== "granted" &&
-      "Notification" in window
-    ) {
-      openPopup();
-    } else if (notificationPermissionStatus === "granted") {
+    if (!("Notification" in window)) return;
+
+    if (notificationPermissionStatus === "granted") {
+      console.log("closePopup");
       closePopup();
+    } else if (
+      notificationPermissionStatus === "denied" ||
+      notificationPermissionStatus === "default"
+    ) {
+      console.log("openPopup");
+      openPopup();
     }
-  }, [notificationPermissionStatus]);
+  }, [notificationPermissionStatus, openPopup, closePopup]);
 
   return (
     <NotificationContext.Provider

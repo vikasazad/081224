@@ -17,7 +17,7 @@ export default async function Dashboard() {
   const data = await getHotelData();
   const room = await handleRoomInformation();
   const conciergeQR = await getConciergeQRData();
-  console.log("USER", user);
+  // console.log("USER", user);
   return (
     <div className="flex min-h-screen w-full flex-col">
       <div className="space-y-4 p-2 mx-8">

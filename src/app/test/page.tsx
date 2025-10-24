@@ -1,5 +1,6 @@
 "use client";
 import { add } from "@/lib/firebase/firestore";
+import { handleAssignmentResponse } from "../modules/staff/utils/whatsapp-staff-manager";
 // import {
 //   sendStaffAssignmentRequest,
 //   sendWhatsAppTextMessage,
@@ -1953,7 +1954,10 @@ export default function Test() {
     //   "room" // assignmentType
     // );
     // const user = await createPaymentLink();
-    const user = await add("vikumar.azad@gmail.com", analytics, "analytics");
+    const user = await handleAssignmentResponse(
+      "918586994689",
+      "decline_BOK:R-101:8930"
+    );
     // const secretKey = new TextEncoder().encode("Vikas@1234");
 
     // const payload = {

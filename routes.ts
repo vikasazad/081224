@@ -13,6 +13,6 @@ export const managerRoutes = [
   "/test",
 ];
 
-export const staffRoutes = ["/staff", "/account"];
+export const staffRoutes = ["/staff", "/account", "/hotel"];
 
 export const apiauthPrefix = "/api/auth";

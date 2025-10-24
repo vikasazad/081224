@@ -1,7 +1,7 @@
 "use server";
 import { auth } from "@/auth";
 import { db } from "@/config/db/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 export async function getManagementData() {
   const session = await auth();
@@ -16,5 +16,24 @@ export async function getManagementData() {
     return docSnap.data();
   } else {
     return { data: null };
+  }
+}
+
+export async function saveStaffData(data: any) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  try {
+    const docRef = doc(db, user, "info");
+    await updateDoc(docRef, {
+      staff: data,
+    });
+    return true;
+  } catch (error) {
+    console.error("Error saving staff data:", error);
+    return false;
   }
 }

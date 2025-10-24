@@ -45,10 +45,14 @@ import {
 } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
 import {
+  addDiscount,
   addKitchenOrder,
   generateInvoiceObject,
+  getDiscount,
   getRoomData,
-  sendInvoiceWhatsapp,
+  removeDiscount,
+  sendFinalMessage,
+  sendTakeReviewMessage,
   setOfflineRoom,
   updateOrdersForAttendant,
 } from "../../utils/staffData";
@@ -60,10 +64,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { sendNotification } from "@/lib/sendNotification";
+// import { sendNotification } from "@/lib/sendNotification";
 import {
   assignAttendantSequentially,
   getOnlineStaffFromFirestore,
+  setHistoryRoom,
   // setHistoryRoom,
   setRooms,
 } from "../../tables/utils/tableApi";
@@ -76,6 +81,7 @@ import {
 import { setInvoiceData } from "@/lib/features/invoiceSlice";
 import { useDispatch } from "react-redux";
 import { Icons } from "@/components/icons";
+import { toast } from "sonner";
 // gst = {
 //   room: {
 //     "upto 7500/night": 12,
@@ -112,13 +118,25 @@ export default function Ongoing({
   const [issueDescription, setIssueDescription] = useState("");
   const [categoryItems, setCategoryItems] = useState([]);
   const [selectedCategoryItems, setSelectedCategoryItems] = useState<any[]>([]);
-
+  const [discountSelect, setDiscountSelect] = useState([
+    { type: "", amount: 0, code: "" },
+  ]);
+  const [selectedDiscount, setSelectedDiscount] = useState<string>("");
   const [checklistOpen, setChecklistOpen] = useState<number | null>(null);
+  const [openDiscountDialog, setOpenDiscountDialog] = useState<{
+    open: boolean;
+    location: string;
+  }>({
+    open: false,
+    location: "",
+  });
   const [addedType, setAddedType] = useState<
     "food" | "issue" | "service" | null
   >(null);
   const [availableAttendant, setavailableAttendant] = useState<any>([]);
-  const [submitFlag, setSubmitFlag] = useState(false);
+  const [submitFlag, setSubmitFlag] = useState<{
+    [key: string]: boolean;
+  }>({});
   const [openFinalSubmitConfirmation, setOpenFinalSubmitConfirmation] =
     useState(false);
   const [finalSubmitData, setFinalSubmitData] = useState<any>(null);
@@ -134,9 +152,8 @@ export default function Ongoing({
     orderId: "",
     index: 0,
   });
-  // console.log("addItems", addItems);
+  console.log("addItems", roomData);
   useEffect(() => {
-    console.log("DATA", data);
     setRoomData(data);
   }, [data]);
 
@@ -227,6 +244,9 @@ export default function Ongoing({
         updatedTableData[index].diningDetails.orders[
           orderIndex
         ].attendantToken = token;
+        updatedTableData[index].diningDetails.orders[
+          orderIndex
+        ].attendantContact = contact;
       }
     } else if (orderId.startsWith("IS:")) {
       // Update issuesReported
@@ -236,6 +256,9 @@ export default function Ongoing({
           if (updatedTableData[index].issuesReported[key].issueId === orderId) {
             updatedTableData[index].issuesReported[key].attendant = attendant;
             updatedTableData[index].issuesReported[key].attendantToken = token;
+            updatedTableData[index].issuesReported[key].attendantContact =
+              contact;
+
             break;
           }
         }
@@ -338,11 +361,12 @@ export default function Ongoing({
             ],
           },
         };
+        console.log("ASSIGNED ATTENDANT", assignedAttendant);
 
         if (availableAttendant) {
           const updatedAttendants = availableAttendant.map((staff: any) =>
             staff.name === assignedAttendant.name
-              ? { ...staff, orders: [...staff.orders, newOrderId] }
+              ? { ...staff, orders: [...staff?.orders, newOrderId] }
               : staff
           );
           setavailableAttendant(updatedAttendants);
@@ -372,7 +396,7 @@ export default function Ongoing({
           //   items,
           //   price,
           // });
-          await addKitchenOrder(
+          const res = await addKitchenOrder(
             newOrderId,
             updatedRoomData[index]?.bookingDetails?.customer?.name,
             items,
@@ -380,6 +404,7 @@ export default function Ongoing({
             assignedAttendant.name,
             assignedAttendant.contact
           );
+          console.log("RES", res);
           updateOrdersForAttendant(
             assignedAttendant.name,
             newOrderId,
@@ -492,6 +517,7 @@ export default function Ongoing({
             ? assignedAttendant.notificationToken
             : "",
           attendantContact: assignedAttendant ? assignedAttendant.contact : "",
+          timeOfFullfilment: "",
         };
 
         updatedRoomData[index] = {
@@ -556,80 +582,75 @@ export default function Ongoing({
       });
     } else if (status === "Served") {
       if (roomData[index]) {
-        const token =
-          roomData[index]?.bookingDetails.customer.notificationToken;
-        console.log("TOKEN", token);
+        // const token =
+        //   roomData[index]?.bookingDetails.customer.notificationToken;
+        // console.log("TOKEN", token);
         updateStatus(status, orderId, index);
-        if (token) {
-          sendNotification(
-            token,
-            "Your Food is Ready!",
-            "your food is prepared and will be served to your table shortly. Sit back, relax, and Bon appétit!"
-          );
-        }
       }
     } else if (status === "Accepted") {
       if (roomData[index]) {
-        const token =
-          roomData[index]?.bookingDetails.customer.notificationToken;
-        const name = roomData[index]?.bookingDetails.customer.name;
-        const data = Object.values(roomData[index]?.servicesUsed).map(
-          (item: any) => {
-            if (item.serviceId === orderId) return item.serviceName;
-          }
-        );
+        // const token =
+        //   roomData[index]?.bookingDetails.customer.notificationToken;
+        // const name = roomData[index]?.bookingDetails.customer.name;
+        // const data = Object.values(roomData[index]?.servicesUsed).map(
+        //   (item: any) => {
+        //     if (item.serviceId === orderId) return item.serviceName;
+        //   }
+        // );
 
         updateStatus(status, orderId, index);
-        if (token) {
-          sendNotification(
-            token,
-            "Service Request Accepted!",
-            `Hi ${name}, your request for ${data} has been accepted. Our team will be with you shortly to provide the service. Thank you for your patience!`
-          );
-        }
+        // if (token) {
+        //   sendNotification(
+        //     token,
+        //     "Service Request Accepted!",
+        //     `Hi ${name}, your request for ${data} has been accepted. Our team will be with you shortly to provide the service. Thank you for your patience!`
+        //   );
+        // }
       }
     } else if (status === "Denied") {
       if (roomData[index]) {
-        const token =
-          roomData[index]?.bookingDetails.customer.notificationToken;
-        const name = roomData[index]?.bookingDetails.customer.name;
-        const data = Object.values(roomData[index]?.servicesUsed).map(
-          (item: any) => {
-            if (item.serviceId === orderId) return item.serviceName;
-          }
-        );
+        // const token =
+        //   roomData[index]?.bookingDetails.customer.notificationToken;
+        // const name = roomData[index]?.bookingDetails.customer.name;
+        // const data = Object.values(roomData[index]?.servicesUsed).map(
+        //   (item: any) => {
+        //     if (item.serviceId === orderId) return item.serviceName;
+        //   }
+        // );
         updateStatus(status, orderId, index);
-        if (token) {
-          sendNotification(
-            token,
-            "Service Request Denied!",
-            `Hi ${name}, we regret to inform you that your request for ${data} has been denied. Please feel free to reach out to our staff for further assistance or to explore other available options. We apologize for any inconvenience caused!`
-          );
-        }
+        // if (token) {
+        //   sendNotification(
+        //     token,
+        //     "Service Request Denied!",
+        //     `Hi ${name}, we regret to inform you that your request for ${data} has been denied. Please feel free to reach out to our staff for further assistance or to explore other available options. We apologize for any inconvenience caused!`
+        //   );
+        // }
       }
-    } else if (status === "Cancelled") {
-      if (roomData[index]) {
-        const token =
-          roomData[index]?.bookingDetails.customer.notificationToken;
-        const name = roomData[index]?.bookingDetails.customer.name;
-        let headline, message;
-        if (orderId.startsWith("IS")) {
-          headline = "Issue cancelled sucessfully";
-          message = "Your registered issue is cancelled successfully";
-        }
-        const data = Object.values(roomData[index]?.servicesUsed).map(
-          (item: any) => {
-            if (item.serviceId === orderId) return item.serviceName;
-          }
-        );
-        headline = "Service Request Cancelled Sucessfully!";
-        message = `Hi ${name}, Your request for ${data} has been cancelled. Please feel free to reach out to our staff for further assistance or to explore other available options.`;
-        updateStatus(status, orderId, index);
-        if (token) {
-          sendNotification(token, headline, message);
-        }
-      }
-    } else {
+    }
+    //  else if (status === "Cancelled") {
+    //   if (roomData[index]) {
+    //     const token =
+    //       roomData[index]?.bookingDetails.customer.notificationToken;
+    //     const name = roomData[index]?.bookingDetails.customer.name;
+    //     let headline, message;
+    //     if (orderId.startsWith("IS")) {
+    //       headline = "Issue cancelled sucessfully";
+    //       message = "Your registered issue is cancelled successfully";
+    //     }
+    //     const data = Object.values(roomData[index]?.servicesUsed).map(
+    //       (item: any) => {
+    //         if (item.serviceId === orderId) return item.serviceName;
+    //       }
+    //     );
+    //     headline = "Service Request Cancelled Sucessfully!";
+    //     message = `Hi ${name}, Your request for ${data} has been cancelled. Please feel free to reach out to our staff for further assistance or to explore other available options.`;
+    //     updateStatus(status, orderId, index);
+    //     if (token) {
+    //       sendNotification(token, headline, message);
+    //     }
+    //   }
+    // }
+    else {
       updateStatus(status, orderId, index);
     }
   };
@@ -714,6 +735,17 @@ export default function Ongoing({
             ].timeOfFullfilment = new Date().toString();
             updatedRoomData[index].diningDetails.orders[orderIndex].status =
               status;
+            const paymentStatus =
+              updatedRoomData[index].diningDetails.orders[orderIndex].payment
+                ?.paymentStatus;
+
+            if (paymentStatus === "paid") {
+              updatedRoomData[index].diningDetails.orders[orderIndex].status =
+                "paid";
+            } else {
+              updatedRoomData[index].diningDetails.orders[orderIndex].status =
+                "pending";
+            }
 
             // Check payment status and set final status accordingly
           } else if (status.toLocaleLowerCase() === "paid") {
@@ -749,6 +781,18 @@ export default function Ongoing({
             updatedRoomData[index].diningDetails.orders[
               orderIndex
             ].timeOfFullfilment = new Date().toString();
+
+            const paymentStatus =
+              updatedRoomData[index].diningDetails.orders[orderIndex].payment
+                ?.paymentStatus;
+
+            if (paymentStatus === "paid") {
+              updatedRoomData[index].diningDetails.orders[orderIndex].status =
+                "paid";
+            } else {
+              updatedRoomData[index].diningDetails.orders[orderIndex].status =
+                "pending";
+            }
           }
           if (status.toLocaleLowerCase() === "paid") {
             updatedRoomData[index].diningDetails.orders[orderIndex].payment = {
@@ -768,6 +812,13 @@ export default function Ongoing({
         servicesUsed.forEach((el: any, i: number) => {
           if (el.serviceId === orderId) {
             updatedRoomData[index].servicesUsed[i].status = status;
+            if (status.toLocaleLowerCase() === "accepted") {
+              if (el.payment.paymentStatus === "paid") {
+                updatedRoomData[index].servicesUsed[i].status = "paid";
+              } else {
+                updatedRoomData[index].servicesUsed[i].status = "pending";
+              }
+            }
             if (status.toLocaleLowerCase() === "paid") {
               updatedRoomData[index].servicesUsed[i].payment = {
                 ...updatedRoomData[index].servicesUsed[i].payment, // Preserve existing fields
@@ -785,6 +836,8 @@ export default function Ongoing({
         for (const issueType in issuesReported) {
           if (issuesReported[issueType].issueId === orderId) {
             issuesReported[issueType].status = status;
+            issuesReported[issueType].timeOfFullfilment =
+              new Date().toISOString();
             break;
           }
         }
@@ -796,15 +849,19 @@ export default function Ongoing({
     console.log("roomData", roomData);
     if (status.toLocaleLowerCase() === "paid") setRooms(roomData);
     if (status.toLocaleLowerCase() === "served") setRooms(roomData);
+    if (status.toLocaleLowerCase() === "accepted") setRooms(roomData);
     if (status.toLocaleLowerCase() === "cancelled") setRooms(roomData);
   };
 
   const handleCheckListInfo = async (data: any) => {
     // Clone the roomData to make changes
     console.log("DATA", data);
+    const user = roomData.find(
+      (item: any) => item.bookingDetails.location === data.location
+    );
 
     let index = 0;
-    setSubmitFlag(data.flag);
+    setSubmitFlag((prev) => ({ ...prev, [data.location]: data.flag }));
     const updatedRoomData = roomData.map((room: any, i: number) => {
       if (room.bookingDetails.location === data.location) {
         index = i;
@@ -819,11 +876,16 @@ export default function Ongoing({
     });
     console.log("roomData", updatedRoomData);
     // Save the updated data into state
+    setRoomData(updatedRoomData);
     await setOfflineRoom(updatedRoomData[index]);
-    await setRoomData(updatedRoomData);
     // here we send the message on whatsapp for review
-    
-
+    if (user) {
+      await sendTakeReviewMessage(
+        `+91${user.bookingDetails.customer.phone}`,
+        [user.bookingDetails.customer.name, "HAPPYSTAY"],
+        "https://g.page/r/CYrhaBonlOFpEAE/review"
+      );
+    }
   };
 
   const handleFinalSubmit = async (item: any, main: number) => {
@@ -858,45 +920,29 @@ export default function Ongoing({
           "@/lib/firebase/invoice-storage"
         );
         const downloadURL = await processAndUploadInvoice(
-          finalSubmitData?.invoiceObject
+          finalSubmitData?.invoiceObject,
+          "room"
         );
         console.log(
           "Invoice uploaded successfully. Download URL:",
           downloadURL
         );
         if (downloadURL) {
-          const res = await sendInvoiceWhatsapp(
-            downloadURL,
-            finalSubmitData?.item?.bookingDetails?.customer?.phone,
-            finalSubmitData?.item?.bookingDetails?.customer?.name,
-            finalSubmitData?.item?.bookingDetails?.bookingId,
-            new Date(
-              finalSubmitData?.item?.bookingDetails?.checkIn
-            ).toLocaleDateString("en-US", {
-              weekday: "short",
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            }),
-            businessInfo?.businessName
+          await sendFinalMessage(
+            `+91${finalSubmitData?.item?.bookingDetails?.customer?.phone}`,
+            [finalSubmitData?.item?.bookingDetails?.customer?.name],
+            downloadURL
           );
-          console.log("res", res);
         }
       } catch (error) {
         console.error("Failed to upload invoice:", error);
       }
     }
 
-    // const type =
-    //   finalSubmitData.item.diningDetails.capicity === "2"
-    //     ? "twoseater"
-    //     : finalSubmitData.item.diningDetails.capicity === "4"
-    //     ? "fourseater"
-    //     : "sixseater";
-    // setHistoryRoom(
-    //   finalSubmitData.item,
-    //   finalSubmitData.item.bookingDetails.roomType
-    // );
+    setHistoryRoom(
+      finalSubmitData.item,
+      finalSubmitData.item.bookingDetails.roomType
+    );
   };
 
   const handleInvoice = async (item: any, main: number) => {
@@ -904,7 +950,7 @@ export default function Ongoing({
     const invoice = `INV${Math.floor(
       1000000 + Math.random() * 9000000
     ).toString()}`;
-    console.log("invoice", invoice);
+    console.log("invoice", item);
     const invoiceObject = await generateInvoiceObject(
       item,
       businessInfo,
@@ -914,8 +960,47 @@ export default function Ongoing({
     // const invoice = await generateInvoice(invoiceObject);
     // console.log("invoice", invoice);
 
-    dispatch(setInvoiceData({ invoice, data: invoiceObject }));
+    dispatch(setInvoiceData({ invoice, from: "room", data: invoiceObject }));
     window.open(`/invoice/${invoice}`, "_blank");
+  };
+
+  const handleDiscount = async (roomNo: any, main: number) => {
+    const discount = await getDiscount();
+    if (discount.length === 0) {
+      toast.error("No discount found");
+      return;
+    }
+    setDiscountSelect([
+      ...discount,
+      { type: "", amount: 0, code: "Clear Discount" },
+    ]);
+    console.log("item", roomNo, main, discount);
+    setOpenDiscountDialog({ open: true, location: roomNo });
+  };
+
+  const handleAddDiscount = async (
+    selectedDiscount: string,
+    location: string
+  ) => {
+    if (!selectedDiscount) return;
+    if (selectedDiscount === "Clear Discount") {
+      console.log("clear discount", selectedDiscount);
+      await removeDiscount(location);
+    } else {
+      const discount = discountSelect.find(
+        (item) => item.code === selectedDiscount
+      );
+      if (discount) {
+        const room = roomData.find(
+          (item: any) => item.bookingDetails.location === location
+        );
+        if (!room) return;
+        const data = await addDiscount(discount, room);
+        console.log("data", data);
+      }
+    }
+    setOpenDiscountDialog({ open: false, location: "" });
+    setSelectedDiscount("");
   };
 
   return (
@@ -955,200 +1040,216 @@ export default function Ongoing({
                           </div>
 
                           <div className="flex items-center gap-3">
-                            <div>
-                              <Dialog
-                                open={openDialogIndex === main}
-                                onOpenChange={(isOpen) => {
-                                  if (!item.checklist?.flag) {
-                                    setOpenDialogIndex(isOpen ? main : null);
-                                  }
-                                }}
+                            {item.checklist?.flag ? (
+                              <div
+                                className=" px-2 py-1 border rounded-md"
+                                onClick={() =>
+                                  handleDiscount(
+                                    item.bookingDetails.location,
+                                    main
+                                  )
+                                }
                               >
-                                <DialogTrigger asChild>
-                                  <div
-                                    className={cn(
-                                      "flex items-center gap-1 px-2 py-1 border rounded-md",
-                                      item.checklist?.flag &&
-                                        "opacity-50 cursor-not-allowed"
-                                    )}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (!item.checklist?.flag) {
-                                        console.log("clicked", main);
-                                      }
-                                    }}
-                                  >
-                                    <PlusCircle size={16} />
-                                    Add
-                                  </div>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>
-                                      {item.bookingDetails.location}
-                                    </DialogTitle>
-                                    <DialogDescription></DialogDescription>
-                                  </DialogHeader>
-                                  <div className="grid gap-4 py-4">
-                                    <Select
-                                      value={categorySelect}
-                                      onValueChange={(value) =>
-                                        setCategorySelect(value)
-                                      }
-                                      disabled={addedType !== null}
+                                Add Discount
+                              </div>
+                            ) : (
+                              <div>
+                                <Dialog
+                                  open={openDialogIndex === main}
+                                  onOpenChange={(isOpen) => {
+                                    if (!item.checklist?.flag) {
+                                      setOpenDialogIndex(isOpen ? main : null);
+                                    }
+                                  }}
+                                >
+                                  <DialogTrigger asChild>
+                                    <div
+                                      className={cn(
+                                        "flex items-center gap-1 px-2 py-1 border rounded-md",
+                                        item.checklist?.flag &&
+                                          "opacity-50 cursor-not-allowed"
+                                      )}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!item.checklist?.flag) {
+                                          console.log("clicked", main);
+                                        }
+                                      }}
                                     >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select category" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="Food">
-                                          Food
-                                        </SelectItem>
-                                        <SelectItem value="Service">
-                                          Service
-                                        </SelectItem>
-                                        <SelectItem value="Issue">
-                                          Issue
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    {addedType && (
+                                      <PlusCircle size={16} />
+                                      Add
+                                    </div>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>
+                                        {item.bookingDetails.location}
+                                      </DialogTitle>
+                                      <DialogDescription></DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                      <Select
+                                        value={categorySelect}
+                                        onValueChange={(value) =>
+                                          setCategorySelect(value)
+                                        }
+                                        disabled={addedType !== null}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="Food">
+                                            Food
+                                          </SelectItem>
+                                          <SelectItem value="Service">
+                                            Service
+                                          </SelectItem>
+                                          <SelectItem value="Issue">
+                                            Issue
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      {addedType && (
+                                        <Button
+                                          variant="outline"
+                                          onClick={() => {
+                                            setAddedType(null);
+                                            setCategorySelect("Food");
+                                            setSelectedCategoryItems([]);
+                                            setCategorySearchTerm("");
+                                            setIssueDescription("");
+                                          }}
+                                        >
+                                          Reset Selection
+                                        </Button>
+                                      )}
+                                      <Input
+                                        placeholder={`Search ${categorySelect} items`}
+                                        value={categorySearchTerm}
+                                        onChange={handleCategorySearchChange}
+                                      />
+                                      {categoryItems.length > 0 && (
+                                        <div className="max-h-[300px] overflow-y-auto border rounded px-2">
+                                          <Table>
+                                            <TableBody>
+                                              {categoryItems.map(
+                                                (item: any, i) => (
+                                                  <TableRow key={i}>
+                                                    <TableCell>
+                                                      {i + 1}.
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      {item.name}
+                                                    </TableCell>
+                                                    {categorySelect ===
+                                                      "Food" && (
+                                                      <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                          <span className="text-sm text-muted-foreground">
+                                                            {item.quantity}
+                                                          </span>
+                                                          <Input
+                                                            type="number"
+                                                            min="1"
+                                                            defaultValue="1"
+                                                            className="w-20"
+                                                            onChange={(e) => {
+                                                              item.count =
+                                                                parseInt(
+                                                                  e.target.value
+                                                                ) || 1;
+                                                            }}
+                                                          />
+                                                        </div>
+                                                      </TableCell>
+                                                    )}
+                                                    {categorySelect ===
+                                                      "Service" && (
+                                                      <>
+                                                        <TableCell>
+                                                          {item.startTime}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                          {item.endTime}
+                                                        </TableCell>
+                                                      </>
+                                                    )}
+                                                    {(categorySelect ===
+                                                      "Service" ||
+                                                      categorySelect ===
+                                                        "Food") && (
+                                                      <TableCell>
+                                                        {item.price}
+                                                      </TableCell>
+                                                    )}
+                                                    {categorySelect ===
+                                                      "Issue" && (
+                                                      <TableCell>
+                                                        {item.issueSubtype}
+                                                      </TableCell>
+                                                    )}
+                                                    <TableCell>
+                                                      <Checkbox
+                                                        checked={selectedCategoryItems.includes(
+                                                          item
+                                                        )}
+                                                        onCheckedChange={() => {
+                                                          if (
+                                                            categorySelect ===
+                                                            "Food"
+                                                          ) {
+                                                            if (!item.count) {
+                                                              item.count = 1;
+                                                            }
+                                                          }
+                                                          handleCategoryItemSelect(
+                                                            item
+                                                          );
+                                                        }}
+                                                      />
+                                                    </TableCell>
+                                                  </TableRow>
+                                                )
+                                              )}
+                                            </TableBody>
+                                          </Table>
+                                        </div>
+                                      )}
+                                      {categorySelect === "Issue" && (
+                                        <Textarea
+                                          placeholder="Notes"
+                                          value={issueDescription}
+                                          onChange={(e) =>
+                                            setIssueDescription(e.target.value)
+                                          }
+                                        />
+                                      )}
+                                    </div>
+                                    <DialogFooter>
                                       <Button
                                         variant="outline"
                                         onClick={() => {
-                                          setAddedType(null);
-                                          setCategorySelect("Food");
-                                          setSelectedCategoryItems([]);
-                                          setCategorySearchTerm("");
-                                          setIssueDescription("");
+                                          handleAdd(
+                                            selectedCategoryItems,
+                                            main
+                                          );
                                         }}
-                                      >
-                                        Reset Selection
-                                      </Button>
-                                    )}
-                                    <Input
-                                      placeholder={`Search ${categorySelect} items`}
-                                      value={categorySearchTerm}
-                                      onChange={handleCategorySearchChange}
-                                    />
-                                    {categoryItems.length > 0 && (
-                                      <div className="max-h-[300px] overflow-y-auto border rounded px-2">
-                                        <Table>
-                                          <TableBody>
-                                            {categoryItems.map(
-                                              (item: any, i) => (
-                                                <TableRow key={i}>
-                                                  <TableCell>
-                                                    {i + 1}.
-                                                  </TableCell>
-                                                  <TableCell>
-                                                    {item.name}
-                                                  </TableCell>
-                                                  {categorySelect ===
-                                                    "Food" && (
-                                                    <TableCell>
-                                                      <div className="flex items-center gap-2">
-                                                        <span className="text-sm text-muted-foreground">
-                                                          {item.quantity}
-                                                        </span>
-                                                        <Input
-                                                          type="number"
-                                                          min="1"
-                                                          defaultValue="1"
-                                                          className="w-20"
-                                                          onChange={(e) => {
-                                                            item.count =
-                                                              parseInt(
-                                                                e.target.value
-                                                              ) || 1;
-                                                          }}
-                                                        />
-                                                      </div>
-                                                    </TableCell>
-                                                  )}
-                                                  {categorySelect ===
-                                                    "Service" && (
-                                                    <>
-                                                      <TableCell>
-                                                        {item.startTime}
-                                                      </TableCell>
-                                                      <TableCell>
-                                                        {item.endTime}
-                                                      </TableCell>
-                                                    </>
-                                                  )}
-                                                  {(categorySelect ===
-                                                    "Service" ||
-                                                    categorySelect ===
-                                                      "Food") && (
-                                                    <TableCell>
-                                                      {item.price}
-                                                    </TableCell>
-                                                  )}
-                                                  {categorySelect ===
-                                                    "Issue" && (
-                                                    <TableCell>
-                                                      {item.issueSubtype}
-                                                    </TableCell>
-                                                  )}
-                                                  <TableCell>
-                                                    <Checkbox
-                                                      checked={selectedCategoryItems.includes(
-                                                        item
-                                                      )}
-                                                      onCheckedChange={() => {
-                                                        if (
-                                                          categorySelect ===
-                                                          "Food"
-                                                        ) {
-                                                          if (!item.count) {
-                                                            item.count = 1;
-                                                          }
-                                                        }
-                                                        handleCategoryItemSelect(
-                                                          item
-                                                        );
-                                                      }}
-                                                    />
-                                                  </TableCell>
-                                                </TableRow>
-                                              )
-                                            )}
-                                          </TableBody>
-                                        </Table>
-                                      </div>
-                                    )}
-                                    {categorySelect === "Issue" && (
-                                      <Textarea
-                                        placeholder="Notes"
-                                        value={issueDescription}
-                                        onChange={(e) =>
-                                          setIssueDescription(e.target.value)
+                                        disabled={
+                                          selectedCategoryItems.length === 0
                                         }
-                                      />
-                                    )}
-                                  </div>
-                                  <DialogFooter>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => {
-                                        handleAdd(selectedCategoryItems, main);
-                                      }}
-                                      disabled={
-                                        selectedCategoryItems.length === 0
-                                      }
-                                    >
-                                      Add
-                                    </Button>
-                                  </DialogFooter>
-                                </DialogContent>
-                              </Dialog>
-                            </div>
+                                      >
+                                        Add
+                                      </Button>
+                                    </DialogFooter>
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                            )}
                             <div
                               className="flex items-center gap-1 p-1 bg-black text-white rounded-md cursor-pointer"
                               onClick={() => {
                                 handleInvoice(item, main);
-                                // handleInvoice();
                               }}
                             >
                               <FileText className="w-4 h-4" />
@@ -1173,7 +1274,7 @@ export default function Ongoing({
                               const bookingDetails = item.bookingDetails;
                               return (
                                 <div className="space-y-2">
-                                  <div className="flex justify-between items-center">
+                                  <div className="flex justify-between items-center py-1">
                                     <div className="flex items-center gap-2">
                                       <Badge variant="outline">
                                         {bookingDetails.bookingId}
@@ -1283,28 +1384,30 @@ export default function Ongoing({
                                       </div>
                                     </div>
                                     <Separator />
-                                    {bookingDetails.payment.discount.code.trim() !==
-                                      "" && (
-                                      <div className="flex justify-between items-center">
-                                        <div>
-                                          <span className="font-medium">
-                                            Discount{" "}
-                                            <Badge variant="outline">
-                                              {
-                                                bookingDetails.payment.discount
-                                                  .code
-                                              }
-                                            </Badge>
-                                          </span>
-                                        </div>
-                                        <span className="text-green-600 font-semibold">
-                                          - ₹
-                                          {bookingDetails.payment.price -
-                                            bookingDetails.payment
-                                              .priceAfterDiscount}
-                                        </span>
-                                      </div>
-                                    )}
+                                    {bookingDetails.payment.discount.length >
+                                      0 &&
+                                      bookingDetails.payment.discount[0]
+                                        .discount > 0 &&
+                                      bookingDetails.payment.discount.map(
+                                        (discount: any, index: number) => (
+                                          <div
+                                            className="flex justify-between items-center"
+                                            key={index}
+                                          >
+                                            <div>
+                                              <span className="font-medium">
+                                                Discount{" "}
+                                                <Badge variant="outline">
+                                                  {discount.code}
+                                                </Badge>
+                                              </span>
+                                            </div>
+                                            <span className="text-green-600 font-semibold">
+                                              - ₹{discount.discount}
+                                            </span>
+                                          </div>
+                                        )
+                                      )}
                                     <div className="flex justify-between items-center">
                                       <div>
                                         <span className="font-medium">
@@ -1821,7 +1924,15 @@ export default function Ongoing({
                           {item.checklist?.selectedItems?.length > 0 && (
                             <>
                               <div className="font-semibold text-lg flex justify-between items-center">
-                                <span>Mini-Bar Items</span>
+                                <div className="flex items-center gap-3">
+                                  <span>Mini-Bar Items</span>
+                                  <StatusChip
+                                    status={
+                                      item.checklist?.payment.paymentStatus
+                                    }
+                                  />
+                                </div>
+
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button
@@ -2005,7 +2116,9 @@ export default function Ongoing({
                                 className="flex items-center gap-2"
                                 size="sm"
                                 disabled={
-                                  submitFlag ? false : !item.checklist?.flag
+                                  submitFlag[item.bookingDetails.location]
+                                    ? false
+                                    : !item.checklist?.flag
                                 }
                                 onClick={() => handleFinalSubmit(item, main)}
                               >
@@ -2063,15 +2176,14 @@ export default function Ongoing({
             )}
           </DialogHeader>
           <DialogFooter>
-            {finalSubmitData?.type === "payment_pending" && (
+            {finalSubmitData?.type === "payment_pending" ? (
               <Button
                 variant="outline"
                 onClick={() => setOpenFinalSubmitConfirmation(false)}
               >
                 Cancel
               </Button>
-            )}
-            {finalSubmitData?.type === "close_table" ? (
+            ) : finalSubmitData?.type === "close_table" ? (
               <>
                 <Button
                   variant="outline"
@@ -2081,8 +2193,6 @@ export default function Ongoing({
                 </Button>
                 <Button
                   onClick={() => {
-                    // Logic to close the table
-                    // You might want to implement a method to remove the table or mark it as closed
                     console.log("tableClosed");
                     setOpenFinalSubmitConfirmation(false);
                     handleRoomClose();
@@ -2150,6 +2260,56 @@ export default function Ongoing({
           </div>
         </div>
       )}
+
+      <Dialog
+        open={openDiscountDialog.open}
+        onOpenChange={(value) =>
+          setOpenDiscountDialog({
+            open: value,
+            location: openDiscountDialog.location,
+          })
+        }
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Discount</DialogTitle>
+            <DialogDescription></DialogDescription>
+            <Select
+              value={selectedDiscount}
+              onValueChange={(value) => setSelectedDiscount(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select discount type" />
+              </SelectTrigger>
+              <SelectContent>
+                {discountSelect.map((item, index) => (
+                  <SelectItem value={item.code} key={index}>
+                    {item.code} - {item.amount}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() =>
+                setOpenDiscountDialog({ open: false, location: "" })
+              }
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={() =>
+                handleAddDiscount(selectedDiscount, openDiscountDialog.location)
+              }
+            >
+              Add Discount
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

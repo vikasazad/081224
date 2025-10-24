@@ -50,7 +50,7 @@ import { uploadImageToFirebase } from "../utils/hotelApi";
 import { saveRoomInfo } from "../../utils/hotelDataApi";
 
 const HotelOverview = ({ data }: { data: any }) => {
-  // console.log("lskdjfsl;dfjk", data);/
+  console.log("lskdjfsl;dfjk", data);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [roomData, setRoomData] = useState<any>();
   const [categoryFlag, setCategoryFlag] = useState<boolean>(false);
@@ -206,18 +206,9 @@ const HotelOverview = ({ data }: { data: any }) => {
 
     try {
       const uploadPromises = images.map(async (img: any) => {
-        const downloadURL = await uploadImageToFirebase(
-          img.file,
-          img.id,
-          categoryName
-        );
+        const path = `${categoryName}/${img.id}`;
+        const downloadURL = await uploadImageToFirebase(img.file, path);
         return downloadURL;
-
-        // {
-        //   // id: img.id,
-        //   url: downloadURL,
-        //   // isFromDb: false,
-        // };
       });
 
       const uploadedImages = await Promise.all(uploadPromises);
@@ -248,14 +239,14 @@ const HotelOverview = ({ data }: { data: any }) => {
         images: allImages,
       };
 
-      const res = await saveRoomInfo(formData, categoryName);
-      console.log("RES", res);
+      await saveRoomInfo(formData, categoryName);
+      // console.log("RES", res);
 
       toast.success("Form submitted successfully", {
         description: "All data has been validated and uploaded",
       });
 
-      console.log("Submitted Data:", formData);
+      // console.log("Submitted Data:", formData);
       setCategoryFlag(false);
     } catch (error) {
       toast.error("Error processing images", {
@@ -409,7 +400,7 @@ const HotelOverview = ({ data }: { data: any }) => {
   };
 
   const categoryClick = (data: any) => {
-    console.log("first", data);
+    // console.log("first", data);
     setCategoryName(data.roomType);
     setPrice(data.price);
     setDescription(data.description);
@@ -441,7 +432,7 @@ const HotelOverview = ({ data }: { data: any }) => {
         });
       });
     }
-    console.log("askjd", imgArr);
+    // console.log("askjd", imgArr);
     setDbImages(imgArr);
     // setFormData({
     //   rooms: [

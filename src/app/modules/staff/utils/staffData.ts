@@ -1,8 +1,8 @@
 "use server";
 import { auth } from "@/auth";
 import { db } from "@/config/db/firebase";
-import { sendNotification } from "@/lib/sendNotification";
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+// import { sendNotification } from "@/lib/sendNotification";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { SignJWT } from "jose";
 import {
   sendStaffAssignmentRequest,
@@ -29,11 +29,7 @@ export const generateInvoiceObject = async (
 
   if (roomData.bookingDetails?.location?.trim() !== "") {
     const payment: any = {
-      discount: {
-        amount: roomData.bookingDetails?.payment?.discount?.amount || 0,
-        code: roomData.bookingDetails?.payment?.discount?.code || "",
-        type: roomData.bookingDetails?.payment?.discount?.type || "",
-      },
+      discount: roomData.bookingDetails?.payment?.discount,
       gst: {
         gstAmount: roomData.bookingDetails?.payment?.gst?.gstAmount || 0,
         gstPercentage:
@@ -209,6 +205,122 @@ export const generateInvoiceObject = async (
       }),
       noOfGuests: booking?.noOfGuests || 0,
     },
+    billItems,
+    totals: {
+      pendingAmount:
+        (billItems.booking?.pendingAmount || 0) +
+        (billItems.diningOrders?.pendingAmount || 0) +
+        (billItems.services?.pendingAmount || 0) +
+        (billItems.checklist?.pendingAmount || 0),
+      subtotal:
+        (billItems.booking?.subtotal || 0) +
+        (billItems.diningOrders?.subtotal || 0) +
+        (billItems.services?.subtotal || 0) +
+        (billItems.checklist?.subtotal || 0),
+      gst:
+        (billItems.booking?.gst?.gstAmount || 0) +
+        (billItems.diningOrders?.gst?.gstAmount || 0) +
+        (billItems.services?.gst?.gstAmount || 0) +
+        (billItems.checklist?.gst?.gstAmount || 0),
+      cgst:
+        (billItems.booking?.gst?.cgstAmount || 0) +
+        (billItems.diningOrders?.gst?.cgstAmount || 0) +
+        (billItems.services?.gst?.cgstAmount || 0) +
+        (billItems.checklist?.gst?.cgstAmount || 0),
+      sgst:
+        (billItems.booking?.gst?.sgstAmount || 0) +
+        (billItems.diningOrders?.gst?.sgstAmount || 0) +
+        (billItems.services?.gst?.sgstAmount || 0) +
+        (billItems.checklist?.gst?.sgstAmount || 0),
+      grandTotal:
+        (billItems.booking?.totalPrice || 0) +
+        (billItems.diningOrders?.totalPrice || 0) +
+        (billItems.services?.totalPrice || 0) +
+        (billItems.checklist?.totalPrice || 0),
+    },
+  };
+
+  // console.log("invoiceObject", invoiceObject);
+
+  return invoiceObject;
+};
+export const generateInvoiceObjectRestaurant = async (
+  tableData: any,
+  businessInfo: any,
+  invoice: string
+) => {
+  let customer, diningOrders;
+
+  if (tableData.diningDetails?.customer?.name) {
+    customer = {
+      name: tableData.diningDetails?.customer?.name || "",
+    };
+  }
+
+  if (tableData.diningDetails?.orders?.length > 0) {
+    const payment: any = {
+      items: [],
+      discount: 0,
+      gst: {
+        gstAmount: 0,
+        gstPercentage: 0,
+        cgstAmount: 0,
+        cgstPercentage: 0,
+        sgstAmount: 0,
+        sgstPercentage: 0,
+      },
+      price: 0,
+      subtotal: 0,
+      totalPrice: 0,
+      pendingAmount: 0,
+    };
+    tableData.diningDetails?.orders.forEach((item: any) => {
+      console.log("item", item);
+      if (item.payment.paymentStatus === "pending") {
+        payment.pendingAmount += item.payment?.price || 0;
+      }
+      payment.items.push(...item.items);
+      payment.discount += item.payment?.discount?.amount || 0;
+      payment.gst.gstAmount += item.payment?.gst?.gstAmount || 0;
+      payment.gst.gstPercentage = item.payment?.gst?.gstPercentage || 0;
+      payment.gst.cgstAmount += item.payment?.gst?.cgstAmount || 0;
+      payment.gst.cgstPercentage = item.payment?.gst?.cgstPercentage || 0;
+      payment.gst.sgstAmount += item.payment?.gst?.sgstAmount || 0;
+      payment.gst.sgstPercentage = item.payment?.gst?.sgstPercentage || 0;
+      payment.price += item.payment?.price || 0;
+      payment.subtotal += item.payment?.subtotal || 0;
+      payment.totalPrice += item.payment?.totalPrice || 0;
+    });
+    diningOrders = {
+      ...payment,
+    };
+  }
+
+  // Calculate totals
+  const billItems: any = {
+    diningOrders,
+  };
+
+  // Room booking charges
+
+  const invoiceObject = {
+    business: {
+      name: businessInfo.businessName,
+      gst: businessInfo.gst,
+      pan: businessInfo.panNo,
+      cin: businessInfo.cin,
+      email: businessInfo.email,
+      phone: businessInfo.phone,
+      invoiceNo: invoice,
+      date: new Date().toLocaleDateString("en-US", {
+        weekday: "short", // Thu
+        day: "2-digit", // 08
+        month: "short", // May
+        year: "numeric", // 2025
+      }),
+    },
+    customer,
+    stayDetails: {},
     billItems,
     totals: {
       pendingAmount:
@@ -551,16 +663,19 @@ export async function setOfflineRoom(tableData: any) {
     if (docSnap.exists()) {
       const data = docSnap.data().live.rooms;
 
-      const tablePhone = tableData?.bookingDetails?.customer?.phone;
-      // console.log("YYYYYYY", tablePhone);
+      const guestPhone = tableData?.bookingDetails?.customer?.phone;
+      // console.log("YYYYYYY", guestPhone);
 
-      if (!tablePhone) {
+      if (!guestPhone) {
         console.error("Phone number is missing in tableData");
         return false;
       }
 
       const updatedData = data.map((item: any) => {
-        if (item.bookingDetails?.customer?.phone === tablePhone) {
+        if (
+          item.bookingDetails?.customer?.phone === guestPhone &&
+          item.bookingDetails?.bookingId === tableData.bookingDetails?.bookingId
+        ) {
           return {
             ...item,
             ...tableData,
@@ -595,7 +710,7 @@ function assignAttendantSequentially(
 
   // Sort staff by number of current orders (ascending)
   const sortedStaff = [...availableStaff].sort(
-    (a, b) => a.orders.length - b.orders.length
+    (a, b) => (a.orders?.length || 0) - (b.orders?.length || 0)
   );
 
   // Return the staff with the least number of orders
@@ -603,6 +718,7 @@ function assignAttendantSequentially(
 }
 
 export async function getOnlineConcierge() {
+  console.log("getOnlineConcierge");
   const session = await auth();
   const user = session?.user?.email;
 
@@ -727,7 +843,10 @@ export async function updateOrdersForAttendant(
         contact,
         `Booking ${orderId} assigned to you, Please reachout to reception to get the room details.`
       );
-    } else if (orderId.startsWith("OR") && contact) {
+    } else if (
+      (orderId.startsWith("OR") || orderId.startsWith("RES")) &&
+      contact
+    ) {
       await sendWhatsAppTextMessage(
         contact,
         `Order ${orderId} assigned to you, Please reachout to kitchen to get the order delivered.`
@@ -992,6 +1111,11 @@ export async function saveRoomData(roomInfo: any) {
     const _bookingId = generateOrderId("BOK", roomInfo.roomNo);
     const _attendant = await getOnlineConcierge();
 
+    if (!_attendant) {
+      console.error("No attendant found");
+      return false;
+    }
+
     const _roomInfo = {
       bookingDetails: {
         customer: {
@@ -1036,11 +1160,14 @@ export async function saveRoomData(roomInfo: any) {
             sgstAmount: roomInfo.sgstAmount || "",
             sgstPercentage: roomInfo.sgstPercentage || "",
           },
-          discount: {
-            type: roomInfo.discount?.type || "",
-            amount: roomInfo.discount?.amount || "",
-            code: roomInfo.discount?.code || "",
-          },
+          discount: [
+            {
+              type: roomInfo.discount?.type || "",
+              amount: roomInfo.discount?.amount || "",
+              code: roomInfo.discount?.code || "",
+              discount: roomInfo.discount?.discount || 0,
+            },
+          ],
         },
       },
       diningDetails: {},
@@ -1055,7 +1182,7 @@ export async function saveRoomData(roomInfo: any) {
           payment: {
             paymentStatus: "paid",
             mode: roomInfo.paymentMode,
-            paymentId: roomInfo.paymentId,
+            paymentId: roomInfo.paymentId || "",
             timeOfTransaction: new Date().toISOString(),
             price: roomInfo.price,
             subtotal: roomInfo.subtotal,
@@ -1069,11 +1196,14 @@ export async function saveRoomData(roomInfo: any) {
               sgstAmount: roomInfo.sgstAmount || "",
               sgstPercentage: roomInfo.sgstPercentage || "",
             },
-            discount: {
-              type: roomInfo.discount?.type || "",
-              amount: roomInfo.discount?.amount || "",
-              code: roomInfo.discount?.code || "",
-            },
+            discount: [
+              {
+                type: roomInfo.discount?.type || "",
+                amount: roomInfo.discount?.amount || "",
+                code: roomInfo.discount?.code || "",
+                discount: roomInfo.discount?.discount || 0,
+              },
+            ],
           },
         },
       ],
@@ -1129,11 +1259,11 @@ export async function saveRoomData(roomInfo: any) {
           roomInfo.roomNo,
           "room"
         );
-        await sendNotification(
-          _attendant.notificationToken,
-          "New Walk-in Guest",
-          "A new walk-in guest has been registered. Please check the staff dashboard for more details."
-        );
+        // await sendNotification(
+        //   _attendant.notificationToken,
+        //   "New Walk-in Guest",
+        //   "A new walk-in guest has been registered. Please check the staff dashboard for more details."
+        // );
       }
 
       console.log("Room data updated successfully");
@@ -1207,6 +1337,7 @@ export async function sendWhatsAppMessage(
     };
   }
 }
+
 export async function sendInvoiceWhatsapp(
   invoiceURL: string,
   phoneNumber: string,
@@ -1443,6 +1574,7 @@ export async function addKitchenOrder(
   try {
     const session = await auth();
     const user = session?.user?.email;
+    console.log("USER", user);
 
     if (!user) {
       console.error("User email is undefined");
@@ -1455,9 +1587,7 @@ export async function addKitchenOrder(
 
     if (!docSnap.exists()) {
       // If kitchen document doesn't exist, create it with initial structure
-      await setDoc(docRef, {
-        orders: {},
-      });
+      return false;
     }
 
     const kitchenData = docSnap.exists()
@@ -1481,11 +1611,15 @@ export async function addKitchenOrder(
       attendantContact: attendantContact,
     };
 
+    console.log("NEW ORDER", newOrder);
+
     // Add the new order to the kitchen orders
     const updatedOrders = {
       [orderId]: newOrder,
-      ...kitchenData.orders,
+      ...kitchenData?.orders,
     };
+
+    console.log("UPDATED ORDERS", updatedOrders);
 
     // Update the document with the new order
     await updateDoc(docRef, {
@@ -1496,6 +1630,511 @@ export async function addKitchenOrder(
     return true;
   } catch (error) {
     console.error("Error adding kitchen order: ", error);
+    return false;
+  }
+}
+
+export async function sendTakeReviewMessage(
+  phoneNumber: string,
+  variables: string[],
+  url: string
+) {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    console.log("phoneNumber", phoneNumber, variables, url);
+    const formattedPhone = phoneNumber.replace(/\D/g, "");
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: "take_review_3",
+            language: { code: "en_US" },
+            components: [
+              {
+                type: "body",
+                parameters: variables.map((value) => ({
+                  type: "text",
+                  text: String(value),
+                })),
+              },
+
+              {
+                type: "button",
+                sub_type: "COPY_CODE",
+                index: "1",
+                parameters: [
+                  {
+                    type: "coupon_code",
+                    coupon_code: variables[1],
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("WhatsApp API Response:", data); // Add logging for debugging
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to send message");
+    }
+
+    return { success: true, message: "Message sent successfully!", data };
+  } catch (error: any) {
+    console.error("WhatsApp API Error:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
+  }
+}
+
+export async function sendFinalMessage(
+  phoneNumber: string,
+  variables: string[],
+  invoiceURL: string
+) {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    console.log("phoneNumber", phoneNumber, variables);
+    const formattedPhone = phoneNumber.replace(/\D/g, "");
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: "final_1",
+            language: { code: "en_US" },
+            components: [
+              {
+                type: "header",
+                parameters: [
+                  {
+                    type: "document",
+                    document: {
+                      link: invoiceURL,
+                      filename: "invoice.pdf",
+                    },
+                  },
+                ],
+              },
+              {
+                type: "body",
+                parameters: variables.map((value) => ({
+                  type: "text",
+                  text: String(value),
+                })),
+              },
+            ],
+          },
+        }),
+      }
+    );
+
+    const data = await response.json();
+    console.log("WhatsApp API Response:", data); // Add logging for debugging
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to send message");
+    }
+
+    return { success: true, message: "Message sent successfully!", data };
+  } catch (error: any) {
+    console.error("WhatsApp API Error:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
+  }
+}
+
+export async function getDiscount() {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  const docRef = doc(db, user, "info");
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return docSnap.data().hotel?.hotelDiscount || [];
+  } else {
+    return false;
+  }
+}
+
+async function calculateTax(
+  pricePerNight: number,
+  subtotalAmount: number,
+  taxType: string,
+  taxDetails: any
+) {
+  const taxTypeData = taxDetails[taxType];
+  if (!taxTypeData) {
+    throw new Error(`Invalid tax type: ${taxType}`);
+  }
+
+  let gstPercentage = 0;
+
+  // Check if there's an "all" key for flat rate
+  if (taxTypeData["all"]) {
+    gstPercentage = parseFloat(taxTypeData["all"]);
+  } else {
+    // Look for price-based keys dynamically
+    const priceKeys = Object.keys(taxTypeData).filter(
+      (key) =>
+        key.includes("below") ||
+        key.includes("above") ||
+        key.includes("under") ||
+        key.includes("over")
+    );
+
+    if (priceKeys.length === 0) {
+      throw new Error(`No valid tax rate found for tax type: ${taxType}`);
+    }
+
+    // Process each price-based key to find the applicable rate
+    for (const key of priceKeys) {
+      const lowerKey = key.toLowerCase();
+
+      // Extract price threshold from the key
+      const priceMatch = key.match(/(\d+(?:\.\d+)?)/);
+      if (!priceMatch) continue;
+
+      const threshold = parseFloat(priceMatch[1]);
+
+      // Check if price/night falls within this bracket
+      if (lowerKey.includes("below") || lowerKey.includes("under")) {
+        if (pricePerNight <= threshold) {
+          gstPercentage = parseFloat(taxTypeData[key]);
+          break;
+        }
+      } else if (lowerKey.includes("above") || lowerKey.includes("over")) {
+        if (pricePerNight > threshold) {
+          gstPercentage = parseFloat(taxTypeData[key]);
+          break;
+        }
+      }
+    }
+
+    // If no bracket matched, try to find a default or fallback rate
+    if (gstPercentage === 0) {
+      // Look for the lowest threshold as fallback
+      const sortedKeys = priceKeys.sort((a, b) => {
+        const aPrice = parseFloat(a.match(/(\d+(?:\.\d+)?)/)?.[1] || "0");
+        const bPrice = parseFloat(b.match(/(\d+(?:\.\d+)?)/)?.[1] || "0");
+        return aPrice - bPrice;
+      });
+
+      if (sortedKeys.length > 0) {
+        gstPercentage = parseFloat(taxTypeData[sortedKeys[0]]);
+      }
+    }
+  }
+
+  if (gstPercentage === 0) {
+    throw new Error(
+      `Could not determine tax rate for ${taxType} with price/night: ${pricePerNight}`
+    );
+  }
+
+  // Calculate amounts
+  const gstAmount = Math.round((subtotalAmount * gstPercentage) / 100);
+  const cgstPercentage = gstPercentage / 2;
+  const sgstPercentage = gstPercentage / 2;
+  const cgstAmount = (subtotalAmount * cgstPercentage) / 100;
+  const sgstAmount = (subtotalAmount * sgstPercentage) / 100;
+
+  return {
+    gstAmount: Math.round(gstAmount * 100) / 100,
+    gstPercentage,
+    cgstAmount: Math.round(cgstAmount * 100) / 100,
+    cgstPercentage,
+    sgstAmount: Math.round(sgstAmount * 100) / 100,
+    sgstPercentage,
+  };
+}
+
+export async function addDiscount(discount: any, table: any) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  try {
+    const docRef = doc(db, user, "restaurant");
+    const gstRef = doc(db, user, "info");
+    const gstSnap = await getDoc(gstRef);
+    if (!gstSnap.exists()) return false;
+    const gstTax = gstSnap.data().business?.gstTax;
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data().live.tables;
+      // Find the table that matches
+      const tableIndex = data.findIndex(
+        (item: any) =>
+          item.diningDetails.location === table.diningDetails.location
+      );
+
+      if (tableIndex === -1) {
+        console.error("table not found");
+        return false;
+      }
+
+      // Calculate discount
+      let calculatedDiscount = 0;
+      if (discount.type === "percentage") {
+        const percentageAmount = parseFloat(discount.amount);
+        calculatedDiscount = Math.round(
+          table.diningDetails.payment.subtotal * (percentageAmount / 100)
+        );
+      } else {
+        calculatedDiscount = Math.round(discount.amount);
+      }
+
+      // Calculate tax for the updated subtotal
+      const taxDetails = await calculateTax(
+        table.diningDetails.payment.price,
+        Math.round(table.diningDetails.payment.subtotal - calculatedDiscount),
+        "dining",
+        gstTax
+      );
+
+      // Create updated table object
+      const updatedTable = {
+        ...data[tableIndex],
+        diningDetails: {
+          ...data[tableIndex].diningDetails,
+          payment: {
+            ...data[tableIndex].diningDetails.payment,
+            priceAfterDiscount:
+              Math.round(
+                table.diningDetails.payment.subtotal - calculatedDiscount
+              ) || "",
+            paymentType: "single",
+            subtotal: table.diningDetails.payment.subtotal - calculatedDiscount,
+            totalPrice: Math.round(
+              table.diningDetails.payment.subtotal -
+                calculatedDiscount +
+                taxDetails.gstAmount
+            ),
+            gst: {
+              gstAmount: taxDetails.gstAmount || "",
+              gstPercentage: taxDetails.gstPercentage || "",
+              cgstAmount: taxDetails.cgstAmount || "",
+              cgstPercentage: taxDetails.cgstPercentage || "",
+              sgstAmount: taxDetails.sgstAmount || "",
+              sgstPercentage: taxDetails.sgstPercentage || "",
+            },
+            discount: [
+              ...data[tableIndex].diningDetails.payment.discount,
+              { ...discount, discount: calculatedDiscount },
+            ],
+          },
+        },
+        transctions: data[tableIndex].transctions.map((transaction: any) => {
+          if (
+            transaction.diningId === data[tableIndex].diningDetails.diningId
+          ) {
+            return {
+              ...transaction,
+              payment: {
+                ...transaction.payment,
+                priceAfterDiscount:
+                  Math.round(
+                    table.diningDetails.payment.subtotal - calculatedDiscount
+                  ) || "",
+                subtotal:
+                  table.diningDetails.payment.subtotal - calculatedDiscount,
+                totalPrice: Math.round(
+                  table.diningDetails.payment.subtotal -
+                    calculatedDiscount +
+                    taxDetails.gstAmount
+                ),
+                gst: {
+                  gstAmount: taxDetails.gstAmount || "",
+                  gstPercentage: taxDetails.gstPercentage || "",
+                  cgstAmount: taxDetails.cgstAmount || "",
+                  cgstPercentage: taxDetails.cgstPercentage || "",
+                  sgstAmount: taxDetails.sgstAmount || "",
+                  sgstPercentage: taxDetails.sgstPercentage || "",
+                },
+                discount: [
+                  ...transaction.payment.discount,
+                  { ...discount, discount: calculatedDiscount },
+                ],
+              },
+            };
+          }
+          return transaction;
+        }),
+      };
+
+      // Create updated data array with the modified table
+      const updatedData = [...data];
+      updatedData[tableIndex] = updatedTable;
+      await updateDoc(docRef, { "live.tables": updatedData });
+      return true;
+      // return updatedData;
+    }
+  } catch (error) {
+    console.error("Error adding discount:", error);
+    return false;
+  }
+}
+
+export async function removeDiscount(location: string) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  try {
+    const docRef = doc(db, user, "restaurant");
+    const gstRef = doc(db, user, "info");
+    const gstSnap = await getDoc(gstRef);
+    if (!gstSnap.exists()) return false;
+    const gstTax = gstSnap.data().business?.gstTax;
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data().live.tables;
+      // Find the room that matches
+      const tableIndex = data.findIndex(
+        (item: any) => item.diningDetails.location === location
+      );
+
+      if (tableIndex === -1) {
+        console.error("table not found");
+        return false;
+      }
+
+      const table = data[tableIndex];
+
+      // Check if there are any discounts to remove
+      if (
+        !table.diningDetails.payment.discount ||
+        table.diningDetails.payment.discount.length === 0
+      ) {
+        console.error("No discounts to remove");
+        return false;
+      }
+
+      // Remove the last discount
+      const updatedDiscounts = table.diningDetails.payment.discount.slice(
+        0,
+        -1
+      );
+
+      // Calculate the total discount amount from remaining discounts
+      let totalRemainingDiscount = 0;
+      updatedDiscounts.forEach((discount: any) => {
+        if (discount.type === "percentage") {
+          const percentageAmount = parseFloat(discount.amount);
+          totalRemainingDiscount += Math.round(
+            table.diningDetails.payment.subtotal * (percentageAmount / 100)
+          );
+        } else {
+          totalRemainingDiscount += Math.round(discount.amount);
+        }
+      });
+
+      // Calculate new subtotal after removing the last discount
+      const newSubtotal =
+        table.diningDetails.payment.price - totalRemainingDiscount;
+
+      // Calculate tax for the updated subtotal
+      const taxDetails = await calculateTax(
+        table.diningDetails.payment.price,
+        Math.round(newSubtotal),
+        "restaurant",
+        gstTax
+      );
+
+      // Create updated room object
+      const updatedTable = {
+        ...table,
+        diningDetails: {
+          ...table.diningDetails,
+          payment: {
+            ...table.diningDetails.payment,
+            priceAfterDiscount:
+              totalRemainingDiscount > 0 ? Math.round(newSubtotal) : "",
+            subtotal: newSubtotal,
+            totalPrice: Math.round(newSubtotal + taxDetails.gstAmount),
+            gst: {
+              gstAmount: taxDetails.gstAmount || "",
+              gstPercentage: taxDetails.gstPercentage || "",
+              cgstAmount: taxDetails.cgstAmount || "",
+              cgstPercentage: taxDetails.cgstPercentage || "",
+              sgstAmount: taxDetails.sgstAmount || "",
+              sgstPercentage: taxDetails.sgstPercentage || "",
+            },
+            discount: updatedDiscounts,
+          },
+        },
+        transctions: table.transctions.map((transaction: any) => {
+          if (transaction.orderId === table.diningDetails.orderId) {
+            return {
+              ...transaction,
+              payment: {
+                ...transaction.payment,
+                priceAfterDiscount:
+                  totalRemainingDiscount > 0 ? Math.round(newSubtotal) : "",
+                subtotal: newSubtotal,
+                totalPrice: Math.round(newSubtotal + taxDetails.gstAmount),
+                gst: {
+                  gstAmount: taxDetails.gstAmount || "",
+                  gstPercentage: taxDetails.gstPercentage || "",
+                  cgstAmount: taxDetails.cgstAmount || "",
+                  cgstPercentage: taxDetails.cgstPercentage || "",
+                  sgstAmount: taxDetails.sgstAmount || "",
+                  sgstPercentage: taxDetails.sgstPercentage || "",
+                },
+                discount: updatedDiscounts,
+              },
+            };
+          }
+          return transaction;
+        }),
+      };
+
+      // Create updated data array with the modified table
+      const updatedData = [...data];
+      updatedData[tableIndex] = updatedTable;
+      await updateDoc(docRef, { "live.tables": updatedData });
+      return true;
+
+      // return updatedData;
+    }
+  } catch (error) {
+    console.error("Error removing discount:", error);
     return false;
   }
 }

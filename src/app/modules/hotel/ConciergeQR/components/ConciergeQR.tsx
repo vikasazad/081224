@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ConciergeQR = ({ data, user }: any) => {
-  console.log("DATA", user);
+  // console.log("DATA", user);
   const [secretKey, setSecretKey] = useState("");
   const [tokens, setTokens] = useState<{ table: string; token: string }[]>([]);
   const [showSecret, setShowSecret] = useState(false);

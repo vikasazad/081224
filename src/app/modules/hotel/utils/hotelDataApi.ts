@@ -127,6 +127,7 @@ export async function saveRoomInfo(roomData: any, roomType: string) {
 
     // Return success response
     // return room;
+    return true;
   } catch (error) {
     console.error("Error saving room info:", error);
     return false;

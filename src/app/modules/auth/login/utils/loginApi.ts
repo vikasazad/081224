@@ -8,7 +8,7 @@ export async function LoginAuth(LoginData: {
   email: string;
   password: string;
 }) {
-  console.log("LoginData", LoginData);
+  // console.log("LoginData", LoginData);
   const email = LoginData.email;
   const password = LoginData.password;
 
@@ -48,10 +48,12 @@ export async function LoginAuth(LoginData: {
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/dashboard",
+      // redirectTo: "/dashboard",
+      redirect: false,
     });
     return { error: false, message: "Login successful" };
   } catch (err) {
+    console.log("ERRORERROR", err);
     if (err instanceof AuthError) {
       console.log("ERRORERROR", err);
       switch (err.type) {

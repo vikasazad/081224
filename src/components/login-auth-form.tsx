@@ -21,6 +21,7 @@ import { findUserByEmail } from "@/lib/firebase/firestore";
 import { LoginAuth } from "@/app/modules/auth/login/utils/loginApi";
 import { signInWithGoogle } from "@/lib/auth/socialLogin";
 import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 // Create a schema for form validation
 const emailSchema = z.object({
@@ -54,6 +55,7 @@ interface LoginAuthForm extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function LoginAuthForm({ className, ...props }: LoginAuthForm) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [isEmailValid, setIsEmailValid] = React.useState<boolean>(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -106,10 +108,10 @@ export function LoginAuthForm({ className, ...props }: LoginAuthForm) {
         password: values.password,
       });
 
-      console.log("LoginAuth Result:", result); // Debugging line
+      // console.log("LoginAuth Result:", result); // Debugging line
 
       if (result?.error) {
-        console.log("HEHE");
+        // console.log("HEHE");
         passwordForm.setError("password", {
           type: "manual",
           message: result.message || "Login error.",
@@ -118,9 +120,9 @@ export function LoginAuthForm({ className, ...props }: LoginAuthForm) {
       }
 
       localStorage.setItem("userEmail", values.email);
-      // router.push("/dashboard");
+      router.push("/dashboard");
     } catch (err) {
-      console.error("Error in onFinalSubmit:", err);
+      console.log("Error in onFinalSubmit:", err);
       passwordForm.setError("password", {
         type: "manual",
         message: "Login failed. Please try again.",

@@ -54,9 +54,9 @@ const Vacant = ({
               className="rounded-xl shadow-md border border-gray-200"
             >
               <CardContent className="px-4 py-0">
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger>
+                <Accordion type="single" collapsible key={main}>
+                  <AccordionItem value={item.roomNo}>
+                    <AccordionTrigger className="p-2">
                       <div className="flex items-center justify-between w-full">
                         <span className="text-2xl font-extrabold tracking-wide text-gray-900">
                           {item.roomNo}

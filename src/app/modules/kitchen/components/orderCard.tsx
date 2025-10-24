@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, AlertCircle } from "lucide-react";
-import { type Order, OrderStatus } from "@/types/kitchen";
+import { KitchenTimerConfig, type Order, OrderStatus } from "@/types/kitchen";
 import OrderTimer from "@/app/modules/kitchen/components/orderTimer";
 import {
   Tooltip,
@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { kitchenTimerConfig } from "./kitchenDashboard";
+// import { kitchenTimerConfig } from "./kitchenDashboard";
 
 interface OrderCardProps {
   order: Order;
@@ -30,6 +30,7 @@ interface OrderCardProps {
   nextStatus: OrderStatus | null;
   nextStatusLabel: string;
   showTimer?: boolean;
+  kitchenTimerConfig: KitchenTimerConfig;
 }
 
 export default function OrderCard({
@@ -38,6 +39,7 @@ export default function OrderCard({
   nextStatus,
   nextStatusLabel,
   showTimer = false,
+  kitchenTimerConfig,
 }: OrderCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAlertVisible, setIsAlertVisible] = useState(false);
@@ -128,9 +130,10 @@ export default function OrderCard({
           <div className="mt-3">
             <OrderTimer
               startTime={new Date(order.startedAt)}
-              duration={kitchenTimerConfig.totalPreparationMinutes}
+              duration={kitchenTimerConfig?.totalPreparationMinutes}
               onAlert={handleTimerAlert}
               order={order}
+              kitchenTimerConfig={kitchenTimerConfig}
             />
             {isAlertVisible && (
               <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-400 text-sm font-medium">
@@ -145,7 +148,7 @@ export default function OrderCard({
         {order.status === OrderStatus.Completed && (
           <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            Preparation time: {getTimeInPreparation()}
+            {getTimeInPreparation()}
             {order.startedAt &&
               order.completedAt &&
               new Date(order.completedAt).getTime() -

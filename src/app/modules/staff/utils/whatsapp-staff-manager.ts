@@ -18,11 +18,11 @@ interface AssignmentRequest {
 
 // Import kitchen timer config for timeout settings
 // Since this is a server component, we need to define the config here
-const kitchenTimerConfig = {
-  totalPreparationMinutes: 15,
-  deliveryReadinessMinutes: 5,
-  escalationTimeoutMinutes: 40, // Total time (waiting + preparation) before escalating to manager
-};
+// const kitchenTimerConfig = {
+//   totalPreparationMinutes: 15,
+//   deliveryReadinessMinutes: 5,
+//   escalationTimeoutMinutes: 40, // Total time (waiting + preparation) before escalating to manager
+// };
 
 /**
  * Helper function to find business emails that have a staff member with given phone
@@ -273,7 +273,8 @@ async function notifyReceptionists(title: string, message: string) {
     const tokens = await getReceptionistTokens();
 
     for (const token of tokens) {
-      await sendNotification(token, title, message);
+      const res = await sendNotification(token, title, message);
+      console.log("res", res);
     }
 
     console.log(`Notifications sent to ${tokens.length} receptionists`);
@@ -487,7 +488,7 @@ export async function handleAssignmentResponse(
       // Notify receptionists about decline
       await notifyReceptionists(
         "Assignment Declined",
-        `Order ${orderId} has been declined by ${assignment.staffName}. Customer: ${assignment.customerName}, Room: ${assignment.roomNumber}. Staff marked as inactive.`
+        `Order ${orderId} has been declined by ${assignment?.staffName}. Customer: ${assignment?.customerName}, Room: ${assignment?.roomNumber}. Staff marked as inactive.`
       );
 
       return { success: true, message: "Assignment declined" };
@@ -1181,7 +1182,8 @@ export async function sendDeliveryReadinessRequest(
   staffName: string,
   staffContact: string,
   customerName: string,
-  roomNumber: string
+  roomNumber: string,
+  deliveryReadinessMinutes: number
 ) {
   try {
     console.log("sendDeliveryReadinessRequest", {
@@ -1213,7 +1215,7 @@ export async function sendDeliveryReadinessRequest(
                 `Order #${orderId} is almost ready!\n` +
                 `Customer: ${customerName}\n` +
                 `Room/Table: ${roomNumber}\n\n` +
-                `Food will be ready in ${kitchenTimerConfig.deliveryReadinessMinutes} minutes. Are you ready for delivery?`,
+                `Food will be ready in ${deliveryReadinessMinutes} minutes. Are you ready for delivery?`,
             },
             action: {
               buttons: [
@@ -1261,8 +1263,8 @@ export async function sendDeliveryReadinessRequest(
 
       // Set timeout using configurable duration
       setTimeout(() => {
-        handleDeliveryReadinessTimeout(orderId);
-      }, kitchenTimerConfig.deliveryReadinessMinutes * 60 * 1000);
+        handleDeliveryReadinessTimeout(orderId, staffName);
+      }, deliveryReadinessMinutes * 60 * 1000);
 
       return { success: true, messageId };
     }
@@ -1280,7 +1282,10 @@ export async function sendDeliveryReadinessRequest(
 /**
  * Handle delivery readiness timeout
  */
-async function handleDeliveryReadinessTimeout(orderId: string) {
+async function handleDeliveryReadinessTimeout(
+  orderId: string,
+  staffName: string
+) {
   try {
     const assignment = await getPendingAssignment(orderId);
 
@@ -1305,7 +1310,7 @@ async function handleDeliveryReadinessTimeout(orderId: string) {
     if (managerInfo) {
       await sendWhatsAppTextMessage(
         managerInfo.contact,
-        `DELIVERY ALERT \n\nStaff assigned to order #${orderId} is not responding. Please assign an active staff member from the dashboard to complete the delivery.\n\nCustomer: ${assignment.customerName}\nRoom/Table: ${assignment.roomNumber}`
+        `DELIVERY ALERT \n\ ${staffName} assigned to order #${orderId} is not responding. Please assign an active staff member from the dashboard to complete the delivery.\n\nCustomer: ${assignment.customerName}\nRoom/Table: ${assignment.roomNumber}`
       );
 
       // Send push notification to manager if token is available
@@ -1313,7 +1318,7 @@ async function handleDeliveryReadinessTimeout(orderId: string) {
         await sendNotification(
           managerInfo.notificationToken,
           "Delivery Alert - Staff Not Responding",
-          `Staff assigned to order #${orderId} is not responding. Please assign an active staff member.`
+          `${staffName} assigned to order #${orderId} is not responding. Please assign an active staff member.`
         );
       }
     }
@@ -1333,7 +1338,8 @@ export async function sendOrderEscalationToManager(
   totalAmount: number,
   items: any[],
   orderStatus: string,
-  totalMinutes: number
+  totalMinutes: number,
+  escalationTimeoutMinutes: number
 ) {
   try {
     const managerInfo = await getManagerInfo();
@@ -1353,7 +1359,7 @@ export async function sendOrderEscalationToManager(
         .map((item) => `${item.count}x ${item.name}`)
         .join(", ")}\n` +
       `Status: ${statusText.toUpperCase()}\n\n` +
-      `This order has exceeded the ${kitchenTimerConfig.escalationTimeoutMinutes}-minute escalation threshold. Please take immediate action.`;
+      `This order has exceeded the ${escalationTimeoutMinutes}-minute escalation threshold. Please take immediate action.`;
 
     // Send WhatsApp message to manager
     const whatsappSuccess = await sendWhatsAppTextMessage(

@@ -28,6 +28,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { CaretSortIcon } from "@radix-ui/react-icons";
+import { toast } from "sonner";
+import { saveStaffData } from "../../utils/AccountApi";
 
 interface StaffMember {
   name: string;
@@ -41,6 +44,7 @@ interface StaffMember {
     end: string;
   };
   orders: string[];
+  active: boolean;
 }
 
 interface StaffManagementProps {
@@ -66,10 +70,17 @@ export default function StaffManagement({
   });
   const [error, setError] = useState("");
 
-  const roles = [
-    "All",
-    ...Array.from(new Set(data.map((staff) => staff.role))),
+  const roleOptions = [
+    "manager",
+    "receptionist",
+    "kitchen",
+    "delivery",
+    "attendant",
+    "concierge",
+    "specialattendant",
   ];
+
+  const roles = ["All", ...roleOptions];
 
   const filteredStaff = data.filter(
     (staff) =>
@@ -90,28 +101,42 @@ export default function StaffManagement({
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const handleShiftChange = (staff: StaffMember, newShift: string) => {
+  const handleShiftDetailsClick = (staff: StaffMember) => {
+    // console.log("handleShiftDetailsClick", staff);
     setSelectedStaff(staff);
+
+    // Parse existing shift details to prepopulate the dialog
+    const startTime = new Date(JSON.parse(staff.shiftDetails.start));
+    const endTime = new Date(JSON.parse(staff.shiftDetails.end));
+
+    const formatTimeForInput = (date: Date) => {
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+      const period = hours >= 12 ? "PM" : "AM";
+      return {
+        time: `${displayHours.toString().padStart(2, "0")}:${minutes
+          .toString()
+          .padStart(2, "0")}`,
+        period: period,
+      };
+    };
+
+    const startFormatted = formatTimeForInput(startTime);
+    const endFormatted = formatTimeForInput(endTime);
+
     setShiftTimes({
-      startTime: "",
-      startPeriod: "AM",
-      endTime: "",
-      endPeriod: "AM",
+      startTime: startFormatted.time,
+      startPeriod: startFormatted.period,
+      endTime: endFormatted.time,
+      endPeriod: endFormatted.period,
     });
     setError("");
 
-    const updatedData = data.map((s) =>
-      s.email === staff.email
-        ? {
-            ...s,
-            shift: newShift,
-          }
-        : s
-    );
-    setData(updatedData);
-
     setIsDialogOpen(true);
   };
+
+  // console.log(data);
 
   const validateTime = (time: string) => {
     if (!time) return false;
@@ -123,7 +148,26 @@ export default function StaffManagement({
     );
   };
 
-  const handleSaveShiftTimes = () => {
+  const handleRoleChange = async (staff: StaffMember, newRole: string) => {
+    // console.log("handleRoleChange", staff, newRole);
+    const updatedData = data.map((s) =>
+      s.email === staff.email
+        ? {
+            ...s,
+            role: newRole,
+          }
+        : s
+    );
+    setData(updatedData);
+    const res = await saveStaffData(updatedData);
+    if (res) {
+      toast.success("Changes saved successfully");
+    } else {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleSaveShiftTimes = async () => {
     if (
       !validateTime(shiftTimes.startTime) ||
       !validateTime(shiftTimes.endTime)
@@ -159,6 +203,13 @@ export default function StaffManagement({
     );
 
     setData(updatedData);
+    console.log("updatedDAta", updatedData);
+    const res = await saveStaffData(updatedData);
+    if (res) {
+      toast.success("Changes saved successfully");
+    } else {
+      toast.error("Something went wrong");
+    }
 
     console.log(
       "Saving shift details for",
@@ -171,7 +222,7 @@ export default function StaffManagement({
 
   return (
     <>
-      <Card className="max-w-6xl mx-8 my-8">
+      <Card className="max-w-full mx-8 my-8">
         <div className="space-y-4 p-4">
           <h2 className="text-2xl font-bold">Staff Management</h2>
 
@@ -219,7 +270,7 @@ export default function StaffManagement({
                   <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Shift</TableHead>
+                  <TableHead>Active</TableHead>
                   <TableHead>Shift Details</TableHead>
                   <TableHead>Current Orders</TableHead>
                 </TableRow>
@@ -230,7 +281,25 @@ export default function StaffManagement({
                     <TableCell>{staff.name}</TableCell>
                     <TableCell>{staff.email}</TableCell>
                     <TableCell>{staff.contact}</TableCell>
-                    <TableCell>{staff.role}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={staff.role}
+                        onValueChange={(value) =>
+                          handleRoleChange(staff, value)
+                        }
+                      >
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {roleOptions.map((role) => (
+                            <SelectItem key={role} value={role}>
+                              {role}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
@@ -243,26 +312,31 @@ export default function StaffManagement({
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Select
-                        value={staff.shift}
-                        onValueChange={(value) =>
-                          handleShiftChange(staff, value)
-                        }
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                          staff.active
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
                       >
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue placeholder="Select shift" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="day">Day</SelectItem>
-                          <SelectItem value="night">Night</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        {staff.active ? "Active" : "Inactive"}
+                      </span>
                     </TableCell>
                     <TableCell>
-                      {formatShiftTime(staff.shiftDetails.start)} -{" "}
-                      {formatShiftTime(staff.shiftDetails.end)}
+                      <div
+                        className="flex items-center justify-between w-[200px] p-2 border rounded-md cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleShiftDetailsClick(staff)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">
+                            {formatShiftTime(staff.shiftDetails.start)} -{" "}
+                            {formatShiftTime(staff.shiftDetails.end)}
+                          </span>
+                        </div>
+                        <CaretSortIcon className="h-4 w-4 text-gray-400" />
+                      </div>
                     </TableCell>
-                    <TableCell>{staff.orders.join(", ") || "-"}</TableCell>
+                    <TableCell>{staff?.orders?.join(", ") || "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -302,8 +376,8 @@ export default function StaffManagement({
           <DialogHeader>
             <DialogTitle>Set Shift Timings</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
               <Label>Start Time</Label>
               <div className="flex gap-2">
                 <Input
@@ -320,7 +394,7 @@ export default function StaffManagement({
                     setShiftTimes({ ...shiftTimes, startPeriod: value })
                   }
                 >
-                  <SelectTrigger className="w-[80px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -331,7 +405,7 @@ export default function StaffManagement({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div>
               <Label>End Time</Label>
               <div className="flex gap-2">
                 <Input
@@ -348,7 +422,7 @@ export default function StaffManagement({
                     setShiftTimes({ ...shiftTimes, endPeriod: value })
                   }
                 >
-                  <SelectTrigger className="w-[80px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -361,7 +435,7 @@ export default function StaffManagement({
 
             {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>

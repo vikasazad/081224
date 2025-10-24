@@ -12,7 +12,10 @@ export const invoiceSlice = createSlice({
       const prevData = state.invoice;
       state.invoice = {
         ...prevData,
-        [action.payload.invoice]: action.payload.data,
+        [action.payload.invoice]: {
+          data: action.payload.data,
+          from: action.payload.from,
+        },
       };
     },
 
@@ -26,7 +29,7 @@ export const invoiceSlice = createSlice({
 
 export const { setInvoiceData, removeInvoiceData } = invoiceSlice.actions;
 
-export const getInvoiceData = (state: any, invoiceId: string) =>
-  state.invoiceData.invoice[invoiceId] || null;
+export const getInvoiceData = (state: any, invoiceId: string) => 
+   state.invoiceData.invoice[invoiceId] || null;
 
 export default invoiceSlice.reducer;

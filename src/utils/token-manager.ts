@@ -121,7 +121,7 @@ class TokenManager {
       console.log("Saving token (changed or time threshold reached)...");
       const result = await saveToken(token);
 
-      if (result.success) {
+      if (result?.success) {
         this.setStoredToken(token);
         console.log("Token saved and cached successfully");
       }

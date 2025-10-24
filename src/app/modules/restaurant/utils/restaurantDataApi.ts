@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { db } from "@/config/db/firebase";
 import { arrayUnion, doc, getDoc, updateDoc } from "firebase/firestore";
 import { removeTableData } from "../../staff/tables/utils/tableApi";
+import { storage } from "@/config/db/firebase";
+import { ref, listAll, deleteObject } from "firebase/storage";
 export async function getTableData() {
   const session = await auth();
   const user = session?.user?.email;
@@ -31,7 +33,7 @@ export async function getMenuData() {
     return false;
   }
   try {
-    const docRef = doc(db, user, "restaurant");
+    const docRef = doc(db, user, "hotel");
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -169,4 +171,128 @@ export async function handleTableRemoval(table: any) {
   await updateDoc(docRef, {
     [`live.tablesData.tableDetails.${table.capacity}`]: arrayUnion(addtable),
   });
+}
+
+export async function saveMenuData(menuData: any, categoryName: string) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data().menu;
+      const category = data.categories.findIndex(
+        (category: any) => category.name === categoryName
+      );
+      data.categories[category].menuItems = menuData;
+      // return data;
+      await updateDoc(docRef, {
+        menu: data,
+      });
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function createNewMenuCategory(
+  categoryName: string,
+  categoryLogo: any,
+  menuItems: any[]
+) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data().menu;
+
+      // Generate new category ID
+      const newCategoryId = (data.categories.length + 1).toString();
+
+      // Create new category object
+      const newCategory = {
+        id: newCategoryId,
+        name: categoryName,
+        categoryLogo: categoryLogo,
+        position: newCategoryId,
+        menuItems: menuItems.map((item, index) => ({
+          id: (index + 1).toString(),
+          name: item.name,
+          position: index + 1,
+          description: item.description,
+          images: item.images,
+          portion: item.portion,
+          price: item.price,
+          cuisineName: item.cuisineName,
+          categoryName: categoryName,
+          nature: item.nature,
+          discountType: item.discountType || "",
+          discountAmount: item.discountAmount || "",
+          tags: [],
+          available: true,
+        })),
+      };
+      // return newCategory;
+
+      // Add new category to existing categories
+      data.categories.push(newCategory);
+
+      // Update the document
+      await updateDoc(docRef, {
+        menu: data,
+      });
+    }
+    return true;
+  } catch (error) {
+    console.error("Error creating new category:", error);
+    return false;
+  }
+}
+
+export async function deleteMenuCategories(categoryNames: string[]) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data().menu;
+
+      // Filter out the categories to be deleted
+      data.categories = data.categories.filter(
+        (category: any) => !categoryNames.includes(category.name)
+      );
+
+      // Update the document
+      await updateDoc(docRef, {
+        menu: data,
+      });
+    }
+
+    await Promise.all(
+      categoryNames.map(async (c) => {
+        const { items } = await listAll(ref(storage, `menu/${c}`));
+        await Promise.all(items.map(deleteObject));
+      })
+    );
+    return true;
+  } catch (error) {
+    console.error("Error deleting categories:", error);
+    return false;
+  }
 }

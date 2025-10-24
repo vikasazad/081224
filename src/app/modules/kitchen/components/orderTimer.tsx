@@ -2,36 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
-import { sendDeliveryReadinessRequest } from "@/app/modules/staff/utils/whatsapp-staff-manager";
-import { type Order } from "@/types/kitchen";
-import { kitchenTimerConfig } from "./kitchenDashboard";
+import { KitchenTimerConfig, type Order } from "@/types/kitchen";
 
 interface OrderTimerProps {
   startTime: Date;
   duration?: number; // in minutes - optional, will use config default
   onAlert: () => void;
-  order?: Order; // Optional order data for delivery readiness
+  order?: Order; // Optional order data (kept for backwards compatibility)
+  kitchenTimerConfig: KitchenTimerConfig;
 }
 
 export default function OrderTimer({
   startTime,
-  duration = kitchenTimerConfig.totalPreparationMinutes, // Use config default
+  duration = 0,
   onAlert,
   order,
+  kitchenTimerConfig,
 }: OrderTimerProps) {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [progress, setProgress] = useState<number>(100);
-  // const [alertTriggered, setAlertTriggered] = useState<boolean>(false);
-  const [deliveryReadinessTriggered, setDeliveryReadinessTriggered] =
+  const [showDeliveryMessage, setShowDeliveryMessage] =
     useState<boolean>(false);
-
   // Total duration in milliseconds
   const totalDuration = duration * 60 * 1000;
 
   // Calculate thresholds based on config
   const deliveryReadinessThreshold =
-    kitchenTimerConfig.deliveryReadinessMinutes * 60 * 1000;
-  // const timerAlertThreshold = kitchenTimerConfig.timerAlertMinutes * 60 * 1000;
+    kitchenTimerConfig?.deliveryReadinessMinutes * 60 * 1000;
+
+  // Note: Delivery readiness notifications are sent by the global KitchenTimerService
+  // This component just shows a visual indicator when the threshold is reached
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -46,37 +46,14 @@ export default function OrderTimer({
       const progressValue = (remaining / totalDuration) * 100;
       setProgress(progressValue);
 
-      // Trigger delivery readiness check based on config
+      // Show delivery readiness message when threshold is crossed
       if (
         remaining <= deliveryReadinessThreshold &&
-        remaining > deliveryReadinessThreshold - 60 * 1000 && // 1 minute window
-        !deliveryReadinessTriggered &&
-        order &&
-        order.attendantContact &&
-        order.attendantName
+        remaining > 0 &&
+        order?.attendantName
       ) {
-        setDeliveryReadinessTriggered(true);
-        // Send delivery readiness request to staff
-        sendDeliveryReadinessRequest(
-          order.id,
-          order.attendantName,
-          order.attendantContact,
-          order.customerName,
-          `Order ${order.id}` // Using order ID as room/table identifier
-        ).catch((error) => {
-          console.error("Failed to send delivery readiness request:", error);
-        });
+        setShowDeliveryMessage(true);
       }
-
-      // Trigger alert based on config
-      // if (
-      //   remaining <= timerAlertThreshold &&
-      //   remaining > 0 &&
-      //   !alertTriggered
-      // ) {
-      //   onAlert();
-      //   setAlertTriggered(true);
-      // }
 
       // Clear interval if timer is done
       if (remaining <= 0) {
@@ -85,16 +62,7 @@ export default function OrderTimer({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [
-    startTime,
-    totalDuration,
-    onAlert,
-    // alertTriggered,
-    deliveryReadinessTriggered,
-    order,
-    deliveryReadinessThreshold,
-    // timerAlertThreshold,
-  ]);
+  }, [startTime, totalDuration, onAlert, deliveryReadinessThreshold, order]);
 
   // Format time left as MM:SS
   const formatTimeLeft = () => {
@@ -129,13 +97,11 @@ export default function OrderTimer({
             : "bg-red-100 dark:bg-red-900"
         }`}
       />
-      {deliveryReadinessTriggered &&
-        timeLeft <= deliveryReadinessThreshold &&
-        timeLeft > 0 && (
-          <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-            Delivery readiness request sent to {order?.attendantName}
-          </div>
-        )}
+      {showDeliveryMessage && timeLeft > 0 && order?.attendantName && (
+        <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+          Delivery readiness request sent to {order.attendantName}
+        </div>
+      )}
     </div>
   );
 }

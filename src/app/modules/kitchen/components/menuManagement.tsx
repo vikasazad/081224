@@ -401,13 +401,14 @@ export default function MenuManagement({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedItems.map((item) => (
-                <TableRow key={item.id} className="hover:bg-gray-100">
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{item.categoryName}</Badge>
-                  </TableCell>
-                  {/* <TableCell>
+              paginatedItems.map((item, index: number) => {
+                return (
+                  <TableRow key={index} className="hover:bg-gray-100">
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{item.categoryName}</Badge>
+                    </TableCell>
+                    {/* <TableCell>
                     {Object.entries(item.price)
                       .map(
                         ([portion, price]) =>
@@ -415,31 +416,32 @@ export default function MenuManagement({
                       )
                       .join(" / ")}
                   </TableCell> */}
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        {pendingChanges.has(item.id)
-                          ? pendingChanges.get(item.id)
-                            ? "Available"
-                            : "Unavailable"
-                          : item.available
-                          ? "Available"
-                          : "Unavailable"}
-                      </span>
-                      <Switch
-                        checked={
-                          pendingChanges.has(item.id)
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          {pendingChanges.has(item.id)
                             ? pendingChanges.get(item.id)
+                              ? "Available"
+                              : "Unavailable"
                             : item.available
-                        }
-                        onCheckedChange={(checked) =>
-                          handleAvailabilityToggle(item.id, checked)
-                        }
-                      />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                            ? "Available"
+                            : "Unavailable"}
+                        </span>
+                        <Switch
+                          checked={
+                            pendingChanges.has(item.id)
+                              ? pendingChanges.get(item.id)
+                              : item.available
+                          }
+                          onCheckedChange={(checked) =>
+                            handleAvailabilityToggle(item.id, checked)
+                          }
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

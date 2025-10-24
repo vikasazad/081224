@@ -429,7 +429,7 @@ export default function HotelInfo({ data }: { data: any }) {
 
         {/* Image Upload Section */}
         <div className="space-y-2">
-          <Label>Room Images</Label>
+          <Label>Hotel Images</Label>
           <div
             className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
               isDragging

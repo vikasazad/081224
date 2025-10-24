@@ -72,15 +72,15 @@ function processData(data: any) {
 
   if (data.hotel?.rooms) {
     data.hotel?.rooms.forEach((table: any) => {
-      console.log("TABLE", table);
+      // console.log("TABLE", table);
       if (table?.diningDetails?.status !== "available") {
         table?.diningDetails?.orders?.forEach((item: any) => {
-          console.log("HOTEKLLLLL", item);
+          // console.log("HOTEKLLLLL", item);
           rows.push(
             createData(
               item.orderId,
-              table.diningDetails.customer?.name || "",
-              item.location,
+              table.bookingDetails.customer?.name || "",
+              table.diningDetails.location,
               table.diningDetails.noOfGuests,
               item.payment.price || 0,
               item.status,
@@ -212,7 +212,7 @@ function processData(data: any) {
     }
   });
 
-  console.log("ROWS", rows);
+  // console.log("ROWS", rows);
   return rows;
 }
 

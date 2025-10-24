@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import HotelRoomHistory from "./HotelRoomHistory";
 
 const History = ({ data, room }: { data: any; room: any }) => {
-  console.log("first", data, room);
+  // console.log("first", data, room);
   const [expandedCategory, setExpandedCategory] = useState<any>(null);
   const [historyData, setHistoryData] = useState<any>({ room: "", data: [] });
   const [historyFlag, setHistoryFlag] = useState<boolean>(false);

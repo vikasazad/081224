@@ -1,16 +1,19 @@
 "use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import OrderCard from "@/app/modules/kitchen/components/orderCard";
-import { type Order, OrderStatus } from "@/types/kitchen";
+import { KitchenTimerConfig, type Order, OrderStatus } from "@/types/kitchen";
+// import { kitchenTimerConfig } from "./kitchenDashboard";
 
 interface OrderBoardProps {
   orders: Order[];
   onOrderStatusChange: (orderId: string, newStatus: OrderStatus) => void;
+  kitchenTimerConfig: KitchenTimerConfig;
 }
 
 export default function OrderBoard({
   orders,
   onOrderStatusChange,
+  kitchenTimerConfig,
 }: OrderBoardProps) {
   // Filter and sort orders by status and respective timestamps
   console.log("ORDERS", orders);
@@ -37,7 +40,7 @@ export default function OrderBoard({
       return dateB - dateA;
     });
 
-  console.log(inPreparationOrders);
+  console.log("inPreparationOrders", inPreparationOrders);
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* New Orders Column */}
@@ -63,6 +66,7 @@ export default function OrderBoard({
                 onStatusChange={onOrderStatusChange}
                 nextStatus={OrderStatus.InPreparation}
                 nextStatusLabel="Start Preparation"
+                kitchenTimerConfig={kitchenTimerConfig}
               />
             ))
           )}
@@ -93,6 +97,7 @@ export default function OrderBoard({
                 nextStatus={OrderStatus.Completed}
                 nextStatusLabel="Mark as Completed"
                 showTimer={true}
+                kitchenTimerConfig={kitchenTimerConfig}
               />
             ))
           )}
@@ -122,6 +127,7 @@ export default function OrderBoard({
                 onStatusChange={onOrderStatusChange}
                 nextStatus={null}
                 nextStatusLabel=""
+                kitchenTimerConfig={kitchenTimerConfig}
               />
             ))
           )}

@@ -97,6 +97,7 @@ import {
   managerRoutes, // Assuming manager routes exist=
   onboardingRoutes,
 } from "../routes";
+import { NextResponse } from "next/server";
 
 export default auth((req) => {
   console.log("=============", req.auth);
@@ -106,7 +107,7 @@ export default auth((req) => {
   const { nextUrl } = req;
 
   if (nextUrl.pathname === "/api/cron") {
-    console.log("Bypassing auth/redirect for Vercel cron job.");
+    // console.log("Bypassing auth/redirect for Vercel cron job.");
     return; // Allow the request to proceed directly to the handler
   }
   if (nextUrl.pathname.startsWith("/api/webhooks/instagram")) {
@@ -129,17 +130,17 @@ export default auth((req) => {
 
   if (isAuthRoute) {
     if (isLoggedIn && newUser) {
-      return Response.redirect(new URL("/onboarding", nextUrl)); //checked
+      return NextResponse.redirect(new URL("/onboarding", nextUrl)); //checked
     }
     if (isLoggedIn) {
       console.log("here1");
       if (role === "admin" || role === "manager") {
         console.log("here2");
-        return Response.redirect(new URL("/dashboard", nextUrl)); // Admins can access the full app   // checked
+        return NextResponse.redirect(new URL("/dashboard", nextUrl)); // Admins can access the full app   // checked
       } else if (role === "staff") {
         // console.log("here3");
         if (!isStaffRoute) {
-          return Response.redirect(new URL("/staff", nextUrl)); // Staff restricted to staff routes //checked
+          return NextResponse.redirect(new URL("/staff", nextUrl)); // Staff restricted to staff routes //checked
         }
       }
     }
@@ -149,22 +150,22 @@ export default auth((req) => {
   if (isLoggedIn) {
     if (role === "staff") {
       if (!isStaffRoute) {
-        return Response.redirect(new URL("/staff", nextUrl)); // Staff restricted to staff routes //checked
+        return NextResponse.redirect(new URL("/staff", nextUrl)); // Staff restricted to staff routes //checked
       }
     } else if (role === "manager") {
       if (!isManagerRoute) {
-        return Response.redirect(new URL("/staff", nextUrl)); // Manager restricted to staff routes (same as staff in your case) //checked
+        return NextResponse.redirect(new URL("/staff", nextUrl)); // Manager restricted to staff routes (same as staff in your case) //checked
       }
     }
   }
 
   if (isLoggedIn && newUser && !isOnboardingRoute) {
     //checked=
-    return Response.redirect(new URL("/onboarding", nextUrl));
+    return NextResponse.redirect(new URL("/onboarding", nextUrl));
   }
 
   if (!isLoggedIn && !isPublicRoute) {
-    return Response.redirect(new URL("/login", nextUrl)); //checked
+    return NextResponse.redirect(new URL("/login", nextUrl)); //checked
   }
 
   return;

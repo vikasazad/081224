@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, X, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
@@ -32,6 +32,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  saveMenuData,
+  createNewMenuCategory,
+} from "../../utils/restaurantDataApi";
+import { uploadImageToFirebase } from "@/app/modules/hotel/hotel/utils/hotelApi";
+import { Icons } from "@/components/icons";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = [
@@ -41,9 +47,21 @@ const ACCEPTED_IMAGE_TYPES = [
   "image/webp",
 ];
 
-export default function MenuItems({ data }: { data: any }) {
-  console.log("9389389", data);
+interface MenuItemsProps {
+  data: any;
+  isCreatingNew?: boolean;
+  onBack?: () => void;
+}
+
+const MenuItems: React.FC<MenuItemsProps> = ({
+  data,
+  isCreatingNew = false,
+  onBack,
+}) => {
+  // console.log("9389389", data);
+  const [isLoading, setIsLoading] = useState(false);
   const [menuItems, setMenuItems] = useState<any>([]);
+  console.log("9389389", menuItems);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [categoryName, setCategoryName] = useState("");
   const [categoryLogo, setCategoryLogo] = useState<any>(null);
@@ -58,24 +76,40 @@ export default function MenuItems({ data }: { data: any }) {
   const categoryLogoInputRef: any = useRef(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   useEffect(() => {
-    setCategoryName(data.name);
-    setCategoryLogo({ url: data.categoryLogo });
+    setCategoryName(data?.name || "");
+    setCategoryLogo({ url: data?.categoryLogo });
     const menuArr: any = [];
     const imgArr: any = [];
-    data.menuItems.map((data: any) => {
+    data?.menuItems.map((data: any) => {
+      let price = {};
+      if (data?.portion === "Single") {
+        price = { Single: data?.price?.Single || "" };
+      } else if (data?.portion === "Half") {
+        price = { Half: data?.price?.Half || "" };
+      } else if (data?.portion === "Full") {
+        price = { Full: data?.price?.Full || "" };
+      } else if (data?.portion === "Half/Full") {
+        price = {
+          Half: data?.price?.Half || "",
+          Full: data?.price?.Full || "",
+        };
+      }
       menuArr.push({
-        name: data.name,
-        description: data.description,
-        cuisineName: data.cuisineName,
-        natureOfFood: data.nature,
-        portionType: data.portion,
-        priceForSingle: data?.price?.Single,
-        priceForHalf: data.price?.Half,
-        priceForFull: data.price?.Full,
-        discountType: data.discountType,
-        discountAmount: data.discountAmount,
+        available: data?.available || true,
+        categoryName: data?.categoryName || "",
+        cuisineName: data?.cuisineName || "",
+        description: data?.description || "",
+        discountType: data?.discountType || "",
+        discountAmount: data?.discountAmount || "",
+        id: data?.id || "",
+        name: data?.name || "",
+        nature: data?.nature || "",
+        portion: data?.portion || "",
+        position: data?.position || "",
+        price: price,
+        tags: data?.tags || [],
       });
-      imgArr.push(data.images);
+      imgArr.push(data?.images || []);
     });
     setMenuItems(menuArr);
     setDishImages(imgArr);
@@ -117,20 +151,20 @@ export default function MenuItems({ data }: { data: any }) {
         itemErrors.cuisineName = "Cuisine name is required";
 
       // Portion type and price validation
-      if (item.portionType === "Single") {
-        if (!item.priceForSingle) {
-          itemErrors.priceForSingle = "Price for single portion is required";
+      if (item.portion === "Single") {
+        if (!item.price?.Single) {
+          itemErrors.price.Single = "Price for single portion is required";
         }
       }
-      if (item.portionType === "Half" || item.portionType === "Half/Full") {
-        if (!item.priceForHalf) {
-          itemErrors.priceForHalf = "Price for half portion is required";
+      if (item.portion === "Half" || item.portion === "Half/Full") {
+        if (!item.price?.Half) {
+          itemErrors.price.Half = "Price for half portion is required";
         }
       }
 
-      if (item.portionType === "Full" || item.portionType === "Half/Full") {
-        if (!item.priceForFull) {
-          itemErrors.priceForFull = "Price for full portion is required";
+      if (item.portion === "Full" || item.portion === "Half/Full") {
+        if (!item.price?.Full) {
+          itemErrors.price.Full = "Price for full portion is required";
         }
       }
 
@@ -164,16 +198,19 @@ export default function MenuItems({ data }: { data: any }) {
       validateForm()
     ) {
       const emptyItem = {
+        categoryName: "",
         name: "",
         description: "",
         cuisineName: "",
-        natureOfFood: "Non-Veg",
-        portionType: "Half",
-        priceForSingle: "",
-        priceForHalf: "",
-        priceForFull: "",
+        nature: "",
+        portion: "Half",
+        position: "",
+        id: "",
+        price: { Half: "" },
+        tags: [],
         discountType: "",
         discountAmount: "",
+        available: true,
       };
 
       setMenuItems([...menuItems, emptyItem]);
@@ -192,6 +229,7 @@ export default function MenuItems({ data }: { data: any }) {
   const handleDeleteLastItem = () => {
     if (menuItems.length > 1) {
       setIsDeleteAlertOpen(true);
+      const lastIndex = menuItems.length - 1;
       const newMenuItems = menuItems.slice(0, -1);
       const newDishImages = dishImages.slice(0, -1);
       const newErrors = errors.slice(0, -1);
@@ -201,6 +239,11 @@ export default function MenuItems({ data }: { data: any }) {
         dishImages[dishImages.length - 1].forEach((image: any) => {
           URL.revokeObjectURL(image.url);
         });
+      }
+
+      // Reset the file input for the deleted item
+      if (fileInputRefs.current[lastIndex]) {
+        fileInputRefs.current[lastIndex].value = "";
       }
 
       setMenuItems(newMenuItems);
@@ -213,9 +256,9 @@ export default function MenuItems({ data }: { data: any }) {
   };
 
   // Handle form submission
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-
+    setIsLoading(true);
     if (
       validateCategory("categoryName", categoryName) &&
       validateCategory("categoryLogo", categoryLogo) &&
@@ -224,26 +267,101 @@ export default function MenuItems({ data }: { data: any }) {
       // Create final data structure with items and their images
       const finalData = menuItems.map((item: any, index: number) => ({
         ...item,
+        id: index + 1,
         images: dishImages[index],
       }));
 
-      console.log("Final Form Data:", finalData);
-      toast.success("All menu items saved successfully!");
+      let res;
+      if (isCreatingNew) {
+        console.log("finalData", finalData);
+        const uploadedImages = await Promise.all(
+          finalData.map(async (item: any) => {
+            if (!item.images || item.images.length === 0) return [];
+
+            const urls = await Promise.all(
+              item.images.map(async (img: any) => {
+                const path = `menu/${categoryName}/${img.id}`;
+                const downloadURL = await uploadImageToFirebase(img.file, path);
+                return downloadURL;
+              })
+            );
+
+            return urls; // This will be an array of URLs for this item
+          })
+        );
+
+        const logo = await uploadImageToFirebase(
+          categoryLogo.file,
+          `menu/${categoryName}/${categoryLogo.id}`
+        );
+
+        // console.log("uploadedImages", uploadedImages);
+        if (uploadedImages.length > 0) {
+          finalData.categoryLogo = logo;
+          for (let i = 0; i < finalData.length; i++) {
+            finalData[i].images = uploadedImages[i];
+          }
+        }
+
+        // Create new category
+        console.log("called-2", categoryName, finalData);
+        res = await createNewMenuCategory(categoryName, logo, finalData);
+        console.log("res", res);
+        if (res) {
+          toast.success("New category created successfully!");
+          // Go back to categories view after successful creation
+          setTimeout(() => {
+            onBack?.();
+          }, 1500);
+          setIsLoading(false);
+        } else {
+          toast.error("Failed to create new category");
+          setIsLoading(false);
+        }
+      } else {
+        // Update existing category
+        res = await saveMenuData(finalData, categoryName);
+        if (res) {
+          toast.success("Menu items updated successfully!");
+          setIsLoading(false);
+        } else {
+          toast.error("Failed to update menu items");
+          setIsLoading(false);
+        }
+      }
+
+      // console.log("res", res);
     } else {
       toast.error("Please fill in all required fields", {
         description: "Some menu items have missing or invalid information.",
       });
+      setIsLoading(false);
     }
   };
 
   const handleInputChange = (e: any, index: number) => {
-    console.log("called-3");
+    // console.log("called-3");
     const { name, value } = e.target;
+    console.log(name, value);
     const updatedMenuItems = [...menuItems];
-    updatedMenuItems[index] = {
-      ...updatedMenuItems[index],
-      [name]: value,
-    };
+
+    // Handle price fields specially
+    if (name === "Half" || name === "Full" || name === "Single") {
+      updatedMenuItems[index] = {
+        ...updatedMenuItems[index],
+        price: {
+          ...updatedMenuItems[index].price,
+          [name]: value,
+        },
+      };
+    } else {
+      // Handle regular fields
+      updatedMenuItems[index] = {
+        ...updatedMenuItems[index],
+        [name]: value,
+      };
+    }
+
     setMenuItems(updatedMenuItems);
   };
 
@@ -256,11 +374,11 @@ export default function MenuItems({ data }: { data: any }) {
     };
 
     // Handle portion type changes
-    if (name === "portionType") {
-      if (value === "Half") {
-        updatedMenuItems[index].priceForFull = "";
-      } else if (value === "Full") {
-        updatedMenuItems[index].priceForHalf = "";
+    if (name === "portion") {
+      if (value === "Half/Full") {
+        updatedMenuItems[index].price = { Half: "", Full: "" };
+      } else {
+        updatedMenuItems[index].price = { [value]: "" };
       }
     }
 
@@ -309,31 +427,57 @@ export default function MenuItems({ data }: { data: any }) {
   const handleFileUpload = (files: any, index: number) => {
     if (!files) return;
 
-    const file = files[0];
-    if (!file || !validateFile(file)) return;
+    const fileArray = Array.from(files);
+    const validFiles: any[] = [];
+
+    // Validate each file
+    for (const file of fileArray) {
+      if (validateFile(file)) {
+        validFiles.push(file);
+      }
+    }
+
+    if (validFiles.length === 0) return;
+
+    const currentImageCount = dishImages[index]?.length || 0;
+    const remainingSlots = 3 - currentImageCount;
+
+    if (remainingSlots <= 0) {
+      toast.error("Maximum images reached", {
+        description: "You can only upload up to 3 images.",
+      });
+      return;
+    }
+
+    // Take only the files that fit within the remaining slots
+    const filesToAdd = validFiles.slice(0, remainingSlots);
+
+    if (filesToAdd.length < validFiles.length) {
+      toast.warning("Some files not uploaded", {
+        description: `Only ${filesToAdd.length} files uploaded. Maximum 3 images allowed.`,
+      });
+    }
 
     setDishImages((prevImages: any) => {
       const newImages = [...prevImages];
       if (!newImages[index]) {
         newImages[index] = [];
       }
-      if (newImages[index].length >= 3) {
-        toast.error("Maximum images reached", {
-          description: "You can only upload up to 3 images.",
-        });
-        return prevImages;
-      }
-      newImages[index] = [
-        ...newImages[index],
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          file,
-          url: URL.createObjectURL(file),
-          name: file.name,
-        }, // Use createImageFile to standardize the image object structure
-      ];
+
+      const newImageObjects = filesToAdd.map((file) => ({
+        id: Math.random().toString(36).substr(2, 9),
+        file,
+        url: URL.createObjectURL(file),
+        name: file.name,
+      }));
+
+      newImages[index] = [...newImages[index], ...newImageObjects];
       return newImages;
     });
+
+    if (filesToAdd.length > 0) {
+      toast.success(`${filesToAdd.length} image(s) uploaded successfully`);
+    }
   };
 
   const handleDragOver = (e: any) => {
@@ -350,20 +494,26 @@ export default function MenuItems({ data }: { data: any }) {
     e.preventDefault();
     setIsDragging(false);
     const files = e.dataTransfer.files;
-    handleFileUpload(files, index);
+    if (files && files.length > 0) {
+      handleFileUpload(files, index);
+    }
   };
 
   const handleDeleteLogo = () => {
-    console.log("called-9");
+    // console.log("called-9");
     if (categoryLogo) {
       URL.revokeObjectURL(categoryLogo.url);
       setCategoryLogo(null);
+    }
+    // Reset the file input to allow re-uploading the same file
+    if (categoryLogoInputRef.current) {
+      categoryLogoInputRef.current.value = "";
     }
     toast.success("Logo deleted successfully");
   };
 
   const handleDeleteImage = (id: any, index: number) => {
-    console.log(id, index);
+    // console.log(id, index);
     setDishImages((prevImages: any) => {
       const newImages = [...prevImages];
 
@@ -386,13 +536,27 @@ export default function MenuItems({ data }: { data: any }) {
       return newImages;
     });
 
+    // Reset the file input to allow re-uploading the same file
+    if (fileInputRefs.current[index]) {
+      fileInputRefs.current[index].value = "";
+    }
+
     toast.success("Dish image deleted successfully");
   };
 
   return (
     <Card className="w-full max-w-4xl ">
       <CardHeader>
-        <CardTitle>Add Appetizer Menu Item</CardTitle>
+        <div className="flex items-center space-x-4">
+          {onBack && (
+            <Button variant="ghost" size="sm" onClick={onBack} className="p-2">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          )}
+          <CardTitle>
+            {isCreatingNew ? "Create New Menu Category" : "Edit Menu Category"}
+          </CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-6">
@@ -415,50 +579,53 @@ export default function MenuItems({ data }: { data: any }) {
 
           <div className="space-y-2">
             <Label>Category Logo</Label>
-            <div className="flex items-start space-x-4">
-              <Input
-                ref={categoryLogoInputRef}
-                type="file"
-                className="hidden"
-                onChange={(e) => {
-                  handleLogoUpload(e.target.files);
-                  validateCategory("categoryLogo", e.target.files);
-                }}
-                accept={ACCEPTED_IMAGE_TYPES.join(",")}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => categoryLogoInputRef.current?.click()}
-              >
-                <ImagePlus className="mr-2 h-4 w-4" /> Upload Logo
-              </Button>
+            <div className="flex   space-x-4">
+              <div className="flex items-start  space-x-4">
+                <Input
+                  ref={categoryLogoInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    handleLogoUpload(e.target.files);
+                    validateCategory("categoryLogo", e.target.files);
+                  }}
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => categoryLogoInputRef.current?.click()}
+                >
+                  <ImagePlus className="mr-2 h-4 w-4" /> Upload Logo
+                </Button>
+              </div>
+
+              {categoryLogo && categoryLogo.url && (
+                <div className="relative w-20 h-20 mx-auto">
+                  <Image
+                    src={categoryLogo.url}
+                    alt="Category Logo"
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteLogo()}
+                    className="absolute -top-2 -right-2 p-1 bg-black/50 rounded-full"
+                  >
+                    <X className="h-4 w-4 text-white" />
+                  </button>
+                </div>
+              )}
             </div>
             {categoryErrors.logo && (
               <p className="text-sm text-red-500">{categoryErrors.logo}</p>
-            )}
-            {categoryLogo && (
-              <div className="relative w-20 h-20 mx-auto">
-                <Image
-                  src={categoryLogo.url}
-                  alt="Category Logo"
-                  fill
-                  className="object-cover rounded-lg"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleDeleteLogo()}
-                  className="absolute -top-2 -right-2 p-1 bg-black/50 rounded-full"
-                >
-                  <X className="h-4 w-4 text-white" />
-                </button>
-              </div>
             )}
           </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-8">
           {menuItems.map((item: any, index: number) => {
-            console.log("first", item);
+            // console.log("first", item);
             return (
               <div key={index}>
                 <Separator className="my-4" />
@@ -468,7 +635,7 @@ export default function MenuItems({ data }: { data: any }) {
                     <Input
                       id={`name-${index}`}
                       name="name"
-                      value={item.name}
+                      value={item?.name}
                       onChange={(e) => handleInputChange(e, index)}
                       className={errors[index]?.name ? "border-red-500" : ""}
                     />
@@ -520,9 +687,9 @@ export default function MenuItems({ data }: { data: any }) {
                   <div className="space-y-2">
                     <Label>Nature of Food</Label>
                     <Select
-                      value={item.natureOfFood}
+                      value={item.nature}
                       onValueChange={(value) =>
-                        handleSelectChange("natureOfFood", value, index)
+                        handleSelectChange("nature", value, index)
                       }
                     >
                       <SelectTrigger>
@@ -538,9 +705,9 @@ export default function MenuItems({ data }: { data: any }) {
                   <div className="space-y-2">
                     <Label>Portion Type</Label>
                     <Select
-                      value={item.portionType}
+                      value={item.portion}
                       onValueChange={(value) =>
-                        handleSelectChange("portionType", value, index)
+                        handleSelectChange("portion", value, index)
                       }
                     >
                       <SelectTrigger>
@@ -557,30 +724,30 @@ export default function MenuItems({ data }: { data: any }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-6 mt-4">
-                  {item.portionType === "Single" && (
+                  {item.portion === "Single" && (
                     <div className="space-y-2">
                       <Label htmlFor={`priceForHalf-${index}`}>
                         Price for Single
                       </Label>
                       <Input
                         type="number"
-                        id={`priceForSingle-${index}`}
-                        name="priceForSingle"
-                        value={item.priceForSingle}
+                        id={`Single-${index}`}
+                        name="Single"
+                        value={item.price.Single}
                         onChange={(e) => handleInputChange(e, index)}
                         className={
-                          errors[index]?.priceForSingle ? "border-red-500" : ""
+                          errors[index]?.price?.Single ? "border-red-500" : ""
                         }
                       />
-                      {errors[index]?.priceForSingle && (
+                      {errors[index]?.price?.Single && (
                         <p className="text-sm text-red-500">
-                          {errors[index].priceForSingle}
+                          {errors[index].price?.Single}
                         </p>
                       )}
                     </div>
                   )}
 
-                  {item.portionType != "Single" && (
+                  {item.portion !== "Single" && (
                     <>
                       <div className="space-y-2">
                         <Label htmlFor={`priceForHalf-${index}`}>
@@ -588,18 +755,18 @@ export default function MenuItems({ data }: { data: any }) {
                         </Label>
                         <Input
                           type="number"
-                          id={`priceForHalf-${index}`}
-                          name="priceForHalf"
-                          value={item.priceForHalf}
+                          id={`Half-${index}`}
+                          name="Half"
+                          value={item.price?.Half}
                           onChange={(e) => handleInputChange(e, index)}
-                          disabled={item.portionType === "Full"}
+                          disabled={item.portion === "Full"}
                           className={
-                            errors[index]?.priceForHalf ? "border-red-500" : ""
+                            errors[index]?.price?.Half ? "border-red-500" : ""
                           }
                         />
-                        {errors[index]?.priceForHalf && (
+                        {errors[index]?.price?.Half && (
                           <p className="text-sm text-red-500">
-                            {errors[index].priceForHalf}
+                            {errors[index].price?.Half}
                           </p>
                         )}
                       </div>
@@ -610,18 +777,18 @@ export default function MenuItems({ data }: { data: any }) {
                         </Label>
                         <Input
                           type="number"
-                          id={`priceForFull-${index}`}
-                          name="priceForFull"
-                          value={item.priceForFull}
+                          id={`Full-${index}`}
+                          name="Full"
+                          value={item.price?.Full}
                           onChange={(e) => handleInputChange(e, index)}
-                          disabled={item.portionType === "Half"}
+                          disabled={item.portion === "Half"}
                           className={
-                            errors[index]?.priceForFull ? "border-red-500" : ""
+                            errors[index]?.price?.Full ? "border-red-500" : ""
                           }
                         />
-                        {errors[index]?.priceForFull && (
+                        {errors[index]?.price?.Full && (
                           <p className="text-sm text-red-500">
-                            {errors[index].priceForFull}
+                            {errors[index].price?.Full}
                           </p>
                         )}
                       </div>
@@ -718,14 +885,16 @@ export default function MenuItems({ data }: { data: any }) {
                   {dishImages[index] && dishImages[index].length > 0 && (
                     <div className="grid grid-cols-3 gap-4 mt-4">
                       {dishImages[index].map((image: any, i: number) => {
+                        const imageSrc = image.url || image;
+                        // Only render if we have a valid image source
+                        if (!imageSrc || imageSrc === "") return null;
+
                         return (
                           <div key={i} className="relative group">
                             <div className="relative w-full h-32">
                               <Image
-                                src={
-                                  image.url ? image.url : image // Use image.url directly for user-uploaded images
-                                }
-                                alt={image.url ? image.url : image}
+                                src={imageSrc}
+                                alt={`Dish image ${i + 1}`}
                                 fill
                                 className="object-cover rounded-lg"
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -798,36 +967,33 @@ export default function MenuItems({ data }: { data: any }) {
                 Delete Last Item
               </Button>
             </div>
-            <div>
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
                 className="mr-4"
                 onClick={() => {
-                  setMenuItems([
-                    {
-                      name: "",
-                      description: "",
-                      cuisineName: "",
-                      natureOfFood: "Non-Veg",
-                      portionType: "Half",
-                      priceForHalf: "",
-                      priceForFull: "",
-                      discountType: "",
-                      discountAmount: "",
-                    },
-                  ]);
-                  setDishImages([]);
-                  setErrors({});
+                  if (onBack) {
+                    onBack();
+                  }
                 }}
               >
                 Cancel
               </Button>
-              <Button type="submit">Finish & Save</Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="flex items-center gap-1"
+              >
+                {isLoading && <Icons.spinner className="w-4 h-4 mr-2" />}
+                {isCreatingNew ? "Create Category" : "Update Category"}
+              </Button>
             </div>
           </CardFooter>
         </form>
       </CardContent>
     </Card>
   );
-}
+};
+
+export default MenuItems;

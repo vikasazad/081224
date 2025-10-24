@@ -35,7 +35,6 @@ const QR = ({ data, user }: any) => {
           tableNo,
           tag: "restaurant",
           phone: "",
-          tax: { gstPercentage: "18" },
         };
 
         // Set TTL to 60 minutes (hardcoded backend value)

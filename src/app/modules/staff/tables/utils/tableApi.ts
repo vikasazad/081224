@@ -3,13 +3,14 @@ import {
   arrayUnion,
   doc,
   getDoc,
+  increment,
   onSnapshot,
   updateDoc,
 } from "firebase/firestore";
 interface StaffMember {
   name: string;
   token: string;
-  orders: string[];
+  orders?: string[];
 }
 
 // export const calculateOrderTotal = (order: any) => {
@@ -131,7 +132,7 @@ export function getOnlineStaffFromFirestore(callback: any) {
         .map((staffMember: any) => ({
           name: staffMember.name,
           notificationToken: staffMember.notificationToken,
-          orders: staffMember.orders,
+          orders: staffMember.orders || [],
           contact: staffMember.contact,
         }));
 
@@ -267,7 +268,7 @@ export function assignAttendantSequentially(
 
   // Sort staff by number of current orders (ascending)
   const sortedStaff = [...availableStaff].sort(
-    (a, b) => a.orders.length - b.orders.length
+    (a, b) => (a.orders?.length || 0) - (b.orders?.length || 0)
   );
 
   // Return the staff with the least number of orders
@@ -311,11 +312,29 @@ export async function setHistory(tableData: any, tableType: string) {
   console.log(tableType);
   try {
     const docRef = doc(db, "vikumar.azad@gmail.com", "restaurant");
+    const docStaffRef = doc(db, "vikumar.azad@gmail.com", "info");
+    const docStaffSnap = await getDoc(docStaffRef);
+    if (!docStaffSnap.exists()) {
+      console.error("Document not found");
+      return false;
+    }
+    const staff = docStaffSnap.data().staff;
     const customerPhone = tableData.diningDetails.customer.phone;
 
     if (!customerPhone) {
       console.error("Customer phone number is missing in tableData.");
       return false;
+    }
+    const ids = await idsToRemove(tableData);
+    if (ids.length > 0) {
+      ids.forEach((id: any) => {
+        const staffIndex = staff.findIndex(
+          (staffMember: any) => staffMember.name === id.name
+        );
+        staff[staffIndex].orders = staff[staffIndex].orders.filter(
+          (order: any) => order !== id.id
+        );
+      });
     }
 
     const table = {
@@ -346,7 +365,12 @@ export async function setHistory(tableData: any, tableType: string) {
       [`customers.${customerPhone}`]: arrayUnion(tableData),
     });
     await updateDoc(docRef, {
+      "live.tablesData.stats.available": increment(1),
+      "live.tablesData.stats.booked": increment(-1),
       [`live.tablesData.tableDetails.${tableType}`]: arrayUnion(table),
+    });
+    await updateDoc(docStaffRef, {
+      staff: staff,
     });
 
     console.log("Data successfully updated and saved to Firestore.");
@@ -358,16 +382,62 @@ export async function setHistory(tableData: any, tableType: string) {
 
   return false;
 }
+
+export async function idsToRemove(data: any) {
+  const ids = [];
+  if (data["bookingDetails"]) {
+    ids.push({
+      id: data["bookingDetails"]?.bookingId,
+      name: data["bookingDetails"]?.attendant,
+    });
+  }
+  if (data["diningDetails"]) {
+    data["diningDetails"]?.orders?.forEach((order: any) => {
+      ids.push({ id: order.orderId, name: order.attendant });
+    });
+  }
+  if (data["servicesUsed"]) {
+    data["servicesUsed"]?.forEach((service: any) => {
+      ids.push({ id: service.serviceId, name: service.attendant });
+    });
+  }
+  if (data["issuesReported"]) {
+    Object.values(data["issuesReported"])?.forEach((item: any) => {
+      ids.push({ id: item.issueId, name: item.attendant });
+    });
+  }
+  return ids;
+}
 export async function setHistoryRoom(roomData: any, roomType: string) {
   console.log(roomType);
   try {
     const docRef = doc(db, "vikumar.azad@gmail.com", "hotel");
+    const docStaffRef = doc(db, "vikumar.azad@gmail.com", "info");
+    const docStaffSnap = await getDoc(docStaffRef);
+    if (!docStaffSnap.exists()) {
+      console.error("Document not found");
+      return false;
+    }
+    const staff = docStaffSnap.data().staff;
     const customerPhone = roomData.bookingDetails.customer.phone;
 
     if (!customerPhone) {
       console.error("Customer phone number is missing in roomData.");
       return false;
     }
+    const ids = await idsToRemove(roomData);
+    if (ids.length > 0) {
+      ids.forEach((id: any) => {
+        const staffIndex = staff.findIndex(
+          (staffMember: any) => staffMember.name === id.name
+        );
+        staff[staffIndex].orders = staff[staffIndex].orders.filter(
+          (order: any) => order !== id.id
+        );
+      });
+    }
+    console.log("staff", staff);
+    console.log("ids", ids);
 
     const room = {
       roomNo: roomData.bookingDetails.location,
@@ -395,10 +465,15 @@ export async function setHistoryRoom(roomData: any, roomType: string) {
       [`history.${roomType}`]: arrayUnion(roomData),
     });
     await updateDoc(docRef, {
-      [`customers.${customerPhone}`]: arrayUnion(roomData),
+      [`customers.${customerPhone}.booking`]: arrayUnion(roomData),
     });
     await updateDoc(docRef, {
+      "live.roomsData.stats.available": increment(1),
+      "live.roomsData.stats.booked": increment(-1),
       [`live.roomsData.roomDetail.${roomType}`]: arrayUnion(room),
+    });
+    await updateDoc(docStaffRef, {
+      staff: staff,
     });
 
     console.log("Data successfully updated and saved to Firestore.");

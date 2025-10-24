@@ -1,10 +1,9 @@
 // import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Overview from "@/app/modules/dashboard/overview/components/overview";
-
 // import { CalendarDateRangePicker } from "@/components/date-range-picker";
-import { Header } from "@/components/header";
 
+import { Header } from "@/components/header";
 export default function Dashboard() {
   return (
     <>

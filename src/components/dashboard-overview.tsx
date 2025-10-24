@@ -36,7 +36,7 @@ const DashboardOverview = ({
   data: any;
   table: any;
 }) => {
-  console.log("YABLE", table);
+  // console.log("YABLE", table);
   const [selectedChart, setSelectedChart] = useState("rooms");
   const [stepSize, setStepSize] = useState<any>();
   const [chartData, setChartData] = useState<any[]>([]);
@@ -151,7 +151,7 @@ const DashboardOverview = ({
 
   const handleTypeClicks = async (category: string) => {
     const data = await get7daysData(user.email, "analytics", category);
-    console.log(data);
+    // console.log(data);
     setSelectedChart(category);
     const selectedCategoryData = data[category];
     const series = Object.keys(selectedCategoryData)
@@ -165,10 +165,10 @@ const DashboardOverview = ({
           color: colors[index % colors.length],
         };
       });
-    console.log("Generated Series:", series);
+    // console.log("Generated Series:", series);
     setChartData(series);
     setStepSize(calculateStepSize(selectedCategoryData));
-    console.log("DATA", data);
+    //  console.log("DATA", data);
   };
 
   const options: ApexOptions = {

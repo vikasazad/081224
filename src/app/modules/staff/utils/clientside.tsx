@@ -55,7 +55,7 @@ export function handleRoomStaffInformation(
                   result.hotelOverview.ongoing = live.rooms;
                   result.hotelOverview.status = live.roomsData.status;
 
-                  live.rooms.forEach((item: any) => {
+                  live.rooms?.forEach((item: any) => {
                     if (item?.bookingDetails?.checkOut) {
                       const checkOutTime = new Date(
                         item.bookingDetails.checkOut
@@ -69,16 +69,20 @@ export function handleRoomStaffInformation(
                     }
                   });
 
-                  Object.keys(live.roomsData.roomDetail).forEach((roomType) => {
-                    live.roomsData.roomDetail[roomType].forEach((item: any) => {
-                      if (item.status === "available") {
-                        result.hotelOverview.vacant.push(item);
-                      }
-                      if (item.status === "fixing required") {
-                        result.hotelOverview.maintenance.push(item);
-                      }
-                    });
-                  });
+                  Object.keys(live.roomsData.roomDetail)?.forEach(
+                    (roomType) => {
+                      live.roomsData.roomDetail[roomType]?.forEach(
+                        (item: any) => {
+                          if (item.status === "available") {
+                            result.hotelOverview.vacant.push(item);
+                          }
+                          if (item.status === "fixing required") {
+                            result.hotelOverview.maintenance.push(item);
+                          }
+                        }
+                      );
+                    }
+                  );
                 }
 
                 if (docSnapRestaurant.exists()) {
@@ -87,15 +91,15 @@ export function handleRoomStaffInformation(
                   result.restaurantOverview.reserved = reservation;
                   result.restaurantOverview.status = live.tablesData.status;
 
-                  live.tables.forEach((item: any) => {
-                    if (item.diningDetails.status === "occupied") {
+                  live.tables?.forEach((item: any) => {
+                    if (item.diningDetails?.status === "occupied") {
                       result.restaurantOverview.occupied.push(item);
                     }
                   });
 
-                  Object.keys(live.tablesData.tableDetails).forEach(
+                  Object.keys(live.tablesData.tableDetails)?.forEach(
                     (tableType) => {
-                      live.tablesData.tableDetails[tableType].forEach(
+                      live.tablesData.tableDetails[tableType]?.forEach(
                         (item: any) => {
                           if (item.status === "available") {
                             result.restaurantOverview.available.push(item);

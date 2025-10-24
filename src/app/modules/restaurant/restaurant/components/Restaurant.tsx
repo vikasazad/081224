@@ -1,32 +1,192 @@
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Trash2, X, Check } from "lucide-react";
+import { PlusCircle, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import MenuItems from "./MenuItems";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { deleteMenuCategories } from "../../utils/restaurantDataApi";
 
 export default function Restaurant({ data }: { data: any }) {
   const [menuFlag, setMenuFlag] = useState<boolean>(false);
   const [menuData, setMenuData] = useState<any>();
-  // console.log("first", data);
+  const [isCreatingNew, setIsCreatingNew] = useState<boolean>(false);
+  const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  console.log("first", data);
   const handleClick = (cat: any) => {
     // console.log("kjzdklzs", cat);
     setMenuData(cat);
+    setIsCreatingNew(false);
     setMenuFlag(true);
+  };
+
+  const handleAddNewCategory = () => {
+    // Create empty category structure for new category
+    const newCategoryData = {
+      name: "",
+      categoryLogo: null,
+      menuItems: [
+        {
+          name: "",
+          description: "",
+          cuisineName: "",
+          categoryName: "",
+          position: "",
+          id: "",
+          nature: "Veg",
+          portion: "Half",
+          price: { Half: "" },
+          discountType: "",
+          discountAmount: "",
+          images: [],
+          available: true,
+          tags: [],
+        },
+      ],
+    };
+    setMenuData(newCategoryData);
+    setIsCreatingNew(true);
+    setMenuFlag(true);
+  };
+
+  const handleBackToCategories = () => {
+    setMenuFlag(false);
+    setMenuData(null);
+    setIsCreatingNew(false);
+  };
+
+  const handleDeleteModeToggle = () => {
+    setIsDeleteMode(!isDeleteMode);
+    setSelectedCategories([]);
+  };
+
+  const handleCategorySelection = (categoryName: string, checked: boolean) => {
+    if (checked) {
+      setSelectedCategories([...selectedCategories, categoryName]);
+    } else {
+      setSelectedCategories(
+        selectedCategories.filter((name) => name !== categoryName)
+      );
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (selectedCategories.length === 0) return;
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const success = await deleteMenuCategories(selectedCategories);
+      if (success) {
+        // Refresh the page or update the data
+        window.location.reload();
+      } else {
+        console.error("Failed to delete categories");
+      }
+    } catch (error) {
+      console.error("Error deleting categories:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+      setIsDeleteMode(false);
+      setSelectedCategories([]);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
   };
   return (
     <div className="container px-8">
       {!menuFlag && (
         <>
-          <h1 className="text-3xl font-bold mb-6">Menu Categories</h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold mb-6">Menu Categories</h1>
+            <div className="flex space-x-4">
+              {!isDeleteMode ? (
+                <>
+                  <Button
+                    variant="outline"
+                    className="flex items-center"
+                    onClick={handleDeleteModeToggle}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="flex items-center"
+                    onClick={handleAddNewCategory}
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    className="flex items-center"
+                    onClick={handleDeleteModeToggle}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex items-center"
+                    onClick={handleDeleteClick}
+                    disabled={selectedCategories.length === 0}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete ({selectedCategories.length})
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {data.categories.map((category: any, index: number) => (
               <Card
                 key={index}
-                className="overflow-hidden hover:shadow-lg transition-shadow duration-300"
-                onClick={() => handleClick(category)}
+                className={`overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer relative ${
+                  isDeleteMode && selectedCategories.includes(category.name)
+                    ? "ring-2 ring-red-500"
+                    : ""
+                }`}
+                onClick={() => !isDeleteMode && handleClick(category)}
               >
+                {isDeleteMode && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <Checkbox
+                      checked={selectedCategories.includes(category.name)}
+                      onCheckedChange={(checked) =>
+                        handleCategorySelection(
+                          category.name,
+                          checked as boolean
+                        )
+                      }
+                      className="bg-white border-2 border-gray-300"
+                    />
+                  </div>
+                )}
                 <CardContent className="p-4">
                   <div className="aspect-square relative mb-2">
                     <Image
@@ -54,27 +214,51 @@ export default function Restaurant({ data }: { data: any }) {
               </Card>
             ))}
           </div>
-          <div className="mt-6 flex justify-end space-x-4 pb-8">
-            <Button variant="outline" className="flex items-center">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-            <Button variant="outline" className="flex items-center">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add
-            </Button>
-            <Button variant="outline" className="flex items-center">
-              <X className="mr-2 h-4 w-4" />
-              Cancel
-            </Button>
-            <Button variant="default" className="flex items-center">
-              <Check className="mr-2 h-4 w-4" />
-              Save
-            </Button>
-          </div>
         </>
       )}
-      {menuFlag && <MenuItems data={menuData} />}
+      {menuFlag && (
+        <>
+          <MenuItems
+            data={menuData}
+            isCreatingNew={isCreatingNew}
+            onBack={handleBackToCategories}
+          />
+        </>
+      )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Categories</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              {selectedCategories.length === 1
+                ? `the "${selectedCategories[0]}" category`
+                : `these ${selectedCategories.length} categories`}
+              ? This action cannot be undone and will permanently remove{" "}
+              {selectedCategories.length === 1
+                ? "the category"
+                : "all selected categories"}{" "}
+              and their menu items.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={handleCancelDelete}
+              disabled={isDeleting}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

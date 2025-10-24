@@ -3,20 +3,18 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import DashboardOverview from "@/components/dashboard-overview";
 import { setupRealtimeDashboard } from "../utils/overviewApi";
-import { useSession } from "next-auth/react";
 
 const Overview = () => {
   const [info, setInfo] = useState<any>(null);
-  const { data: session } = useSession();
 
   useEffect(() => {
     let cleanup: (() => void) | undefined;
-
-    if (session?.user?.email) {
+    const userEmail = localStorage.getItem("userEmail");
+    if (userEmail) {
       // Setup real-time listeners
-      cleanup = setupRealtimeDashboard(session.user.email, (dashboardData) => {
+      cleanup = setupRealtimeDashboard(userEmail, (dashboardData) => {
         setInfo({
-          user: session.user,
+          user: userEmail,
           data: dashboardData.data,
           table: dashboardData.table,
         });
@@ -29,7 +27,7 @@ const Overview = () => {
         cleanup();
       }
     };
-  }, [session]);
+  }, []);
 
   return (
     <div>

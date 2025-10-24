@@ -31,7 +31,6 @@ const QR = ({ data, user }: any) => {
           email: user,
           tableNo,
           tag: "restaurant",
-          tax: { gstPercentage: "" },
         };
         const token = await new SignJWT(payload)
           .setProtectedHeader({ alg: "HS256" })

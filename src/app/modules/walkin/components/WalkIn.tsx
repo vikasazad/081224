@@ -153,8 +153,8 @@ const WalkIn = () => {
     paymentMode: "cash",
     numberOfGuests: "2",
     numberOfRooms: "1",
-    roomNo: room?.roomNo || "",
-    price: room?.price || "",
+    roomNo: room.roomNo || "",
+    price: room.price || "",
     subtotal: 0,
     nights: 0,
     totalPrice: 0,
@@ -299,12 +299,10 @@ const WalkIn = () => {
         let calculatedDiscount = 0;
 
         if (couponResult.type === "percentage") {
-          const percentageAmount = parseFloat(
-            couponResult.amount.replace("%", "")
-          );
+          const percentageAmount = parseFloat(couponResult.amount);
           calculatedDiscount = baseTotal * (percentageAmount / 100);
         } else {
-          calculatedDiscount = couponResult.discount || 0;
+          calculatedDiscount = couponResult.amount || 0;
         }
 
         setDiscount(calculatedDiscount);
@@ -386,6 +384,7 @@ const WalkIn = () => {
           type: coupon?.type || "",
           amount: coupon?.amount || "",
           code: coupon?.code || "",
+          discount: discount || 0,
         },
         priceAfterDiscount: coupon?.type ? guestDetails?.subtotal : "",
       };

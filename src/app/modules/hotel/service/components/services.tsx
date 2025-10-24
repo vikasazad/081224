@@ -32,7 +32,7 @@ import Tours from "./tours";
 // import Business from "./business";
 
 const Service = ({ data }: { data: any }) => {
-  console.log("DATA", data);
+  // console.log("DATA", data);
 
   const [serviceData, setServiceData] = useState<any>(true);
   const [categoryFlag, setCategoryFlag] = useState<boolean>(false);

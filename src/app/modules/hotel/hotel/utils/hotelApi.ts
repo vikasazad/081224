@@ -60,22 +60,16 @@ export const convertToWebP = (file: File): Promise<File> => {
 };
 
 // Upload images to Firebase Storage
-export const uploadImageToFirebase = async (
-  file: File,
-  fileId: string,
-  categoryName: string
-): Promise<string> => {
+export const uploadImageToFirebase = async (file: File, path: string) => {
   try {
     const webpFile = await convertToWebP(file);
-    const storageRef = ref(
-      storage,
-      `${categoryName}/${fileId}_${webpFile.name}`
-    );
+    const storageRef = ref(storage, `${path}_${webpFile.name}`);
     const snapshot = await uploadBytes(storageRef, webpFile);
     const downloadURL = await getDownloadURL(snapshot.ref);
     return downloadURL;
   } catch (error) {
     console.error("Error uploading image:", error);
-    throw new Error("Image upload failed");
+    // throw new Error("Image upload failed");
+    return false;
   }
 };

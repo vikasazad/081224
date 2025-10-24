@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import Occupied from "./occupied";
 import Reserved from "./reserved";
 import Available from "./available";
@@ -48,35 +47,29 @@ export default function Tables({
         </Button>
       </div>
 
-      <Card className="w-full mx-2">
-        <CardContent className="p-4">
-          <div className="w-full bg-white rounded-lg">
-            {!data ? (
-              <div className="flex justify-center items-center h-full">
-                <span className="text-gray-500 text-sm">
-                  Loading..............
-                </span>
-              </div>
-            ) : (
-              <>
-                {statusFilter === "occupied" && (
-                  <Occupied
-                    data={table.occupied}
-                    status={table.status}
-                    businessInfo={businessInfo}
-                  />
-                )}
-                {statusFilter === "reserved" && (
-                  <Reserved data={table.reserved} status={table.status} />
-                )}
-                {statusFilter === "available" && (
-                  <Available data={table.available} status={table.status} />
-                )}
-              </>
-            )}
+      <div className="px-1">
+        {!data ? (
+          <div className="flex justify-center items-center h-full">
+            <span className="text-gray-500 text-sm">Loading..............</span>
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <>
+            {statusFilter === "occupied" && (
+              <Occupied
+                data={table.occupied}
+                status={table.status}
+                businessInfo={businessInfo}
+              />
+            )}
+            {statusFilter === "reserved" && (
+              <Reserved data={table.reserved} status={table.status} />
+            )}
+            {statusFilter === "available" && (
+              <Available data={table.available} status={table.status} />
+            )}
+          </>
+        )}
+      </div>
     </>
   );
 }

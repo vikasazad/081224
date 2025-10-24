@@ -27,6 +27,15 @@ export interface Order {
   attendantContact?: string;
 }
 
+export interface KitchenTimerConfig {
+  waitingAlertMinutes: number;
+  totalPreparationMinutes: number;
+  deliveryReadinessMinutes: number;
+  onTimeThresholdMinutes: number;
+  delayedThresholdMinutes: number;
+  escalationTimeoutMinutes: number;
+}
+
 // Menu item interface
 export interface MenuItem {
   id: string;

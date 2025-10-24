@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 
 export default function RecentTransactions({ data }: any) {
-  console.log(data);
+  // console.log(data);
   const router = useRouter();
   const [items, setItems] = React.useState<any[]>(data?.recentTransactions);
   const [searchQuery, setSearchQuery] = React.useState("");

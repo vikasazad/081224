@@ -7,10 +7,12 @@ import { handleRoomStaffInformation } from "../modules/staff/utils/clientside";
 import { useTokenManager } from "@/hooks/useTokenManager";
 import Delivery from "../modules/staff/delivery/components/delivery";
 import Takeaway from "../modules/staff/takeaway/components/takeaway";
-import { Clock, Truck, MapPin, UtensilsCrossed } from "lucide-react";
+import { Truck, MapPin, UtensilsCrossed } from "lucide-react";
+import Image from "next/image";
 
 const Page = () => {
   const [staffData, setStaffData] = useState<any>({});
+  const [activeTab, setActiveTab] = useState("room");
 
   // Use the token manager hook with custom options
   const { getTokenInfo, isReady } = useTokenManager({
@@ -65,7 +67,11 @@ const Page = () => {
         {!staffData ? (
           <p className="px-auto">Loading........</p>
         ) : (
-          <Tabs defaultValue="room" className="space-y-4 mx-8">
+          <Tabs
+            defaultValue="room"
+            className="space-y-4 mx-8"
+            onValueChange={setActiveTab}
+          >
             <TabsList className="w-full h-10 grid  grid-cols-4">
               <TabsTrigger value="room" className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
@@ -80,7 +86,17 @@ const Page = () => {
                 <span className="hidden sm:inline">Delivery</span>
               </TabsTrigger>
               <TabsTrigger value="takeaway" className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
+                <Image
+                  src={
+                    activeTab === "takeaway"
+                      ? "/takeaway.svg"
+                      : "/GTakeaway.svg"
+                  }
+                  alt="Takeaway"
+                  width={15}
+                  height={10}
+                  className="bg-slate-50"
+                />
                 <span className="hidden sm:inline">Takeaway</span>
               </TabsTrigger>
             </TabsList>
