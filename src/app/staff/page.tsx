@@ -113,7 +113,7 @@ const Page = () => {
               />
             </TabsContent>
             <TabsContent value="delivery" className="space-y-4">
-              <Delivery data={staffData.deliveryOverview} />
+              <Delivery data={staffData?.deliveryOverview} />
             </TabsContent>
             <TabsContent value="takeaway" className="space-y-4">
               <Takeaway data={staffData.takeawayOverview} />

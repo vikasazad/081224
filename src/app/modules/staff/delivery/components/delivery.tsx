@@ -340,7 +340,7 @@ export default function Delivery({ data }: { data: any }) {
   console.log("deliveryData", deliveryData);
   return (
     <div className="space-y-4 mb-10">
-      {Object.values(deliveryData).length > 0 ? (
+      {deliveryData && Object.values(deliveryData).length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.values(deliveryData).map((order: any) =>
             Object.values(order).map((item: any, main) => {

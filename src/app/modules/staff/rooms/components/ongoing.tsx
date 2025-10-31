@@ -1570,7 +1570,30 @@ export default function Ongoing({
                                       </div>
                                     ))}
                                   </div>
+
                                   <Separator />
+                                  {order.payment.discount.length > 0 &&
+                                    order.payment.discount[0].discount > 0 &&
+                                    order.payment.discount.map(
+                                      (discount: any, index: number) => (
+                                        <div
+                                          className="flex justify-between items-center"
+                                          key={index}
+                                        >
+                                          <div>
+                                            <span className="font-medium">
+                                              Discount{" "}
+                                              <Badge variant="outline">
+                                                {discount.code}
+                                              </Badge>
+                                            </span>
+                                          </div>
+                                          <span className="text-green-600 font-semibold">
+                                            - ₹{discount.discount}
+                                          </span>
+                                        </div>
+                                      )
+                                    )}
                                   <div className="flex justify-between items-center">
                                     <div>
                                       <span className="font-medium">

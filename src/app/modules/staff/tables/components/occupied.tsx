@@ -760,7 +760,7 @@ export default function Occupied({
         );
         if (downloadURL) {
           await sendFinalMessage(
-            `+91${finalSubmitData?.item?.diningDetails?.customer?.phone}`,
+            finalSubmitData?.item?.diningDetails?.customer?.phone,
             [finalSubmitData?.item?.diningDetails?.customer?.name || "User"],
             downloadURL
           );

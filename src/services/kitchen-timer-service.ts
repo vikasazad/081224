@@ -26,12 +26,12 @@ class KitchenTimerService {
   private escalatedOrders = new Set<string>();
   private deliveryReadinessTriggered = new Set<string>();
   private kitchenTimerConfig: KitchenTimerConfig = {
-    waitingAlertMinutes: 2, // Alert after 2 minutes if order hasn't been started
-    totalPreparationMinutes: 5, // Total time for order preparation
-    deliveryReadinessMinutes: 4, // Minutes remaining when to send delivery readiness request
+    waitingAlertMinutes: 10, // Alert after 2 minutes if order hasn't been started
+    totalPreparationMinutes: 20, // Total time for order preparation
+    deliveryReadinessMinutes: 10, // Minutes remaining when to send delivery readiness request
     onTimeThresholdMinutes: 30, // Orders completed within this time are "on time"
     delayedThresholdMinutes: 30, // Orders taking longer than this are "delayed"
-    escalationTimeoutMinutes: 10, // Total time before escalating to manager
+    escalationTimeoutMinutes: 40, // Total time before escalating to manager
   };
 
   private constructor() {}

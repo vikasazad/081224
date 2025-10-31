@@ -292,17 +292,17 @@ const WalkIn = () => {
     if (couponInput.trim()) {
       const couponCode = couponInput.trim().toUpperCase();
       const couponResult = await findCoupon(couponCode);
-
+      console.log("couponResult", couponResult);
       if (couponResult) {
         setCoupon(couponResult);
         const baseTotal = guestDetails.subtotal || 0;
         let calculatedDiscount = 0;
 
         if (couponResult.type === "percentage") {
-          const percentageAmount = parseFloat(couponResult.amount);
+          const percentageAmount = parseFloat(couponResult.discount);
           calculatedDiscount = baseTotal * (percentageAmount / 100);
         } else {
-          calculatedDiscount = couponResult.amount || 0;
+          calculatedDiscount = couponResult.discount || 0;
         }
 
         setDiscount(calculatedDiscount);
