@@ -35,8 +35,7 @@ const ConciergeQR = ({ data, user }: any) => {
           email: user,
           roomNo: tableNo,
           phone: "",
-          tag: "concierge",
-          tax: { gstPercentage: "18" },
+          tag: "hotel",
         };
         const token = await new SignJWT(payload)
           .setProtectedHeader({ alg: "HS256" })

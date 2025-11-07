@@ -333,6 +333,7 @@ const WalkIn = () => {
 
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("handleSubmit");
     e.preventDefault();
     if (validateForm()) {
       setIsLoading(true);
@@ -359,6 +360,7 @@ const WalkIn = () => {
 
   // Handle OTP verification
   const handleOtpSubmit = async () => {
+    console.log("handleOtpSubmit");
     setIsLoading(true);
     try {
       const phoneVerified = await verifyOtp(verificationId, otp);
@@ -405,6 +407,7 @@ const WalkIn = () => {
 
   // Handle resend OTP
   const handleResendOtp = async () => {
+    console.log("handleResendOtp");
     try {
       const phoneOtpRes: any = await resendOtp(fNumber);
       setVerificationId(phoneOtpRes.verificationId);
@@ -825,8 +828,20 @@ const WalkIn = () => {
                 <Input
                   id="phone"
                   value={guestDetails.phone}
-                  onChange={(e) => handleFormChange("phone", e.target.value)}
+                  onChange={(e) => {
+                    if (/^\d{0,10}$/.test(e.target.value)) {
+                      handleFormChange("phone", e.target.value);
+                    }
+                  }}
                   className="mt-2"
+                  maxLength={10}
+                  minLength={10}
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                  type="tel"
+                  required
+                  aria-invalid={false}
+                  aria-describedby="phone-error"
                 />
                 {errors.phone && (
                   <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
@@ -912,6 +927,7 @@ const WalkIn = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <Button
+                      type="button"
                       onClick={handleOtpSubmit}
                       disabled={isLoading}
                       className="flex-1 mr-2"
@@ -922,6 +938,7 @@ const WalkIn = () => {
                       Verify OTP
                     </Button>
                     <Button
+                      type="button"
                       variant="outline"
                       onClick={handleResendOtp}
                       disabled={!canResend || isLoading}

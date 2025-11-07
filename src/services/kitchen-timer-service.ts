@@ -26,7 +26,7 @@ class KitchenTimerService {
   private escalatedOrders = new Set<string>();
   private deliveryReadinessTriggered = new Set<string>();
   private kitchenTimerConfig: KitchenTimerConfig = {
-    waitingAlertMinutes: 10, // Alert after 2 minutes if order hasn't been started
+    waitingAlertMinutes: 10, // Alert after 10 minutes if order hasn't been started
     totalPreparationMinutes: 20, // Total time for order preparation
     deliveryReadinessMinutes: 10, // Minutes remaining when to send delivery readiness request
     onTimeThresholdMinutes: 30, // Orders completed within this time are "on time"

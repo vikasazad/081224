@@ -1449,7 +1449,7 @@ export default function Ongoing({
                                               variant="outline"
                                               className="mx-2"
                                             >
-                                              {bookingDetails.payment.mode}
+                                              {bookingDetails.payment.mode?.toUpperCase()}
                                             </Badge>
                                           </>
                                         ) : (
@@ -1631,7 +1631,7 @@ export default function Ongoing({
                                             variant="outline"
                                             className="mx-2"
                                           >
-                                            {order.payment.mode}
+                                            {order.payment.mode?.toUpperCase()}
                                           </Badge>
                                         </>
                                       ) : (
@@ -1801,7 +1801,7 @@ export default function Ongoing({
                                             variant="outline"
                                             className="mx-2"
                                           >
-                                            {service.payment.mode}
+                                            {service.payment.mode?.toUpperCase()}
                                           </Badge>
                                         </>
                                       ) : (
@@ -1938,6 +1938,12 @@ export default function Ongoing({
                                     <p className="text-sm text-slate-600">
                                       {issue.description}
                                     </p>
+                                    {issue.imageUrl &&
+                                      issue.imageUrl.trim().length > 0 && (
+                                        <p className="text-sm text-slate-600">
+                                          {issue.imageUrl}
+                                        </p>
+                                      )}
                                   </div>
                                 </div>
                               </div>

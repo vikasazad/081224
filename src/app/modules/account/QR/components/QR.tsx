@@ -30,6 +30,7 @@ const QR = ({ data, user }: any) => {
         const payload = {
           email: user,
           tableNo,
+          phone: "",
           tag: "restaurant",
         };
         const token = await new SignJWT(payload)
