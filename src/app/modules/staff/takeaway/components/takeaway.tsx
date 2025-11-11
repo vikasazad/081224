@@ -12,18 +12,26 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { Separator } from "@/components/ui/separator";
 
-import { User, Copy } from "lucide-react";
+import { User, Copy, IndianRupee } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
 // import {
 //   setOfflineRoom,
 //   updateOrdersForAttendant,
 // } from "../../utils/staffData";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { completeTakeawayOrder } from "../../utils/staffData";
+import { Icons } from "@/components/icons";
 
 // import { getOnlineStaffFromFirestore } from "../../tables/utils/tableApi";
 
 export default function Takeaway({ data }: { data: any }) {
+  console.log("DATA", data);
   const [deliveryData, setDeliveryData] = useState<any>([]);
+  const [isloading, setIsloading] = useState<{ id: string; loading: boolean }>({
+    id: "",
+    loading: false,
+  });
   // const [addItems, setAddItems] = useState<any>([]);
 
   // const [availableAttendant, setavailableAttendant] = useState<any>([]);
@@ -45,6 +53,17 @@ export default function Takeaway({ data }: { data: any }) {
     console.log("DATA", data);
     setDeliveryData(data);
   }, [data]);
+
+  const handleFinalSubmit = async (item: any, main: number) => {
+    console.log("clicked", item, main);
+    setIsloading({ id: item.orderId, loading: true });
+    try {
+      console.log("item", item);
+      await completeTakeawayOrder(item.orderId, item.customer.phone);
+    } catch (error) {
+      console.error("Error in handleFinalSubmit: ", error);
+    }
+  };
 
   // useEffect(() => {
   //   getRoomData().then((data) => {
@@ -452,7 +471,7 @@ export default function Takeaway({ data }: { data: any }) {
                                 <User className="h-4 w-4 text-gray-500" />
 
                                 <p className="text-sm font-medium">
-                                  {item?.customer?.name}
+                                  {item?.customer?.name || "Guest"}
                                 </p>
                                 <span className="text-xs text-gray-500">•</span>
                                 <div className="flex items-center gap-1">
@@ -516,8 +535,12 @@ export default function Takeaway({ data }: { data: any }) {
                                         </span>
                                       </div>
                                     </div>
-                                    <span className="text-green-600 font-semibold">
-                                      ₹{Number(itm.price)}
+                                    <span className="text-green-600 font-semibold flex items-center ">
+                                      <IndianRupee
+                                        className="h-3 w-3"
+                                        strokeWidth={3}
+                                      />
+                                      {Number(itm.price)}
                                     </span>
                                   </div>
                                 ))}
@@ -527,8 +550,12 @@ export default function Takeaway({ data }: { data: any }) {
                                 <div>
                                   <span className="font-medium">Subtotal</span>
                                 </div>
-                                <span className="text-green-600 font-medium">
-                                  ₹{item?.payment?.subtotal}
+                                <span className="text-green-600 font-medium flex items-center">
+                                  <IndianRupee
+                                    className="h-3 w-3"
+                                    strokeWidth={3}
+                                  />
+                                  {item?.payment?.subtotal}
                                 </span>
                               </div>
                               {item?.payment?.gst.gstPercentage && (
@@ -536,8 +563,12 @@ export default function Takeaway({ data }: { data: any }) {
                                   <div>
                                     <span className="font-medium">{`Tax (${item?.payment?.gst.gstPercentage}%)`}</span>
                                   </div>
-                                  <span className="text-green-600 font-medium">
-                                    ₹{item?.payment?.gst.gstAmount}
+                                  <span className="text-green-600 font-medium flex items-center">
+                                    <IndianRupee
+                                      className="h-3 w-3"
+                                      strokeWidth={3}
+                                    />
+                                    {item?.payment?.gst.gstAmount}
                                   </span>
                                 </div>
                               )}
@@ -560,10 +591,30 @@ export default function Takeaway({ data }: { data: any }) {
                                     </Badge>
                                   )}
                                 </div>
-                                <span className="text-green-600 font-semibold">
-                                  ₹{item?.payment.price}
+                                <span className="text-green-600 font-semibold flex items-center">
+                                  <IndianRupee
+                                    className="h-3 w-3"
+                                    strokeWidth={3}
+                                  />
+                                  {item?.payment.price}
                                 </span>
                               </div>
+                            </div>
+                            <div className="float-right py-2">
+                              <Button
+                                className="flex items-center gap-2"
+                                disabled={
+                                  isloading.id === item.orderId &&
+                                  isloading.loading
+                                }
+                                onClick={() => handleFinalSubmit(item, main)}
+                              >
+                                Submit
+                                {isloading.id === item.orderId &&
+                                  isloading.loading && (
+                                    <Icons.spinner className="h-4 w-4 animate-spin" />
+                                  )}
+                              </Button>
                             </div>
                           </div>
                         </AccordionContent>

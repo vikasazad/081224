@@ -328,6 +328,8 @@ export async function handleFlowRequest(
                   ? `${id} - Hotel`
                   : id.startsWith("OR")
                   ? `${id} - Food`
+                  : id.startsWith("RES")
+                  ? `${id} - Food`
                   : id.startsWith("SE")
                   ? `${id} - Service`
                   : id,
@@ -434,10 +436,15 @@ async function handleDataExchange(data: DecryptedFlowData): Promise<any> {
       }
 
       // Check if orderId starts with OR (Food order) or SE (Service)
-      if (orderId.startsWith("OR") || orderId.startsWith("SE")) {
-        const issuesList = orderId.startsWith("OR")
-          ? foodIssues.map((issue) => ({ id: issue, title: issue }))
-          : serviceIssues.map((issue) => ({ id: issue, title: issue }));
+      if (
+        orderId.startsWith("OR") ||
+        orderId.startsWith("SE") ||
+        orderId.startsWith("RES")
+      ) {
+        const issuesList =
+          orderId.startsWith("OR") || orderId.startsWith("RES")
+            ? foodIssues.map((issue) => ({ id: issue, title: issue }))
+            : serviceIssues.map((issue) => ({ id: issue, title: issue }));
 
         return {
           screen: "OTHERISSUES",

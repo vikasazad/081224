@@ -10,6 +10,7 @@ const Overview = () => {
   useEffect(() => {
     let cleanup: (() => void) | undefined;
     const userEmail = localStorage.getItem("userEmail");
+    console.log("userEmail", userEmail);
     if (userEmail) {
       // Setup real-time listeners
       cleanup = setupRealtimeDashboard(userEmail, (dashboardData) => {

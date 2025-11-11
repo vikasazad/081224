@@ -1328,7 +1328,6 @@ export default function Occupied({
                             </Button> */}
                             <Button
                               className="flex items-center gap-2"
-                              size="sm"
                               onClick={() => handleFinalSubmit(item, main)}
                             >
                               Submit

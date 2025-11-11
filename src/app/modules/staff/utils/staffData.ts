@@ -2,7 +2,13 @@
 import { auth } from "@/auth";
 import { db } from "@/config/db/firebase";
 // import { sendNotification } from "@/lib/sendNotification";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  deleteField,
+  arrayUnion,
+  doc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { SignJWT } from "jose";
 import {
   sendStaffAssignmentRequest,
@@ -2137,4 +2143,55 @@ export async function removeDiscount(location: string) {
     console.error("Error removing discount:", error);
     return false;
   }
+}
+
+export async function completeTakeawayOrder(
+  orderId: string,
+  customerPhone: string
+) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  try {
+    const takeawayRef = doc(db, user, "hotel");
+    const takeawayData = await getDoc(takeawayRef);
+    if (takeawayData.exists()) {
+      const data = takeawayData.data()?.takeaway[customerPhone][orderId];
+      const length = Object.keys(
+        takeawayData.data()?.takeaway[customerPhone]
+      ).length;
+
+      await updateDoc(takeawayRef, {
+        [`customers.${customerPhone}.orders`]: arrayUnion({
+          ...data,
+          timeOfFullfilment: new Date().toISOString(),
+          status: "Delivered",
+        }),
+      });
+
+      if (length === 1) {
+        await updateDoc(takeawayRef, {
+          [`takeaway.${customerPhone}`]: deleteField(),
+        });
+      } else {
+        await updateDoc(takeawayRef, {
+          [`takeaway.${customerPhone}.${orderId}`]: deleteField(),
+        });
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error("Error completing takeaway order:", error);
+    return false;
+  }
+
+  // await sendWhatsAppMessageDeliveryCompleted(`+91${customerPhone}`, [
+  //   orderId,
+  //   address,
+  //   "Wah Bhai Wah",
+  // ]);
 }

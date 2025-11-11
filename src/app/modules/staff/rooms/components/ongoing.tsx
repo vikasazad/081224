@@ -2136,14 +2136,12 @@ export default function Ongoing({
                               <Button
                                 variant="outline"
                                 className="flex items-center gap-2"
-                                size="sm"
                                 onClick={() => setChecklistOpen(main)}
                               >
                                 Checkout
                               </Button>
                               <Button
                                 className="flex items-center gap-2"
-                                size="sm"
                                 disabled={
                                   submitFlag[item.bookingDetails.location]
                                     ? false
