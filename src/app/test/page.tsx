@@ -17,7 +17,7 @@ export default function Test() {
       categories: {
         executive: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -34,7 +34,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -49,7 +49,7 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -64,7 +64,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -79,7 +79,7 @@ export default function Test() {
               totalEarnings: 76000,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -94,7 +94,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -109,7 +109,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -124,7 +124,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -141,7 +141,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -161,7 +161,7 @@ export default function Test() {
         },
         deluxe: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -178,7 +178,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -193,7 +193,7 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -208,7 +208,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -223,7 +223,7 @@ export default function Test() {
               totalEarnings: 78000,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -238,7 +238,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -253,7 +253,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -268,7 +268,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -305,7 +305,7 @@ export default function Test() {
         },
         suite: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -322,7 +322,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -337,14 +337,14 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
               totalBookings: 7,
               totalFoodOrders: 0,
               avgStayDuration: 0,
-              totalEarnings: 135000,
+              totalEarnings: 328000,
               totalEarningsFromServices: 0,
               avgPriceOfRooms: 0,
               totalEarningsFromMinibar: 0,
@@ -352,7 +352,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -367,7 +367,7 @@ export default function Test() {
               totalEarnings: 13790,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -382,7 +382,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -392,12 +392,12 @@ export default function Test() {
               avgPrice: 0,
               avgPriceOfServices: 0,
               totalBookings: 7,
-              totalEarnings: 129000,
+              totalEarnings: 311000,
               totalEarningsFromServices: 0,
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -412,7 +412,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -429,7 +429,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -449,7 +449,7 @@ export default function Test() {
         },
         "super suite": {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -466,7 +466,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -481,7 +481,7 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -496,7 +496,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -511,7 +511,7 @@ export default function Test() {
               totalEarnings: 62000,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -526,7 +526,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -541,7 +541,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -556,7 +556,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -573,7 +573,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -597,7 +597,7 @@ export default function Test() {
       categories: {
         "in-house restaurant": {
           weeks: {
-            20: {
+            48: {
               totalEarnings: 0,
               avgDiningDuration: 0,
               totalBookings: 0,
@@ -615,7 +615,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPrice: 0,
               totalIssues: 0,
               avgPricPerOrder: 0,
@@ -631,7 +631,7 @@ export default function Test() {
               totalEarnings: 41000,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               totalBookings: 10,
               totalFoodOrders: 0,
               totalOrdersOnline: 0,
@@ -647,7 +647,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               avgDiningDuration: 0,
               totalBookings: 10,
               avgPrice: 0,
@@ -663,7 +663,7 @@ export default function Test() {
               avgPriceForOrdersDelivery: 0,
               avgPriceForOrdersTakeaway: 0,
             },
-            132: {
+            327: {
               avgPrice: 0,
               totalIssues: 0,
               avgPricPerOrder: 0,
@@ -679,7 +679,7 @@ export default function Test() {
               avgPriceForOrdersDelivery: 0,
               avgPriceForOrdersTakeaway: 0,
             },
-            131: {
+            326: {
               avgDiningDuration: 0,
               totalFoodOrders: 0,
               totalOrdersOnline: 0,
@@ -695,7 +695,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPricPerOrder: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgDiningDuration: 0,
               avgPricPerOrder: 0,
@@ -711,7 +711,7 @@ export default function Test() {
               avgPriceForOrdersTakeaway: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPricPerOrder: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -729,7 +729,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               totalIssues: 0,
               avgPrice: 0,
               totalEarnings: 0,
@@ -750,7 +750,7 @@ export default function Test() {
         },
         restaurant: {
           weeks: {
-            20: {
+            48: {
               totalEarnings: 0,
               avgDiningDuration: 0,
               totalBookings: 10,
@@ -768,7 +768,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPrice: 0,
               totalIssues: 0,
               avgPricPerOrder: 0,
@@ -784,7 +784,7 @@ export default function Test() {
               totalEarnings: 51000,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               totalBookings: 10,
               totalFoodOrders: 0,
               totalOrdersOnline: 0,
@@ -800,7 +800,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               avgDiningDuration: 0,
               totalBookings: 10,
               avgPrice: 0,
@@ -816,7 +816,7 @@ export default function Test() {
               avgPriceForOrdersDelivery: 0,
               avgPriceForOrdersTakeaway: 0,
             },
-            132: {
+            327: {
               avgPrice: 0,
               totalIssues: 0,
               avgPricPerOrder: 0,
@@ -832,7 +832,7 @@ export default function Test() {
               avgPriceForOrdersDelivery: 0,
               avgPriceForOrdersTakeaway: 0,
             },
-            131: {
+            326: {
               avgDiningDuration: 0,
               totalFoodOrders: 0,
               totalOrdersOnline: 0,
@@ -848,7 +848,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPricPerOrder: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgDiningDuration: 0,
               avgPricPerOrder: 0,
@@ -864,7 +864,7 @@ export default function Test() {
               avgPriceForOrdersTakeaway: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPricPerOrder: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -882,7 +882,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               totalIssues: 0,
               avgPrice: 0,
               totalEarnings: 0,
@@ -907,7 +907,7 @@ export default function Test() {
       categories: {
         spa: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -924,7 +924,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -935,11 +935,11 @@ export default function Test() {
               totalBookings: 5,
               totalFoodOrders: 0,
               avgStayDuration: 0,
-              totalEarnings: 31000,
+              totalEarnings: 31100,
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -954,7 +954,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -969,7 +969,7 @@ export default function Test() {
               totalEarnings: 28000,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -984,7 +984,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -999,7 +999,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1014,7 +1014,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -1026,12 +1026,12 @@ export default function Test() {
               totalServiceRequests: 0,
               avgStayDuration: 0,
               totalEarningsFromMinibar: 0,
-              totalEarnings: 31000,
+              totalEarnings: 31100,
               avgPriceOfServices: 0,
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -1051,7 +1051,7 @@ export default function Test() {
         },
         gym: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -1068,7 +1068,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -1083,7 +1083,7 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -1098,7 +1098,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1113,7 +1113,7 @@ export default function Test() {
               totalEarnings: 22000,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -1128,7 +1128,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -1143,7 +1143,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1158,7 +1158,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -1175,7 +1175,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -1195,7 +1195,7 @@ export default function Test() {
         },
         laundry: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -1212,7 +1212,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -1227,7 +1227,7 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -1242,7 +1242,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1257,7 +1257,7 @@ export default function Test() {
               totalEarnings: 18000,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -1272,7 +1272,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -1287,7 +1287,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1302,7 +1302,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -1319,7 +1319,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -1339,7 +1339,7 @@ export default function Test() {
         },
         pool: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -1356,7 +1356,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -1371,7 +1371,7 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -1386,7 +1386,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1401,7 +1401,7 @@ export default function Test() {
               totalEarnings: 32000,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -1416,7 +1416,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -1431,7 +1431,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1446,7 +1446,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -1463,7 +1463,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -1487,7 +1487,7 @@ export default function Test() {
       categories: {
         rooms: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -1504,7 +1504,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -1519,7 +1519,7 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -1534,7 +1534,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1549,7 +1549,7 @@ export default function Test() {
               totalEarnings: 62,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -1560,11 +1560,11 @@ export default function Test() {
               avgPriceOfRooms: 0,
               totalBookings: 2,
               avgPriceOfFood: 0,
-              totalEarnings: 46,
+              totalEarnings: 48,
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -1579,7 +1579,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1594,7 +1594,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -1611,7 +1611,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -1631,7 +1631,7 @@ export default function Test() {
         },
         Food: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -1648,7 +1648,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -1663,7 +1663,7 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -1678,7 +1678,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1693,7 +1693,7 @@ export default function Test() {
               totalEarnings: 13,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -1708,7 +1708,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -1723,7 +1723,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1738,7 +1738,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -1755,7 +1755,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -1775,7 +1775,7 @@ export default function Test() {
         },
         services: {
           weeks: {
-            20: {
+            48: {
               avgPriceOfServices: 0,
               totalEarnings: 0,
               avgStayDuration: 0,
@@ -1792,7 +1792,7 @@ export default function Test() {
             },
           },
           days: {
-            135: {
+            330: {
               avgPriceOfServices: 0,
               avgPrice: 0,
               totalEarningsFromServices: 0,
@@ -1807,7 +1807,7 @@ export default function Test() {
               totalServiceRequests: 0,
               avgPriceOfFood: 0,
             },
-            134: {
+            329: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPriceOfServices: 0,
@@ -1822,7 +1822,7 @@ export default function Test() {
               totalIssues: 0,
               avgPrice: 0,
             },
-            133: {
+            328: {
               totalEarningsFromServices: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1837,7 +1837,7 @@ export default function Test() {
               totalEarnings: 7,
               totalFoodOrders: 0,
             },
-            132: {
+            327: {
               avgPriceOfMinibar: 0,
               totalServiceRequests: 0,
               avgPrice: 0,
@@ -1852,7 +1852,7 @@ export default function Test() {
               avgStayDuration: 0,
               totalFoodOrders: 0,
             },
-            131: {
+            326: {
               totalServiceRequests: 0,
               avgPriceOfMinibar: 0,
               avgStayDuration: 0,
@@ -1867,7 +1867,7 @@ export default function Test() {
               avgPriceOfFood: 0,
               avgPriceOfRooms: 0,
             },
-            130: {
+            325: {
               avgPriceOfFood: 0,
               avgStayDuration: 0,
               avgPriceOfServices: 0,
@@ -1882,7 +1882,7 @@ export default function Test() {
               totalFoodOrders: 0,
               avgPrice: 0,
             },
-            129: {
+            324: {
               avgPriceOfRooms: 0,
               totalIssues: 0,
               totalFoodOrders: 0,
@@ -1899,7 +1899,7 @@ export default function Test() {
             },
           },
           months: {
-            3: {
+            11: {
               avgPriceOfServices: 0,
               avgPriceOfMinibar: 0,
               totalIssues: 0,
@@ -1925,7 +1925,7 @@ export default function Test() {
 
   const handleUser = async () => {
     // const variables = [
-    //   "0143161875/1", // Reservation No
+    //   "0143281875/1", // Reservation No
     //   "301", // Room No
     //   "10 March 2025", // Check-in
     //   "15 March 2025", // Check-out

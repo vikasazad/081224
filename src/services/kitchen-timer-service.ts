@@ -21,6 +21,7 @@ class KitchenTimerService {
   private static instance: KitchenTimerService;
   private intervalRef: NodeJS.Timeout | null = null;
   private unsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
   private orders: any = {};
   private alertedOrders = new Set<string>();
   private escalatedOrders = new Set<string>();
@@ -34,13 +35,70 @@ class KitchenTimerService {
     escalationTimeoutMinutes: 40, // Total time before escalating to manager
   };
 
-  private constructor() {}
+  private constructor() {
+    this.initializeConfig();
+  }
 
   static getInstance(): KitchenTimerService {
     if (!KitchenTimerService.instance) {
       KitchenTimerService.instance = new KitchenTimerService();
     }
     return KitchenTimerService.instance;
+  }
+
+  private initializeConfig() {
+    console.log("Initializing Kitchen Timer Config from database...");
+
+    // Set up Firestore listener for real-time config updates
+    const infoRef = doc(db, "vikumar.azad@gmail.com", "info");
+    this.configUnsubscribe = onSnapshot(
+      infoRef,
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          const dbConfig = data?.business?.kitchenTimerConfig;
+
+          if (dbConfig) {
+            // Merge DB config with defaults (in case some fields are missing)
+            this.kitchenTimerConfig = {
+              waitingAlertMinutes:
+                dbConfig.waitingAlertMinutes ??
+                this.kitchenTimerConfig.waitingAlertMinutes,
+              totalPreparationMinutes:
+                dbConfig.totalPreparationMinutes ??
+                this.kitchenTimerConfig.totalPreparationMinutes,
+              deliveryReadinessMinutes:
+                dbConfig.deliveryReadinessMinutes ??
+                this.kitchenTimerConfig.deliveryReadinessMinutes,
+              onTimeThresholdMinutes:
+                dbConfig.onTimeThresholdMinutes ??
+                this.kitchenTimerConfig.onTimeThresholdMinutes,
+              delayedThresholdMinutes:
+                dbConfig.delayedThresholdMinutes ??
+                this.kitchenTimerConfig.delayedThresholdMinutes,
+              escalationTimeoutMinutes:
+                dbConfig.escalationTimeoutMinutes ??
+                this.kitchenTimerConfig.escalationTimeoutMinutes,
+            };
+            console.log(
+              "Kitchen Timer Config updated from database:",
+              this.kitchenTimerConfig
+            );
+          } else {
+            console.log(
+              "No kitchenTimerConfig found in database, using defaults"
+            );
+          }
+        }
+      },
+      (error) => {
+        console.error(
+          "Kitchen Timer Service: Error getting config updates:",
+          error
+        );
+        console.log("Continuing with default configuration");
+      }
+    );
   }
 
   getConfig(): KitchenTimerConfig {
@@ -92,6 +150,10 @@ class KitchenTimerService {
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
+    }
+    if (this.configUnsubscribe) {
+      this.configUnsubscribe();
+      this.configUnsubscribe = null;
     }
     console.log("Kitchen Timer Service stopped");
   }

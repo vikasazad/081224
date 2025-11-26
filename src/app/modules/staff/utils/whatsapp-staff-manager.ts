@@ -27,6 +27,20 @@ interface AssignmentRequest {
 /**
  * Helper function to find business emails that have a staff member with given phone
  */
+
+async function getBusinessSettings(phoneNumber: string): Promise<any> {
+  const id = await findBusinessWithStaff(phoneNumber);
+  if (!id) {
+    return false;
+  }
+  const docRef = doc(db, id[0], "info");
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    return data.business.whatsappTimeout;
+  }
+  return null;
+}
 async function findBusinessWithStaff(_phoneNumber: string): Promise<string[]> {
   console.log("findBusinessWithStaff", _phoneNumber);
   // This is a simplified implementation
@@ -407,9 +421,13 @@ export async function sendStaffAssignmentRequest(
       console.log("initial pendingAssignments stored in database");
 
       // Set timeout using configurable duration
+      const timeout = await getBusinessSettings(staffContact);
+      if (!timeout) {
+        return { success: false, message: "Business settings not found" };
+      }
       setTimeout(() => {
         handleAssignmentTimeout(orderId);
-      }, 5 * 60 * 1000);
+      }, timeout * 60 * 1000);
 
       return { success: true, messageId };
     }

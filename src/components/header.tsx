@@ -26,9 +26,9 @@ const baseNavItems = [
   { href: "/staff", label: "Staff" },
   { href: "/hotel", label: "Hotel" },
   { href: "/restaurant", label: "Restaurant" },
-  { href: "/account", label: "Account" },
   { href: "/inventory", label: "Inventory" },
   { href: "/kitchen", label: "Kitchen" },
+  { href: "/account", label: "Account" },
   { href: "/social", label: "Social" },
 ];
 

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Facebook, Instagram, Twitter, Youtube, Globe } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
 
 interface PlatformFilterProps {
   value: string;
@@ -15,6 +16,7 @@ export function PlatformFilter({ value, onValueChange }: PlatformFilterProps) {
     { id: "facebook", name: "Facebook", icon: Facebook },
     { id: "twitter", name: "Twitter", icon: Twitter },
     { id: "youtube", name: "YouTube", icon: Youtube },
+    { id: "googlemaps", name: "Google Maps", icon: FcGoogle },
   ];
 
   return (

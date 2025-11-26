@@ -36,7 +36,7 @@ const DashboardOverview = ({
   data: any;
   table: any;
 }) => {
-  // console.log("YABLE", table);
+  // console.log("YABLE", user);
   const [selectedChart, setSelectedChart] = useState("rooms");
   const [stepSize, setStepSize] = useState<any>();
   const [chartData, setChartData] = useState<any[]>([]);
@@ -150,7 +150,7 @@ const DashboardOverview = ({
   };
 
   const handleTypeClicks = async (category: string) => {
-    const data = await get7daysData(user.email, "analytics", category);
+    const data = await get7daysData(user, "analytics", category);
     // console.log(data);
     setSelectedChart(category);
     const selectedCategoryData = data[category];

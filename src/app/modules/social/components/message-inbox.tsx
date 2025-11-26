@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -36,6 +36,7 @@ import {
 import { format } from "date-fns";
 import { PlatformFilter } from "./platform-filter";
 import { QuickReplyTemplates } from "./quick-reply-templates";
+import { FcGoogle } from "react-icons/fc";
 
 export function MessageInbox() {
   const [platform, setPlatform] = useState<string>("all");
@@ -43,9 +44,7 @@ export function MessageInbox() {
   const [replyText, setReplyText] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-
-  // This would be fetched from your API based on the filters
-  const messages = [
+  const [messages, setMessages] = useState([
     {
       id: "1",
       platform: "instagram",
@@ -116,7 +115,100 @@ export function MessageInbox() {
       date: "2023-07-11T16:30:00Z",
       status: "replied",
     },
-  ];
+    {
+      id: "6",
+      platform: "googlemaps",
+      type: "review",
+      user: {
+        name: "John Doe",
+        username: "johndoe",
+        avatar: "/placeholder.svg?height=40&width=40",
+      },
+      content:
+        "5 stars! The hotel room was beautiful and the staff was incredibly helpful. Will definitely recommend to friends! Will definitely recommend to friends!",
+      date: "2023-07-09T16:30:00Z",
+      status: "unread",
+    },
+    {
+      id: "7",
+      platform: "googlemaps",
+      type: "review",
+      user: {
+        name: "Jane Johnson",
+        username: "janejane",
+        avatar: "/placeholder.svg?height=40&width=40",
+      },
+      content:
+        "4 stars! The hotel room was beautiful and the staff was incredibly helpful. Will definitely recommend to friends!",
+      date: "2023-07-10T16:30:00Z",
+      status: "replied",
+    },
+  ]);
+
+  // Fetch Google Maps reviews on component mount
+  useEffect(() => {
+    const fetchGoogleReviews = async () => {
+      console.log("fetching google reviews");
+      try {
+        const response = await fetch("/api/google-reviews");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.reviews && data.reviews.length > 0) {
+            // Append Google reviews to existing messages
+            console.log("data", data);
+            const formattedReviews: any[] = [];
+
+            data?.reviews?.forEach((review: any) => {
+              const username = review.authorAttribution.displayName
+                .replace(/\s+/g, "")
+                .toLowerCase();
+
+              // Extract unique review ID from the name field
+              // Format: "places/{placeId}/reviews/{reviewId}"
+              const reviewId = review.name.split("/").pop();
+
+              formattedReviews.push({
+                id: reviewId, // Use unique review ID from name field
+                platform: "googlemaps",
+                type: "review",
+                user: {
+                  name: review.authorAttribution.displayName,
+                  username: username,
+                  avatar:
+                    review.authorAttribution.photoUri ||
+                    "/placeholder.svg?height=40&width=40",
+                },
+                content: `${review.rating} stars! ${review.text.text}`,
+                date: review.publishTime,
+                status: "unread",
+                rating: review.rating,
+                googleMapsUri: review.googleMapsUri,
+                flagContentUri: review.flagContentUri,
+              });
+            });
+
+            setMessages((prevMessages) => {
+              // Get existing message IDs to avoid duplicates
+              const existingIds = new Set(prevMessages.map((msg) => msg.id));
+
+              // Only add reviews that don't already exist
+              const newReviews = formattedReviews.filter(
+                (review) => !existingIds.has(review.id)
+              );
+
+              return [...prevMessages, ...newReviews];
+            });
+          }
+        } else {
+          console.error("Failed to fetch Google reviews:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching Google reviews:", error);
+      }
+    };
+
+    fetchGoogleReviews();
+  }, []);
 
   // Filter messages based on selected platform, status, and search query
   const filteredMessages = messages.filter((message) => {
@@ -417,6 +509,9 @@ export function MessageInbox() {
                   )}
                   {messageDetails?.platform === "twitter" && (
                     <Twitter className="h-4 w-4" />
+                  )}
+                  {messageDetails?.platform === "googlemaps" && (
+                    <FcGoogle className="h-4 w-4" />
                   )}
                 </div>
                 <div className="text-sm text-muted-foreground">

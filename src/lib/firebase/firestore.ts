@@ -36,7 +36,7 @@ export async function update(email: string, newUser: any, field: string) {
   try {
     const docRef = doc(db, email, field);
     await updateDoc(docRef, {
-      kitchen: newUser,
+      menu: newUser,
     });
     return "User registered Successfully";
   } catch (error) {
