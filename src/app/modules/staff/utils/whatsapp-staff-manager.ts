@@ -244,10 +244,12 @@ async function markStaffOffline(phoneNumber: string) {
 /**
  * Get receptionist notification tokens
  */
-async function getReceptionistTokens(): Promise<string[]> {
+async function getReceptionistTokens(): Promise<
+  { phoneNumber: string; token: string }[]
+> {
   try {
     const businessEmails = await findBusinessWithStaff("");
-    const tokens: string[] = [];
+    const tokens: { phoneNumber: string; token: string }[] = [];
 
     for (const businessEmail of businessEmails) {
       const docRef = doc(db, businessEmail, "info");
@@ -266,7 +268,10 @@ async function getReceptionistTokens(): Promise<string[]> {
 
         receptionists.forEach((receptionist: any) => {
           if (receptionist.notificationToken) {
-            tokens.push(receptionist.notificationToken);
+            tokens.push({
+              token: receptionist.notificationToken,
+              phoneNumber: receptionist.contact,
+            });
           }
         });
       }
@@ -287,7 +292,8 @@ async function notifyReceptionists(title: string, message: string) {
     const tokens = await getReceptionistTokens();
 
     for (const token of tokens) {
-      const res = await sendNotification(token, title, message);
+      const res = await sendNotification(token.token, title, message);
+      await sendWhatsAppTextMessage(token.phoneNumber, message);
       console.log("res", res);
     }
 
