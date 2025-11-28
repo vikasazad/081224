@@ -1,6 +1,6 @@
 "use server";
 import { db } from "@/config/db/firebase";
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { sendNotification } from "@/lib/sendNotification";
 
 interface AssignmentRequest {
@@ -697,31 +697,126 @@ async function confirmStaffAssignment(staffContact: string, orderId: string) {
   }
 }
 
+// async function storePendingAssignment(assignment: AssignmentRequest) {
+//   try {
+//     // Store assignment as a field within the webhook document
+//     const businessEmail = assignment.businessEmail || "vikumar.azad@gmail.com";
+//     const docRef = doc(db, businessEmail, "webhook");
+
+//     // Get existing webhook document
+//     const docSnap = await getDoc(docRef);
+//     let existingAssignments = {};
+
+//     if (docSnap.exists()) {
+//       existingAssignments = docSnap.data() || {};
+//     }
+
+//     // Add the new assignment
+//     const updatedAssignments = {
+//       ...existingAssignments,
+//       [assignment.orderId]: {
+//         ...assignment,
+//         status: assignment.status || "pending",
+//         timestamp: Date.now(),
+//       },
+//     };
+
+//     await setDoc(docRef, updatedAssignments);
+//     console.log("Pending assignment stored:", assignment.orderId);
+//   } catch (error) {
+//     console.error("Error storing pending assignment:", error);
+//   }
+// }
+
+// async function getPendingAssignment(
+//   orderId: string
+// ): Promise<AssignmentRequest | null> {
+//   try {
+//     // Get assignment from webhook document
+//     const businessEmail = "vikumar.azad@gmail.com";
+//     const docRef = doc(db, businessEmail, "webhook");
+//     const docSnap = await getDoc(docRef);
+
+//     if (docSnap.exists()) {
+//       const assignments = docSnap.data();
+//       if (assignments && assignments[orderId]) {
+//         return assignments[orderId] as AssignmentRequest;
+//       }
+//     }
+//     return null;
+//   } catch (error) {
+//     console.error("Error getting pending assignment:", error);
+//     return null;
+//   }
+// }
+
+// async function updateAssignmentStatus(
+//   orderId: string,
+//   status: AssignmentRequest["status"]
+// ) {
+//   try {
+//     // Update assignment status in webhook document
+//     const businessEmail = "vikumar.azad@gmail.com";
+//     const docRef = doc(db, businessEmail, "webhook");
+
+//     const docSnap = await getDoc(docRef);
+//     if (docSnap.exists()) {
+//       const assignments = docSnap.data();
+//       if (assignments && assignments[orderId]) {
+//         const updatedAssignments = {
+//           ...assignments,
+//           [orderId]: {
+//             ...assignments[orderId],
+//             status: status,
+//             updatedAt: Date.now(),
+//           },
+//         };
+
+//         await setDoc(docRef, updatedAssignments);
+//         console.log(`Assignment ${orderId} status updated to ${status}`);
+//       }
+//     }
+//   } catch (error) {
+//     console.error("Error updating assignment status:", error);
+//   }
+// }
+
+// async function removePendingAssignment(orderId: string) {
+//   try {
+//     const businessEmail = "vikumar.azad@gmail.com";
+//     const docRef = doc(db, businessEmail, "webhook");
+//     const docSnap = await getDoc(docRef);
+//     if (docSnap.exists()) {
+//       const assignments = docSnap.data();
+//       if (assignments && assignments[orderId]) {
+//         delete assignments[orderId];
+//         await setDoc(docRef, assignments);
+//         console.log(`Pending assignment removed: ${orderId}`);
+//       }
+//     }
+//   } catch (error) {
+//     console.error("Error removing pending assignment:", error);
+//   }
+// }
+
 async function storePendingAssignment(assignment: AssignmentRequest) {
   try {
-    // Store assignment as a field within the webhook document
     const businessEmail = assignment.businessEmail || "vikumar.azad@gmail.com";
-    const docRef = doc(db, businessEmail, "webhook");
+    const assignmentRef = doc(
+      db,
+      businessEmail,
+      "webhook",
+      "assignments",
+      assignment.orderId
+    );
 
-    // Get existing webhook document
-    const docSnap = await getDoc(docRef);
-    let existingAssignments = {};
-
-    if (docSnap.exists()) {
-      existingAssignments = docSnap.data() || {};
-    }
-
-    // Add the new assignment
-    const updatedAssignments = {
-      ...existingAssignments,
-      [assignment.orderId]: {
-        ...assignment,
-        status: assignment.status || "pending",
-        timestamp: Date.now(),
-      },
+    const assignmentData = {
+      ...assignment,
+      status: assignment.status || "pending",
+      timestamp: Date.now(),
     };
 
-    await setDoc(docRef, updatedAssignments);
+    await setDoc(assignmentRef, assignmentData);
     console.log("Pending assignment stored:", assignment.orderId);
   } catch (error) {
     console.error("Error storing pending assignment:", error);
@@ -732,16 +827,18 @@ async function getPendingAssignment(
   orderId: string
 ): Promise<AssignmentRequest | null> {
   try {
-    // Get assignment from webhook document
     const businessEmail = "vikumar.azad@gmail.com";
-    const docRef = doc(db, businessEmail, "webhook");
-    const docSnap = await getDoc(docRef);
+    const assignmentRef = doc(
+      db,
+      businessEmail,
+      "webhook",
+      "assignments",
+      orderId
+    );
+    const docSnap = await getDoc(assignmentRef);
 
     if (docSnap.exists()) {
-      const assignments = docSnap.data();
-      if (assignments && assignments[orderId]) {
-        return assignments[orderId] as AssignmentRequest;
-      }
+      return docSnap.data() as AssignmentRequest;
     }
     return null;
   } catch (error) {
@@ -755,47 +852,23 @@ async function updateAssignmentStatus(
   status: AssignmentRequest["status"]
 ) {
   try {
-    // Update assignment status in webhook document
     const businessEmail = "vikumar.azad@gmail.com";
-    const docRef = doc(db, businessEmail, "webhook");
+    const assignmentRef = doc(
+      db,
+      businessEmail,
+      "webhook",
+      "assignments",
+      orderId
+    );
 
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const assignments = docSnap.data();
-      if (assignments && assignments[orderId]) {
-        const updatedAssignments = {
-          ...assignments,
-          [orderId]: {
-            ...assignments[orderId],
-            status: status,
-            updatedAt: Date.now(),
-          },
-        };
+    await updateDoc(assignmentRef, {
+      status: status,
+      updatedAt: Date.now(),
+    });
 
-        await setDoc(docRef, updatedAssignments);
-        console.log(`Assignment ${orderId} status updated to ${status}`);
-      }
-    }
+    console.log(`Assignment ${orderId} status updated to ${status}`);
   } catch (error) {
     console.error("Error updating assignment status:", error);
-  }
-}
-
-async function removePendingAssignment(orderId: string) {
-  try {
-    const businessEmail = "vikumar.azad@gmail.com";
-    const docRef = doc(db, businessEmail, "webhook");
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const assignments = docSnap.data();
-      if (assignments && assignments[orderId]) {
-        delete assignments[orderId];
-        await setDoc(docRef, assignments);
-        console.log(`Pending assignment removed: ${orderId}`);
-      }
-    }
-  } catch (error) {
-    console.error("Error removing pending assignment:", error);
   }
 }
 
@@ -831,6 +904,24 @@ async function markStaffInactive(phoneNumber: string) {
     }
   } catch (error) {
     console.error("Error marking staff inactive:", error);
+  }
+}
+
+async function removePendingAssignment(orderId: string) {
+  try {
+    const businessEmail = "vikumar.azad@gmail.com";
+    const assignmentRef = doc(
+      db,
+      businessEmail,
+      "webhook",
+      "assignments",
+      orderId
+    );
+
+    await deleteDoc(assignmentRef);
+    console.log(`Pending assignment removed: ${orderId}`);
+  } catch (error) {
+    console.error("Error removing pending assignment:", error);
   }
 }
 

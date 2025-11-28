@@ -335,6 +335,7 @@ const WalkIn = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     console.log("handleSubmit");
     e.preventDefault();
+    // handleOtpSubmit();
     if (validateForm()) {
       setIsLoading(true);
 

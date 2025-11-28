@@ -38,6 +38,6 @@ export const fetchToken = async () => {
 };
 const authentication = getAuth(app);
 authentication.useDeviceLanguage();
-export { authentication, messaging };
+export { app, authentication, messaging };
 export const db = getFirestore(app);
 export const storage = getStorage(app);
