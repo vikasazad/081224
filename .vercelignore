@@ -1,0 +1,6 @@
+# Exclude Firebase Cloud Functions from Vercel build
+functions/
+firebase.json
+.firebaserc
+firestore.rules
+firestore.indexes.json
