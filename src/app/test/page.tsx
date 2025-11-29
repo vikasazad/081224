@@ -1955,6 +1955,7 @@ export default function Test() {
     // );
     // const user = await createPaymentLink();
     const user = await add("vikumar.azad@gmail.com", analytics, "analytics");
+    // const user = await add("vikumar.azad@gmail.com", analytics, "analytics");
     // const user = await callHelloWorld("vikumar.azad@gmail.com");
     // const secretKey = new TextEncoder().encode("Vikas@1234");
 

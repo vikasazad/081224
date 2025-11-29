@@ -28,19 +28,19 @@ interface AssignmentRequest {
  * Helper function to find business emails that have a staff member with given phone
  */
 
-async function getBusinessSettings(phoneNumber: string): Promise<any> {
-  const id = await findBusinessWithStaff(phoneNumber);
-  if (!id) {
-    return false;
-  }
-  const docRef = doc(db, id[0], "info");
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    return data.business.whatsappTimeout;
-  }
-  return null;
-}
+// async function getBusinessSettings(phoneNumber: string): Promise<any> {
+//   const id = await findBusinessWithStaff(phoneNumber);
+//   if (!id) {
+//     return false;
+//   }
+//   const docRef = doc(db, id[0], "info");
+//   const docSnap = await getDoc(docRef);
+//   if (docSnap.exists()) {
+//     const data = docSnap.data();
+//     return data.business.whatsappTimeout;
+//   }
+//   return null;
+// }
 async function findBusinessWithStaff(_phoneNumber: string): Promise<string[]> {
   console.log("findBusinessWithStaff", _phoneNumber);
   // This is a simplified implementation
@@ -426,14 +426,14 @@ export async function sendStaffAssignmentRequest(
 
       console.log("initial pendingAssignments stored in database");
 
-      // Set timeout using configurable duration
-      const timeout = await getBusinessSettings(staffContact);
-      if (!timeout) {
-        return { success: false, message: "Business settings not found" };
-      }
-      setTimeout(() => {
-        handleAssignmentTimeout(orderId);
-      }, timeout * 60 * 1000);
+      // // Set timeout using configurable duration
+      // const timeout = await getBusinessSettings(staffContact);
+      // if (!timeout) {
+      //   return { success: false, message: "Business settings not found" };
+      // }
+      // setTimeout(() => {
+      //   handleAssignmentTimeout(orderId);
+      // }, timeout * 60 * 1000);
 
       return { success: true, messageId };
     }
@@ -588,6 +588,11 @@ export async function handleAssignmentResponse(
       }
       await removeCompletedRequest(orderId, assignment.roomNumber);
       await removePendingAssignment(orderId);
+      await removeOrderIdFromStaff(
+        orderId,
+        assignment.staffContact,
+        assignment.staffName
+      );
       return { success: true, message: "Request resolved" };
     }
 
@@ -601,7 +606,7 @@ export async function handleAssignmentResponse(
 /**
  * Handle assignment timeout - try next staff member
  */
-async function handleAssignmentTimeout(orderId: string) {
+export async function handleAssignmentTimeout(orderId: string) {
   try {
     //In this we are only sending notification to the receptionist not the manager
     const assignment = await getPendingAssignment(orderId);
@@ -925,6 +930,34 @@ async function removePendingAssignment(orderId: string) {
   }
 }
 
+async function removeOrderIdFromStaff(
+  orderId: string,
+  staffContact: string,
+  staffName: string
+) {
+  try {
+    const businessEmail = "vikumar.azad@gmail.com";
+    const staffRef = doc(db, businessEmail, "info");
+    const docSnap = await getDoc(staffRef);
+    const data = docSnap.data()?.staff || [];
+    const index = data.findIndex(
+      (member: any) =>
+        member.contact === staffContact && member.name === staffName
+    );
+    console.log("index", index);
+    if (index !== -1) {
+      data[index].orders = data[index].orders.filter(
+        (order: any) => order !== orderId
+      );
+      console.log("data[index].orders", data[index].orders);
+    }
+    console.log("data", data);
+    await updateDoc(staffRef, { staff: data });
+    console.log(`Order ${orderId} removed from staff: ${staffContact}`);
+  } catch (error) {
+    console.error("Error removing order id from staff:", error);
+  }
+}
 /**
  * Mark staff as active
  */

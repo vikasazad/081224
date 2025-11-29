@@ -108,6 +108,10 @@ const StatusChip = ({ status }: { status: string }) => {
       color: "rgb(255, 255, 255)",
       backgroundColor: "rgb(255, 77, 79)",
     },
+    Timeout: {
+      color: "rgb(255, 255, 255)",
+      backgroundColor: "red",
+    },
   };
 
   const defaultStyle = {

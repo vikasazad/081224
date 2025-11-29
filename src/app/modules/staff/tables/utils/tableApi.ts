@@ -436,8 +436,8 @@ export async function setHistoryRoom(roomData: any, roomType: string) {
         );
       });
     }
-    console.log("staff", staff);
-    console.log("ids", ids);
+    // console.log("staff", staff);
+    // console.log("ids", ids);
 
     const room = {
       roomNo: roomData.bookingDetails.location,

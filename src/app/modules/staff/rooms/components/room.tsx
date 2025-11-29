@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 
 export default function Rooms({
   data,
+  webhook,
   businessInfo,
 }: {
   data: any;
+  webhook: any;
   businessInfo: any;
 }) {
   const [statusFilter, setStatusFilter] = useState("ongoing");
@@ -65,6 +67,7 @@ export default function Rooms({
             {statusFilter === "ongoing" && (
               <Ongoing
                 data={room.ongoing}
+                webhook={webhook}
                 status={room.status}
                 businessInfo={businessInfo}
               />

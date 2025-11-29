@@ -8,6 +8,10 @@ import {
   doc,
   getDoc,
   updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import { SignJWT } from "jose";
 import {
@@ -867,7 +871,13 @@ export async function updateOrdersForAttendant(
         contact,
         `Service ${orderId} assigned to you, Please reachout to reception to get the service delivered.`
       );
+    } else if (orderId.startsWith("REQ:") && contact) {
+      await sendWhatsAppTextMessage(
+        contact,
+        `Request ${orderId} assigned to you, Please reachout to reception to get the request delivered.`
+      );
     }
+
     console.log("Order attendant updated successfully");
   } catch (error) {
     console.error("Error updating orders: ", error);
@@ -963,6 +973,53 @@ export async function setAttendent(tableData: any) {
     }
   } catch (error) {
     console.error("ERROR updating table data:", error);
+    return false;
+  }
+}
+
+export async function updateRequestsForAttendant(
+  orderId: string,
+  attendantName: string,
+  attendantContact: string
+) {
+  const session = await auth();
+  const user = session?.user?.email;
+
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  try {
+    // Reference to the assignments collection
+    const assignmentsRef = collection(db, user, "webhook", "assignments");
+
+    // Query to find the assignment with matching orderId
+    const q = query(assignmentsRef, where("orderId", "==", orderId));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      console.error(`No assignment found with orderId: ${orderId}`);
+      return false;
+    }
+
+    // Update the first matching document (should only be one)
+    const assignmentDoc = querySnapshot.docs[0];
+    await updateDoc(assignmentDoc.ref, {
+      staffName: attendantName,
+      staffContact: attendantContact,
+      status: "pending",
+      timestamp: Date.now(),
+      attemptCount: 0,
+      timedOutAt: 0,
+    });
+
+    console.log(
+      `Successfully updated attendant for ${orderId}: ${attendantName}`
+    );
+    return true;
+  } catch (error) {
+    console.error("Error updating request attendant:", error);
     return false;
   }
 }

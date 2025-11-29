@@ -103,6 +103,7 @@ const Page = () => {
             <TabsContent value="room" className="space-y-4">
               <Rooms
                 data={staffData.hotelOverview}
+                webhook={staffData.webhook}
                 businessInfo={staffData.businessInfo}
               />
             </TabsContent>

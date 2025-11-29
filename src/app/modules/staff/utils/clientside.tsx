@@ -1,158 +1,178 @@
 "use client";
 
 import { db } from "@/config/db/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { collection, doc, onSnapshot } from "firebase/firestore";
 
+// Helper function to create empty result structure
+function createEmptyResult() {
+  return {
+    hotelOverview: {
+      todayCheckIn: [],
+      ongoing: [],
+      todayCheckOut: [],
+      vacant: [],
+      maintenance: [],
+      status: {},
+    },
+    restaurantOverview: {
+      occupied: [],
+      reserved: [],
+      available: [],
+      cleaning: [],
+      status: {},
+    },
+    deliveryOverview: [],
+    takeawayOverview: [],
+    businessInfo: {},
+    webhook: {},
+  };
+}
+
+// Helper function to check if room should check out today
+function isTodayCheckOut(checkOutDate: string): boolean {
+  const checkOutTime = new Date(checkOutDate);
+  return checkOutTime.toDateString() === new Date().toDateString();
+}
+
+// Helper function to process hotel data
+function processHotelData(hotelSnapshot: any, result: any) {
+  if (!hotelSnapshot.exists()) return;
+
+  const hotelData = hotelSnapshot.data();
+  const live = hotelData.live;
+
+  result.deliveryOverview = hotelData.delivery || [];
+  result.takeawayOverview = hotelData.takeaway || [];
+  result.hotelOverview.todayCheckIn = hotelData.reservation || [];
+  result.hotelOverview.ongoing = live?.rooms || [];
+  result.hotelOverview.status = live?.roomsData?.status || {};
+
+  // Process ongoing rooms for today's checkouts
+  live?.rooms?.forEach((room: any) => {
+    if (
+      room?.bookingDetails?.checkOut &&
+      isTodayCheckOut(room.bookingDetails.checkOut)
+    ) {
+      result.hotelOverview.todayCheckOut.push(room);
+    }
+  });
+
+  // Process room details for vacant and maintenance rooms
+  const roomDetails = live?.roomsData?.roomDetail || {};
+  Object.values(roomDetails).forEach((rooms: any) => {
+    rooms?.forEach((room: any) => {
+      if (room.status === "available") {
+        result.hotelOverview.vacant.push(room);
+      } else if (room.status === "fixing required") {
+        result.hotelOverview.maintenance.push(room);
+      }
+    });
+  });
+}
+
+// Helper function to process restaurant data
+function processRestaurantData(restaurantSnapshot: any, result: any) {
+  if (!restaurantSnapshot.exists()) return;
+
+  const restaurantData = restaurantSnapshot.data();
+  const live = restaurantData.live;
+
+  result.restaurantOverview.reserved = restaurantData.reservation || [];
+  result.restaurantOverview.status = live?.tablesData?.status || {};
+
+  // Process occupied tables
+  live?.tables?.forEach((table: any) => {
+    if (table?.diningDetails?.status === "occupied") {
+      result.restaurantOverview.occupied.push(table);
+    }
+  });
+
+  // Process table details for available and cleaning tables
+  const tableDetails = live?.tablesData?.tableDetails || {};
+  Object.values(tableDetails).forEach((tables: any) => {
+    tables?.forEach((table: any) => {
+      if (table.status === "available") {
+        result.restaurantOverview.available.push(table);
+      } else if (table.status === "cleaning") {
+        result.restaurantOverview.cleaning.push(table);
+      }
+    });
+  });
+}
+
+// Helper function to process business info
+function processBusinessInfo(infoSnapshot: any, result: any) {
+  if (infoSnapshot.exists()) {
+    result.businessInfo = infoSnapshot.data().business || {};
+  }
+}
+
+// Helper function to process webhook data (collection snapshot)
+function processWebhookData(webhookSnapshot: any, result: any) {
+  if (webhookSnapshot.empty) {
+    result.webhook = {};
+    return;
+  }
+
+  // Process all documents in the assignments collection
+  const assignments: any = {};
+  webhookSnapshot.docs.forEach((doc: any) => {
+    assignments[doc.id] = doc.data();
+  });
+
+  result.webhook = assignments;
+}
+
+// Main function with refactored subscription management
 export function handleRoomStaffInformation(
   callback: (result: any | null) => void
 ) {
   const docRefHotel = doc(db, "vikumar.azad@gmail.com", "hotel");
   const docRefRestaurant = doc(db, "vikumar.azad@gmail.com", "restaurant");
   const docRefBusinessInfo = doc(db, "vikumar.azad@gmail.com", "info");
+  const colRefWebhookAssignments = collection(
+    db,
+    "vikumar.azad@gmail.com",
+    "webhook",
+    "assignments"
+  );
 
-  // Create unsubscribe functions for both listeners
+  // Store latest snapshots
+  let hotelSnapshot: any = null;
+  let restaurantSnapshot: any = null;
+  let infoSnapshot: any = null;
+  let webhookSnapshot: any = null;
+  // Function to process all data when any snapshot updates
+  function processAllData() {
+    if (
+      !hotelSnapshot ||
+      !restaurantSnapshot ||
+      !infoSnapshot ||
+      !webhookSnapshot
+    ) {
+      return; // Wait for all snapshots to be available
+    }
+
+    try {
+      const result = createEmptyResult();
+
+      processBusinessInfo(infoSnapshot, result);
+      processHotelData(hotelSnapshot, result);
+      processRestaurantData(restaurantSnapshot, result);
+      processWebhookData(webhookSnapshot, result);
+      callback(result);
+    } catch (error) {
+      console.error("Error processing Firestore data:", error);
+      callback(null);
+    }
+  }
+
+  // Set up listeners for all three documents
   const unsubscribeHotel = onSnapshot(
     docRefHotel,
-    (docSnapHotel) => {
-      const unsubscribeRestaurant = onSnapshot(
-        docRefRestaurant,
-        (docSnapRestaurant) => {
-          const unsubscribeInfo = onSnapshot(
-            docRefBusinessInfo,
-            (docSnapInfo) => {
-              try {
-                const result: any = {
-                  hotelOverview: {
-                    todayCheckIn: [],
-                    ongoing: [],
-                    todayCheckOut: [],
-                    vacant: [],
-                    maintenance: [],
-                    status: {},
-                  },
-                  restaurantOverview: {
-                    occupied: [],
-                    reserved: [],
-                    available: [],
-                    cleaning: [],
-                    status: {},
-                  },
-                  deliveryOverview: [],
-                  takeawayOverview: [],
-                  businessInfo: {},
-                };
-
-                if (docSnapInfo.exists()) {
-                  result.businessInfo = docSnapInfo.data().business;
-                }
-
-                if (docSnapHotel.exists()) {
-                  const reservation = docSnapHotel.data().reservation;
-                  const live = docSnapHotel.data().live;
-                  result.deliveryOverview = docSnapHotel.data().delivery;
-                  result.takeawayOverview = docSnapHotel.data().takeaway;
-                  result.hotelOverview.todayCheckIn = reservation;
-                  result.hotelOverview.ongoing = live.rooms;
-                  result.hotelOverview.status = live.roomsData.status;
-
-                  live.rooms?.forEach((item: any) => {
-                    if (item?.bookingDetails?.checkOut) {
-                      const checkOutTime = new Date(
-                        item.bookingDetails.checkOut
-                      );
-                      if (
-                        checkOutTime.toDateString() ===
-                        new Date().toDateString()
-                      ) {
-                        result.hotelOverview.todayCheckOut.push(item);
-                      }
-                    }
-                  });
-
-                  Object.keys(live.roomsData.roomDetail)?.forEach(
-                    (roomType) => {
-                      live.roomsData.roomDetail[roomType]?.forEach(
-                        (item: any) => {
-                          if (item.status === "available") {
-                            result.hotelOverview.vacant.push(item);
-                          }
-                          if (item.status === "fixing required") {
-                            result.hotelOverview.maintenance.push(item);
-                          }
-                        }
-                      );
-                    }
-                  );
-                }
-
-                if (docSnapRestaurant.exists()) {
-                  const reservation = docSnapRestaurant.data().reservation;
-                  const live = docSnapRestaurant.data().live;
-                  result.restaurantOverview.reserved = reservation;
-                  result.restaurantOverview.status = live.tablesData.status;
-
-                  live.tables?.forEach((item: any) => {
-                    if (item.diningDetails?.status === "occupied") {
-                      result.restaurantOverview.occupied.push(item);
-                    }
-                  });
-
-                  Object.keys(live.tablesData.tableDetails)?.forEach(
-                    (tableType) => {
-                      live.tablesData.tableDetails[tableType]?.forEach(
-                        (item: any) => {
-                          if (item.status === "available") {
-                            result.restaurantOverview.available.push(item);
-                          }
-                          if (item.status === "cleaning") {
-                            result.restaurantOverview.cleaning.push(item);
-                          }
-                        }
-                      );
-                    }
-                  );
-                }
-
-                if (
-                  Object.keys(result).length === 0 ||
-                  (result.hotelOverview === null &&
-                    result.restaurantOverview === null)
-                ) {
-                  console.log("No data available");
-                  callback(null);
-                } else {
-                  callback(result);
-                }
-              } catch (error) {
-                console.error("Error processing Firestore data:", error);
-                callback(null);
-              }
-
-              return () => unsubscribeInfo();
-            },
-            (error) => {
-              console.error("Error in info snapshot listener:", error);
-              callback(null);
-            }
-          );
-
-          // Unsubscribe from the restaurant snapshot listener
-          return () => {
-            unsubscribeRestaurant();
-            unsubscribeInfo();
-          };
-        },
-        (error) => {
-          console.error("Error in restaurant snapshot listener:", error);
-          callback(null);
-        }
-      );
-
-      // Return a function to unsubscribe from both listeners
-      return () => {
-        unsubscribeHotel();
-        unsubscribeRestaurant();
-      };
+    (snapshot) => {
+      hotelSnapshot = snapshot;
+      processAllData();
     },
     (error) => {
       console.error("Error in hotel snapshot listener:", error);
@@ -160,9 +180,48 @@ export function handleRoomStaffInformation(
     }
   );
 
-  // Return a function to unsubscribe from both listeners
+  const unsubscribeRestaurant = onSnapshot(
+    docRefRestaurant,
+    (snapshot) => {
+      restaurantSnapshot = snapshot;
+      processAllData();
+    },
+    (error) => {
+      console.error("Error in restaurant snapshot listener:", error);
+      callback(null);
+    }
+  );
+
+  const unsubscribeInfo = onSnapshot(
+    docRefBusinessInfo,
+    (snapshot) => {
+      infoSnapshot = snapshot;
+      processAllData();
+    },
+    (error) => {
+      console.error("Error in info snapshot listener:", error);
+      callback(null);
+    }
+  );
+
+  const unsubscribeWebhook = onSnapshot(
+    colRefWebhookAssignments,
+    (snapshot) => {
+      webhookSnapshot = snapshot;
+      processAllData();
+    },
+    (error) => {
+      console.error("Error in webhook snapshot listener:", error);
+      callback(null);
+    }
+  );
+
+  // Return cleanup function that unsubscribes from all listeners
   return () => {
     unsubscribeHotel();
+    unsubscribeRestaurant();
+    unsubscribeInfo();
+    unsubscribeWebhook();
   };
 }
 

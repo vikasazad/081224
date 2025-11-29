@@ -55,6 +55,7 @@ import {
   sendTakeReviewMessage,
   setOfflineRoom,
   updateOrdersForAttendant,
+  updateRequestsForAttendant,
 } from "../../utils/staffData";
 import ChecklistDialog from "@/components/staff-checkout-checklist";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,7 @@ import { setInvoiceData } from "@/lib/features/invoiceSlice";
 import { useDispatch } from "react-redux";
 import { Icons } from "@/components/icons";
 import { toast } from "sonner";
+import { format } from "date-fns";
 // gst = {
 //   room: {
 //     "upto 7500/night": 12,
@@ -102,14 +104,18 @@ const generateRandomOrderNumber = () => {
 
 export default function Ongoing({
   data,
+  webhook,
   status,
   businessInfo,
 }: {
   data: any;
+  webhook: any;
   status: any;
   businessInfo: any;
 }) {
   // const router = useRouter();
+  // console.log("data", data);
+  console.log("webhook", webhook);
   const dispatch = useDispatch();
   const [roomData, setRoomData] = useState<any>([]);
   const [addItems, setAddItems] = useState<any>([]);
@@ -205,7 +211,7 @@ export default function Ongoing({
     );
   };
 
-  const handleAttendantChange = (
+  const handleAttendantChange = async (
     orderId: string,
     attendant: string,
     index: number
@@ -274,6 +280,14 @@ export default function Ongoing({
         updatedTableData[index].servicesUsed[serviceIndex].attendantToken =
           token;
       }
+    } else if (orderId.startsWith("REQ:")) {
+      await updateRequestsForAttendant(orderId, attendant, contact);
+      updatedTableData[index].bookingDetails.requests[orderId].attendant = {
+        name: attendant,
+        token: token,
+        contact: contact,
+      };
+      // return;
     } else {
       console.error("Unrecognized orderId prefix for", orderId);
       return;
@@ -1472,6 +1486,95 @@ export default function Ongoing({
                                 </div>
                               );
                             })()}
+
+                          {(() => {
+                            const filteredRequests = Object.values(
+                              webhook
+                            ).filter(
+                              (assignment: any) =>
+                                assignment.roomNumber ===
+                                item.bookingDetails?.location
+                            );
+
+                            if (filteredRequests.length === 0) return null;
+
+                            return (
+                              <div className="space-y-2">
+                                <div className="bg-slate-50 rounded-lg p-4 space-y-4">
+                                  <div>
+                                    <span className="text-sm font-semibold text-slate-700">
+                                      Room Request
+                                    </span>
+                                  </div>
+
+                                  {filteredRequests.map(
+                                    (assignment: any, i: number) => (
+                                      <div key={i}>
+                                        {i > 0 && (
+                                          <Separator className="my-4" />
+                                        )}
+                                        <div className="space-y-3">
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-xs text-slate-500">
+                                              {format(
+                                                new Date(assignment.timestamp),
+                                                "HH:mm (d MMM)"
+                                              )}
+                                            </span>
+                                            <Badge
+                                              variant="outline"
+                                              className="font-medium"
+                                            >
+                                              {assignment.orderId}
+                                            </Badge>
+
+                                            <Select
+                                              onValueChange={(value) =>
+                                                handleAttendantChange(
+                                                  assignment.orderId,
+                                                  value,
+                                                  main
+                                                )
+                                              }
+                                            >
+                                              <SelectTrigger className="w-[140px] py-0 h-6">
+                                                <SelectValue
+                                                  placeholder={
+                                                    assignment.staffName
+                                                  }
+                                                />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {availableAttendant.map(
+                                                  (attendant: any) => (
+                                                    <SelectItem
+                                                      key={attendant.name}
+                                                      value={attendant.name}
+                                                    >
+                                                      {attendant.name}
+                                                    </SelectItem>
+                                                  )
+                                                )}
+                                              </SelectContent>
+                                            </Select>
+
+                                            <StatusChip
+                                              status={assignment.status}
+                                            />
+                                          </div>
+
+                                          <div className="text-sm text-slate-600 bg-white rounded px-3 py-2">
+                                            {assignment.info}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                                <Separator />
+                              </div>
+                            );
+                          })()}
 
                           {item.diningDetails?.orders?.map(
                             (order: any, i: any) => (
