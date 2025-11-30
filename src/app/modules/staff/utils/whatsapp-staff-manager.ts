@@ -683,10 +683,14 @@ async function confirmStaffAssignment(staffContact: string, orderId: string) {
         const updatedStaff = staff.map((member: any) => {
           if (member.contact === staffContact) {
             const orders = member.orders || [];
-            return {
-              ...member,
-              orders: [...orders, orderId],
-            };
+            // Only add orderId if it doesn't already exist
+            if (!orders.includes(orderId)) {
+              return {
+                ...member,
+                orders: [...orders, orderId],
+              };
+            }
+            return member;
           }
           return member;
         });
