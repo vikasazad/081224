@@ -416,6 +416,7 @@ export async function sendStaffAssignmentRequest(
         orderId,
         staffContact,
         messageId,
+        info:"Check IN Request",
         timestamp: Date.now(),
         attemptCount: 1,
         customerName,
@@ -1403,6 +1404,7 @@ export async function sendDeliveryReadinessRequest(
         orderId,
         staffContact,
         messageId,
+        info:"Delivery Request"
         timestamp: Date.now(),
         attemptCount: 1,
         customerName,
