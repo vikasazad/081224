@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { sendNotification } from "@/lib/sendNotification";
 
 interface AssignmentRequest {
+  info: string;
   staffName: string;
   orderId: string;
   staffContact: string;
@@ -416,7 +417,7 @@ export async function sendStaffAssignmentRequest(
         orderId,
         staffContact,
         messageId,
-        info:"Check IN Request",
+        info: "Check IN Request",
         timestamp: Date.now(),
         attemptCount: 1,
         customerName,
@@ -1404,7 +1405,7 @@ export async function sendDeliveryReadinessRequest(
         orderId,
         staffContact,
         messageId,
-        info:"Delivery Request"
+        info: "Delivery Request",
         timestamp: Date.now(),
         attemptCount: 1,
         customerName,
