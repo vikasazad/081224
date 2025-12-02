@@ -198,7 +198,8 @@ export function MessageInbox() {
             });
           }
         } else {
-          console.error("Failed to fetch Google reviews:", response.json());
+          const error = await response.json();
+          console.error("Failed to fetch Google reviews:", error);
         }
       } catch (error) {
         console.error("Error fetching Google reviews:", error);
