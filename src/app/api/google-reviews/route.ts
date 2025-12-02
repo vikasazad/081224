@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const placeId = process.env.NEXT_PUBLIC_GOOELEMAP_PLACEID;
-    const apiKey = process.env.GOOGLEMAP_KEY;
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     console.log("placeId", placeId);
     console.log("apiKey", apiKey);
 
