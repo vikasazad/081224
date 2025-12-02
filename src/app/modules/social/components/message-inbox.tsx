@@ -52,7 +52,7 @@ export function MessageInbox() {
       user: {
         name: "Sarah Johnson",
         username: "sarahj",
-        avatar: "/placeholder.svg?height=40&width=40",
+        avatar: "",
       },
       content:
         "The food was amazing! Will definitely be back soon. Do you take reservations for large groups?",
@@ -66,7 +66,7 @@ export function MessageInbox() {
       user: {
         name: "Michael Chen",
         username: "michaelc",
-        avatar: "/placeholder.svg?height=40&width=40",
+        avatar: "",
       },
       content:
         "Hi, I'm planning to visit next weekend. Do you have any special events going on?",
@@ -80,7 +80,7 @@ export function MessageInbox() {
       user: {
         name: "Alex Rivera",
         username: "alexr",
-        avatar: "/placeholder.svg?height=40&width=40",
+        avatar: "",
       },
       content:
         "@hotelname The service at your restaurant was terrible. Waited over an hour for food!",
@@ -94,7 +94,7 @@ export function MessageInbox() {
       user: {
         name: "Emily Wilson",
         username: "emilyw",
-        avatar: "/placeholder.svg?height=40&width=40",
+        avatar: "",
       },
       content:
         "Hello! I left my jacket in your restaurant last night. Is there any way I could get it back?",
@@ -108,7 +108,7 @@ export function MessageInbox() {
       user: {
         name: "David Thompson",
         username: "davidt",
-        avatar: "/placeholder.svg?height=40&width=40",
+        avatar: "",
       },
       content:
         "5 stars! The hotel room was beautiful and the staff was incredibly helpful. Will definitely recommend to friends!",
@@ -122,7 +122,7 @@ export function MessageInbox() {
       user: {
         name: "John Doe",
         username: "johndoe",
-        avatar: "/placeholder.svg?height=40&width=40",
+        avatar: "",
       },
       content:
         "5 stars! The hotel room was beautiful and the staff was incredibly helpful. Will definitely recommend to friends! Will definitely recommend to friends!",
@@ -136,7 +136,7 @@ export function MessageInbox() {
       user: {
         name: "Jane Johnson",
         username: "janejane",
-        avatar: "/placeholder.svg?height=40&width=40",
+        avatar: "",
       },
       content:
         "4 stars! The hotel room was beautiful and the staff was incredibly helpful. Will definitely recommend to friends!",
@@ -174,9 +174,7 @@ export function MessageInbox() {
                 user: {
                   name: review.authorAttribution.displayName,
                   username: username,
-                  avatar:
-                    review.authorAttribution.photoUri ||
-                    "/placeholder.svg?height=40&width=40",
+                  avatar: review.authorAttribution.photoUri,
                 },
                 content: `${review.rating} stars! ${review.text.text}`,
                 date: review.publishTime,
@@ -200,7 +198,7 @@ export function MessageInbox() {
             });
           }
         } else {
-          console.error("Failed to fetch Google reviews:", response.statusText);
+          console.error("Failed to fetch Google reviews:", response.json());
         }
       } catch (error) {
         console.error("Error fetching Google reviews:", error);
