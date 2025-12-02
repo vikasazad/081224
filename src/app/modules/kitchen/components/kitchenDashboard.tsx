@@ -16,20 +16,21 @@ import {
 import KitchenTimerService from "@/services/kitchen-timer-service";
 // import { generateSampleOrders } from "@/lib/sample-data";
 
-// Get kitchen timer config from the global service
+// Get kitchen timer service instance
 const timerService = KitchenTimerService.getInstance();
-export const kitchenTimerConfig: KitchenTimerConfig = timerService.getConfig();
 
 export default function KitchenDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<any>([]);
   const [activeTab, setActiveTab] = useState<string>("orders");
   const [filterType, setFilterType] = useState<string | null>(null);
+  const [kitchenTimerConfig, setKitchenTimerConfig] =
+    useState<KitchenTimerConfig>(timerService.getConfig());
 
   useEffect(() => {
     const unsubscribe = getKitchenAndMenuData((data) => {
       if (data) {
-        console.log("DATA", data);
+        // console.log("DATA", data);
         setOrders(data.kitchen?.orders || []);
         setMenuItems(data?.menu || []);
       }
@@ -38,6 +39,19 @@ export default function KitchenDashboard() {
     // Cleanup subscription on unmount
     return () => {
       if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
+  // Subscribe to kitchen timer config changes
+  useEffect(() => {
+    const unsubscribeConfig = timerService.onConfigChange((newConfig) => {
+      // console.log("Kitchen Timer Config updated in dashboard:", newConfig);
+      setKitchenTimerConfig(newConfig);
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      unsubscribeConfig();
     };
   }, []);
 
@@ -173,7 +187,7 @@ export default function KitchenDashboard() {
     }
   };
 
-  console.log(menuItems);
+  // console.log(menuItems);
 
   // Handle stat card click for filtering
   const handleStatCardClick = (type: string) => {

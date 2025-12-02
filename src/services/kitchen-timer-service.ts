@@ -7,6 +7,7 @@ import {
   sendOrderEscalationToManager,
 } from "@/app/modules/staff/utils/whatsapp-staff-manager";
 import { OrderStatus } from "@/types/kitchen";
+import { getOnlineStaff } from "@/app/modules/staff/utils/staffData";
 
 export interface KitchenTimerConfig {
   waitingAlertMinutes: number;
@@ -26,6 +27,11 @@ class KitchenTimerService {
   private alertedOrders = new Set<string>();
   private escalatedOrders = new Set<string>();
   private deliveryReadinessTriggered = new Set<string>();
+  private configListeners: ((config: KitchenTimerConfig) => void)[] = [];
+  private deliveryAlertListeners: ((
+    orderId: string,
+    deliveryPartner: { name: string; contact: string }
+  ) => void)[] = [];
   private kitchenTimerConfig: KitchenTimerConfig = {
     waitingAlertMinutes: 10, // Alert after 10 minutes if order hasn't been started
     totalPreparationMinutes: 20, // Total time for order preparation
@@ -84,10 +90,14 @@ class KitchenTimerService {
               "Kitchen Timer Config updated from database:",
               this.kitchenTimerConfig
             );
+            // Notify all listeners about the config update
+            this.notifyConfigListeners();
           } else {
             console.log(
               "No kitchenTimerConfig found in database, using defaults"
             );
+            // Still notify listeners even with defaults
+            this.notifyConfigListeners();
           }
         }
       },
@@ -103,6 +113,52 @@ class KitchenTimerService {
 
   getConfig(): KitchenTimerConfig {
     return this.kitchenTimerConfig;
+  }
+
+  // Subscribe to config changes
+  onConfigChange(listener: (config: KitchenTimerConfig) => void): () => void {
+    this.configListeners.push(listener);
+    // Immediately call listener with current config
+    listener(this.kitchenTimerConfig);
+
+    // Return unsubscribe function
+    return () => {
+      this.configListeners = this.configListeners.filter((l) => l !== listener);
+    };
+  }
+
+  // Notify all listeners about config changes
+  private notifyConfigListeners() {
+    this.configListeners.forEach((listener) => {
+      listener(this.kitchenTimerConfig);
+    });
+  }
+
+  // Subscribe to delivery alert events
+  onDeliveryAlert(
+    listener: (
+      orderId: string,
+      deliveryPartner: { name: string; contact: string }
+    ) => void
+  ): () => void {
+    this.deliveryAlertListeners.push(listener);
+
+    // Return unsubscribe function
+    return () => {
+      this.deliveryAlertListeners = this.deliveryAlertListeners.filter(
+        (l) => l !== listener
+      );
+    };
+  }
+
+  // Notify all listeners about delivery alerts
+  private notifyDeliveryAlertListeners(
+    orderId: string,
+    deliveryPartner: { name: string; contact: string }
+  ) {
+    this.deliveryAlertListeners.forEach((listener) => {
+      listener(orderId, deliveryPartner);
+    });
   }
 
   start() {
@@ -242,17 +298,24 @@ class KitchenTimerService {
   }
 
   private async checkForDeliveryReadiness() {
+    console.log("checkForDeliveryReadiness");
     const now = new Date().getTime();
 
     for (const order of Object.values(this.orders) as any[]) {
       // Only check orders that are in preparation
+      // console.log("order", order);
+
+      // For delivery orders (DEL), attendant info is optional - we'll fetch delivery partner
+      const isDeliveryOrder = order.id?.includes("DEL");
+      const hasAttendantInfo = order.attendantName && order.attendantContact;
+
       if (
         order.status === OrderStatus.InPreparation &&
         !this.deliveryReadinessTriggered.has(order.id) &&
         order.startedAt &&
-        order.attendantName &&
-        order.attendantContact
+        (hasAttendantInfo || isDeliveryOrder) // Allow delivery orders without attendant
       ) {
+        console.log("HERE 1");
         const startedTime = new Date(order.startedAt).getTime();
         const elapsedTime = now - startedTime;
         const totalDuration =
@@ -266,18 +329,50 @@ class KitchenTimerService {
           remaining <= deliveryReadinessThreshold &&
           remaining > deliveryReadinessThreshold - 60 * 1000 // 1 minute window
         ) {
+          console.log("HERE 2");
           try {
+            const deliveryPartner = {
+              name: "",
+              contact: "",
+              notificationToken: "",
+              orders: [],
+            };
+            // For delivery orders, fetch an available delivery partner
+            if (order.id.includes("DEL")) {
+              const res = await getOnlineStaff("delivery");
+              if (res) {
+                deliveryPartner.name = res.name;
+                deliveryPartner.contact = res.contact;
+              }
+            }
+
+            // Determine final recipient
+            const recipientName = order.attendantName?.trim()
+              ? order.attendantName
+              : deliveryPartner.name;
+            const recipientContact = order.attendantContact?.trim()
+              ? order.attendantContact
+              : deliveryPartner.contact;
+
+            // Notify listeners about the delivery partner assignment
+            if (deliveryPartner.name && deliveryPartner.contact) {
+              this.notifyDeliveryAlertListeners(order.id, {
+                name: deliveryPartner.name,
+                contact: deliveryPartner.contact,
+              });
+            }
+
             this.deliveryReadinessTriggered.add(order.id);
             await sendDeliveryReadinessRequest(
               order.id,
-              order.attendantName,
-              order.attendantContact,
+              recipientName,
+              recipientContact,
               order.customerName,
               `Order ${order.id}`,
               this.kitchenTimerConfig.deliveryReadinessMinutes
             );
             console.log(
-              `Kitchen Timer Service: Delivery readiness request sent for order ${order.id} to ${order.attendantName}`
+              `Kitchen Timer Service: Delivery readiness request sent for order ${order.id} to ${recipientName}`
             );
           } catch (error) {
             console.error(

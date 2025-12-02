@@ -16,7 +16,7 @@ export default function OrderBoard({
   kitchenTimerConfig,
 }: OrderBoardProps) {
   // Filter and sort orders by status and respective timestamps
-  console.log("ORDERS", orders);
+  // console.log("ORDERS", orders);
   const newOrders = Object.values(orders)
     .filter((order) => order.status === OrderStatus.New)
     .sort(
@@ -40,7 +40,7 @@ export default function OrderBoard({
       return dateB - dateA;
     });
 
-  console.log("inPreparationOrders", inPreparationOrders);
+  // console.log("inPreparationOrders", inPreparationOrders);
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* New Orders Column */}

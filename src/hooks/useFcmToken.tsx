@@ -187,7 +187,7 @@ const GlobalNotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!("Notification" in window)) return;
 
     if (notificationPermissionStatus === "granted") {
-      console.log("closePopup");
+      // console.log("closePopup");
       closePopup();
     } else if (
       notificationPermissionStatus === "denied" ||

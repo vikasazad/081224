@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { KitchenTimerConfig, type Order } from "@/types/kitchen";
+import KitchenTimerService from "@/services/kitchen-timer-service";
 
 interface OrderTimerProps {
   startTime: Date;
@@ -23,6 +24,14 @@ export default function OrderTimer({
   const [progress, setProgress] = useState<number>(100);
   const [showDeliveryMessage, setShowDeliveryMessage] =
     useState<boolean>(false);
+  const [deliveryPartner, setDeliveryPartner] = useState<{
+    name: string;
+    contact: string;
+  }>({
+    name: "",
+    contact: "",
+  });
+
   // Total duration in milliseconds
   const totalDuration = duration * 60 * 1000;
 
@@ -32,6 +41,23 @@ export default function OrderTimer({
 
   // Note: Delivery readiness notifications are sent by the global KitchenTimerService
   // This component just shows a visual indicator when the threshold is reached
+
+  // Subscribe to delivery alerts for this order
+  useEffect(() => {
+    const timerService = KitchenTimerService.getInstance();
+    const unsubscribe = timerService.onDeliveryAlert((orderId, partner) => {
+      // Only update if this alert is for our order
+      if (orderId === order?.id) {
+        console.log(`Delivery partner assigned to order ${orderId}:`, partner);
+        setDeliveryPartner(partner);
+        setShowDeliveryMessage(true);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [order?.id]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -97,11 +123,16 @@ export default function OrderTimer({
             : "bg-red-100 dark:bg-red-900"
         }`}
       />
-      {showDeliveryMessage && timeLeft > 0 && order?.attendantName && (
-        <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-          Delivery readiness request sent to {order.attendantName}
-        </div>
-      )}
+      {showDeliveryMessage &&
+        timeLeft > 0 &&
+        (order?.attendantName || deliveryPartner.name) && (
+          <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+            Delivery readiness request sent to{" "}
+            {order?.attendantName?.trim()
+              ? order?.attendantName
+              : deliveryPartner.name}
+          </div>
+        )}
     </div>
   );
 }

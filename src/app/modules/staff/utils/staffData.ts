@@ -727,7 +727,7 @@ function assignAttendantSequentially(
   return sortedStaff[0];
 }
 
-export async function getOnlineConcierge() {
+export async function getOnlineStaff(staffType: string) {
   console.log("getOnlineConcierge");
   const session = await auth();
   const user = session?.user?.email;
@@ -758,7 +758,7 @@ export async function getOnlineConcierge() {
       .filter(
         (staffMember: any) =>
           staffMember.status === "online" &&
-          staffMember.role === "concierge" &&
+          staffMember.role === staffType &&
           staffMember.active !== false // Check that staff is active (true or undefined)
       )
       .map((staffMember: any) => ({
@@ -1172,7 +1172,7 @@ export async function saveRoomData(roomInfo: any) {
     }
 
     const _bookingId = generateOrderId("BOK", roomInfo.roomNo);
-    const _attendant = await getOnlineConcierge();
+    const _attendant = await getOnlineStaff("concierge");
 
     if (!_attendant) {
       console.error("No attendant found");
