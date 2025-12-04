@@ -58,21 +58,29 @@ const Vacant = ({
                   <AccordionItem value={item.roomNo}>
                     <AccordionTrigger className="p-2">
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-2xl font-extrabold tracking-wide text-gray-900">
+                        <span className="text-xl font-bold  text-gray-900">
                           {item.roomNo}
                         </span>
-                        <StatusChip status={item.status} />
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="flex flex-col gap-2 mt-2">
-                        <div className="flex flex-wrap gap-2 items-center">
+                        <div className="flex items-center gap-2">
                           <Badge
                             variant="outline"
                             className="text-xs px-2 py-1"
                           >
                             {item.roomType}
                           </Badge>
+                          <StatusChip status={item.status} />
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="flex flex-col gap-2 mt-2">
+                        <div className="flex flex-wrap gap-2 items-center">
+                          {/* <Badge
+                            variant="outline"
+                            className="text-xs px-2 py-1"
+                          >
+                            {item.roomType}
+                          </Badge> */}
                           <Badge
                             variant="outline"
                             className="text-xs px-2 py-1"

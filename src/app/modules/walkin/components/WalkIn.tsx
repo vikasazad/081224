@@ -481,7 +481,7 @@ const WalkIn = () => {
                   <Pencil size={16} />
                 </button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl ">
                 <DialogHeader>
                   <DialogTitle>Additional Details</DialogTitle>
                   <DialogDescription>

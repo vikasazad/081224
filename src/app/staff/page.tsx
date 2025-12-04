@@ -58,7 +58,7 @@ const Page = () => {
 
   return (
     <>
-      <div className="flex min-h-screen w-full flex-col">
+      <div className="flex min-h-screen w-full flex-col ">
         <div className="space-y-4 p-2 mx-8">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
             <h2 className="text-3xl font-bold tracking-tight mt-2">Staff</h2>
@@ -69,23 +69,35 @@ const Page = () => {
         ) : (
           <Tabs
             defaultValue="room"
-            className="space-y-4 mx-8"
+            className="space-y-4 mx-4 md:mx-8"
             onValueChange={setActiveTab}
           >
-            <TabsList className="w-full h-10 grid  grid-cols-4">
-              <TabsTrigger value="room" className="flex items-center gap-2">
+            <TabsList className=" h-10 flex  justify-evenly mx-0  ">
+              <TabsTrigger
+                value="room"
+                className="flex items-center gap-2 py-2 md:py-1"
+              >
                 <MapPin className="w-4 h-4" />
                 <span className="hidden sm:inline">Rooms</span>
               </TabsTrigger>
-              <TabsTrigger value="table" className="flex items-center gap-2">
+              <TabsTrigger
+                value="table"
+                className="flex items-center gap-2 py-2 md:py-1"
+              >
                 <UtensilsCrossed className="w-4 h-4" />
                 <span className="hidden sm:inline">Tables</span>
               </TabsTrigger>
-              <TabsTrigger value="delivery" className="flex items-center gap-2">
+              <TabsTrigger
+                value="delivery"
+                className="flex items-center gap-2 py-2 md:py-1"
+              >
                 <Truck className="w-4 h-4" />
                 <span className="hidden sm:inline">Delivery</span>
               </TabsTrigger>
-              <TabsTrigger value="takeaway" className="flex items-center gap-2">
+              <TabsTrigger
+                value="takeaway"
+                className="flex items-center gap-2 py-2 md:py-1"
+              >
                 <Image
                   src={
                     activeTab === "takeaway"

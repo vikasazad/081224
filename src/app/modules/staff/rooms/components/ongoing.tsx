@@ -1029,7 +1029,7 @@ export default function Ongoing({
                   <Accordion type="single" collapsible>
                     <AccordionItem value="item-1">
                       <AccordionTrigger>
-                        <div className="flex justify-between items-center w-full">
+                        <div className="md:flex md:justify-between md:items-center md:w-full space-y-2  ">
                           <div className="flex items-center gap-1">
                             <div className="flex flex-col items-start">
                               <div className="flex items-center gap-3">

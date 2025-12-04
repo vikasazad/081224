@@ -22,7 +22,7 @@ export default function Rooms({
   // console.log("ROOM", room);
   return (
     <>
-      <div className="flex flex-wrap gap-2 mt-4 mx-2">
+      <div className=" flex flex-wrap gap-2 mt-4 ">
         <Button
           variant={statusFilter === "ongoing" ? "default" : "outline"}
           size="sm"
