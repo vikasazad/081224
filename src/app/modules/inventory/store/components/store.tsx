@@ -173,7 +173,7 @@ const Store = ({ data }: any) => {
         </Card>
 
         {title === "Add New Item" && (
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={setOpen} modal={false}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogTitle>Add New Item</DialogTitle>
               <DialogDescription>

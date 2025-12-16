@@ -106,6 +106,9 @@ export function InventoryForm({
   const [supplierGstOptions, setSupplierGstOptions] = useState<string[]>([]);
   const [isAddingSupplier, setIsAddingSupplier] = useState(false);
   const [isAddingSku, setIsAddingSku] = useState(false);
+  const [skuOpen, setSkuOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -224,12 +227,17 @@ export function InventoryForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>SKU</FormLabel>
-                  <Popover>
+                  <Popover
+                    open={skuOpen}
+                    onOpenChange={setSkuOpen}
+                    modal={false}
+                  >
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant="outline"
                           role="combobox"
+                          aria-expanded={skuOpen}
                           className={cn(
                             "w-full justify-between",
                             !field.value && "text-muted-foreground"
@@ -256,6 +264,7 @@ export function InventoryForm({
                                 key={sku.value}
                                 onSelect={() => {
                                   form.setValue("sku", sku.value);
+                                  setSkuOpen(false);
                                 }}
                               >
                                 <CheckIcon
@@ -271,7 +280,10 @@ export function InventoryForm({
                             ))}
                             <CommandItem
                               value="add-new"
-                              onSelect={() => setIsAddingSku(true)}
+                              onSelect={() => {
+                                setSkuOpen(false);
+                                setIsAddingSku(true);
+                              }}
                             >
                               <span className="text-blue-500">
                                 + Add new SKU
@@ -292,12 +304,17 @@ export function InventoryForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Category</FormLabel>
-                  <Popover>
+                  <Popover
+                    open={categoryOpen}
+                    onOpenChange={setCategoryOpen}
+                    modal={false}
+                  >
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant="outline"
                           role="combobox"
+                          aria-expanded={categoryOpen}
                           className={cn(
                             "w-full justify-between",
                             !field.value && "text-muted-foreground"
@@ -324,6 +341,7 @@ export function InventoryForm({
                                 key={category.name}
                                 onSelect={() => {
                                   form.setValue("category", category.name);
+                                  setCategoryOpen(false);
                                 }}
                               >
                                 <CheckIcon
@@ -459,7 +477,7 @@ export function InventoryForm({
                         <SelectValue placeholder="Select a supplier" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent position="popper">
                       {data?.suppliers.map((supplier: any) => (
                         <SelectItem key={supplier.name} value={supplier.name}>
                           {supplier.name}
@@ -504,7 +522,7 @@ export function InventoryForm({
                         <SelectValue placeholder="Select supplier GST" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent position="popper">
                       {supplierGstOptions.map((gst) => (
                         <SelectItem key={gst} value={gst}>
                           {gst}
@@ -531,7 +549,7 @@ export function InventoryForm({
                         <SelectValue placeholder="Select a quantity unit" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent position="popper">
                       {quantityUnits.map((unit) => (
                         <SelectItem key={unit.value} value={unit.value}>
                           {unit.label}
@@ -562,7 +580,11 @@ export function InventoryForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date</FormLabel>
-                  <Popover>
+                  <Popover
+                    open={dateOpen}
+                    onOpenChange={setDateOpen}
+                    modal={false}
+                  >
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -585,7 +607,10 @@ export function InventoryForm({
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date);
+                          setDateOpen(false);
+                        }}
                         disabled={(date) =>
                           date > new Date() || date < new Date("1900-01-01")
                         }
@@ -628,7 +653,7 @@ export function InventoryForm({
                         <SelectValue placeholder="Select a payment mode" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent position="popper">
                       {paymentModes.map((mode) => (
                         <SelectItem key={mode.value} value={mode.value}>
                           {mode.label}

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/accordion";
 import { useDispatch } from "react-redux";
 import { addGstTax, addRoom } from "@/lib/features/walkinSlice";
+import { Button } from "@/components/ui/button";
 
 const Vacant = ({
   data,
@@ -46,6 +47,12 @@ const Vacant = ({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <span className="text-xl font-bold">Vacant Rooms</span>
+        <Button variant="default" size="sm">
+          New Reservation
+        </Button>
+      </div>
       {roomData && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {roomData.map((item: any, main: number) => (

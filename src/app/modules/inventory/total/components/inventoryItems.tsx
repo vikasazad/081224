@@ -561,7 +561,11 @@ export default function InventoryItems({ data }: any) {
         </div>
       </div>
 
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        modal={false}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogTitle>Add New Item</DialogTitle>
           <DialogDescription>
@@ -596,6 +600,7 @@ export default function InventoryItems({ data }: any) {
       <Dialog
         open={isCategoryDialogOpen}
         onOpenChange={setIsCategoryDialogOpen}
+        modal={false}
       >
         <DialogContent>
           <DialogTitle>Add New Category</DialogTitle>
@@ -651,7 +656,11 @@ export default function InventoryItems({ data }: any) {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isSkuDialogOpen} onOpenChange={setIsSkuDialogOpen}>
+      <Dialog
+        open={isSkuDialogOpen}
+        onOpenChange={setIsSkuDialogOpen}
+        modal={false}
+      >
         <DialogContent className="max-w-2xl">
           <DialogTitle>SKU List</DialogTitle>
           <DialogDescription></DialogDescription>
