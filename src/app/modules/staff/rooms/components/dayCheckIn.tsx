@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 const DayCheckIn = ({ data }: { data: any; status: string }) => {
+  console.log("DATA", data);
   const [roomData, setRoomData] = useState([]);
 
   useEffect(() => {
@@ -32,22 +33,22 @@ const DayCheckIn = ({ data }: { data: any; status: string }) => {
                       <div className="flex justify-between items-center w-full">
                         <div className="flex flex-col items-start">
                           <span className="text-xl font-bold">
-                            Booking {item.bookingDetails.bookingId}
+                            Booking {item.bookingId}
                           </span>
                           <div className="flex">
                             <span className="text-sm text-muted-foreground">
-                              Guest: {item.bookingDetails.customer.name}
+                              Guest: {item.name}
                             </span>
                             <Badge
                               variant="secondary"
                               className="flex items-center gap-1"
                             >
                               <Users size={14} />
-                              {item.bookingDetails.noOfGuests} Guests
+                              {item.numberOfGuests} Guests
                             </Badge>
                           </div>
                         </div>
-                        <StatusChip status={item.bookingDetails.status} />
+                        <StatusChip status={item?.status || "available"} />
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -59,9 +60,7 @@ const DayCheckIn = ({ data }: { data: any; status: string }) => {
                           </div>
                           <div>
                             <p className="font-medium">
-                              {new Date(
-                                item.bookingDetails.checkIn
-                              ).toLocaleString()}
+                              {new Date(item.checkIn).toLocaleString()}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               10:17 AM
@@ -76,9 +75,7 @@ const DayCheckIn = ({ data }: { data: any; status: string }) => {
                           </div>
                           <div>
                             <p className="font-medium">
-                              {new Date(
-                                item.bookingDetails.checkOut
-                              ).toLocaleString()}
+                              {new Date(item.checkOut).toLocaleString()}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               10:17 AM
@@ -88,14 +85,14 @@ const DayCheckIn = ({ data }: { data: any; status: string }) => {
                       </div>
 
                       <Separator className="my-2" />
-                      {item.bookingDetails.specialRequirements && (
+                      {item?.specialRequirements && (
                         <>
                           <div className="space-y-4">
                             <h3 className="text-sm font-medium">
                               Special Requirement
                             </h3>
                             <Badge variant="outline">
-                              {item.bookingDetails.specialRequirements}
+                              {item?.specialRequirements}
                             </Badge>
                           </div>
 

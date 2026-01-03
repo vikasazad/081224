@@ -127,7 +127,7 @@ const Reservations = () => {
 
   return (
     <div className="space-y-4">
-      <div className="max-w-7xl mx-auto">
+      <div className=" mx-auto">
         <div className=" mb-6">
           {/* Header */}
           <div className="flex justify-between items-center">
