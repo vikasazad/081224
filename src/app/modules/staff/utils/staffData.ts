@@ -2252,3 +2252,78 @@ export async function completeTakeawayOrder(
   //   "Wah Bhai Wah",
   // ]);
 }
+
+export async function addReservation(reservationData: any) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  if (!reservationData) {
+    console.error("Reservation data is undefined");
+    return false;
+  }
+
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      await updateDoc(docRef, {
+        reservation: arrayUnion(reservationData),
+      });
+      return true;
+    }
+  } catch (error) {
+    console.error("Error adding reservation:", error);
+    return false;
+  }
+}
+
+export async function getReservationsInRange(
+  startDate: string,
+  endDate: string
+) {
+  const session = await auth();
+  const user = session?.user?.email;
+
+  if (!user) {
+    console.error("User email is undefined");
+    return null;
+  }
+
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const allReservations = data.reservation || [];
+
+      // Normalize dates to start and end of day for proper comparison
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      // Filter reservations within the date range
+      const filteredReservations = allReservations.filter(
+        (reservation: any) => {
+          const checkInDate = new Date(reservation.checkIn);
+
+          // Include reservations where check-in falls within the selected range
+          return checkInDate >= start && checkInDate <= end;
+        }
+      );
+
+      return filteredReservations;
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Error fetching reservations:", error);
+    return null;
+  }
+}

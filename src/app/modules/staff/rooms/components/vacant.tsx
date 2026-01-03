@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 // import { Clock, User } from "lucide-react";
 import StatusChip from "@/components/ui/StatusChip";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import {
   Accordion,
@@ -13,7 +14,6 @@ import {
 } from "@/components/ui/accordion";
 import { useDispatch } from "react-redux";
 import { addGstTax, addRoom } from "@/lib/features/walkinSlice";
-import { Button } from "@/components/ui/button";
 
 const Vacant = ({
   data,
@@ -47,11 +47,8 @@ const Vacant = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <span className="text-xl font-bold">Vacant Rooms</span>
-        <Button variant="default" size="sm">
-          New Reservation
-        </Button>
+      <div className="">
+        <h1 className="text-3xl font-bold text-gray-900">Vacant Rooms</h1>
       </div>
       {roomData && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

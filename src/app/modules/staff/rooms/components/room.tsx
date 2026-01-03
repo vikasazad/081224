@@ -6,6 +6,7 @@ import DayCheckOut from "./dayCheckOut";
 import DayCheckIn from "./dayCheckIn";
 import Vacant from "./vacant";
 import { Button } from "@/components/ui/button";
+import Reservations from "./reservations";
 // import Maintenance from "./maintenance";
 
 export default function Rooms({
@@ -48,6 +49,14 @@ export default function Rooms({
           <span className="hidden sm:inline">Today </span>CheckIn
         </Button>
         <Button
+          variant={statusFilter === "reservations" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setStatusFilter("reservations")}
+          className="text-xs sm:text-sm"
+        >
+          <span className="hidden sm:inline">Reservations </span>
+        </Button>
+        <Button
           variant={statusFilter === "vacant" ? "default" : "outline"}
           size="sm"
           onClick={() => setStatusFilter("vacant")}
@@ -82,6 +91,7 @@ export default function Rooms({
             {statusFilter === "checkin" && (
               <DayCheckIn data={room.todayCheckIn} status={room.status} />
             )}
+            {statusFilter === "reservations" && <Reservations />}
             {statusFilter === "vacant" && (
               <Vacant
                 data={room.vacant}
