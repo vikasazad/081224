@@ -95,7 +95,7 @@ const HotelRoomTransctions = ({ data }: any) => {
                           ₹{transaction.payment?.subtotal}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          ₹{transaction.payment?.price}
+                          ₹{transaction.payment?.totalPrice}
                         </TableCell>
                         <TableCell>
                           <Badge

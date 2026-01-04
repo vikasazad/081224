@@ -263,7 +263,6 @@ const HotelRoomHistory = ({ data }: any) => {
                           className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
                         >
                           <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4" />
                             <div>
                               <p className="font-medium">{el.orderId}</p>
                               <p className="text-sm text-gray-500">

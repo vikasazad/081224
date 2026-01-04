@@ -385,7 +385,7 @@ const WalkIn = () => {
         paymentMode: guestDetails.paymentMode,
         discount: {
           type: coupon?.type || "",
-          amount: coupon?.amount || "",
+          amount: coupon?.discount || "",
           code: coupon?.code || "",
           discount: discount || 0,
         },

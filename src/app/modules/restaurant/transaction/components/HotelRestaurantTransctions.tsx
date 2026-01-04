@@ -50,11 +50,11 @@ const HotelRestaurantTransctions = ({ data }: any) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.data.length > 0 &&
-                  data.data
+                {data?.data?.length > 0 &&
+                  data?.data
                     .filter(
                       (table: any) =>
-                        table.diningDetails.location === data.table
+                        table?.diningDetails?.location === data?.table
                     )
                     .map((item: any) => {
                       return item.transctions.map(

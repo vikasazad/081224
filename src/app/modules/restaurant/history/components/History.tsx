@@ -24,6 +24,8 @@ const History = ({ data }: { data: any }) => {
   const ontableSelect = async (key: string, roomNo: string) => {
     console.log(key, roomNo);
     const data = await getRestaurantHistory(key);
+    console.log("00000000000000", data);
+
     if (data === false) {
       toast.error("Error while getting history!!");
     }
