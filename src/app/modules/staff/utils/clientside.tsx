@@ -1,7 +1,8 @@
 "use client";
 
-import { db } from "@/config/db/firebase";
+import { db, storage } from "@/config/db/firebase";
 import { collection, doc, onSnapshot } from "firebase/firestore";
+import { ref, listAll, getDownloadURL } from "firebase/storage";
 
 // Helper function to create empty result structure
 function createEmptyResult() {
@@ -28,6 +29,12 @@ function createEmptyResult() {
   };
 }
 
+// Helper function to check if room should check in today
+function isTodayCheckIn(checkInDate: string): boolean {
+  const checkInTime = new Date(checkInDate);
+  return checkInTime.toDateString() === new Date().toDateString();
+}
+
 // Helper function to check if room should check out today
 function isTodayCheckOut(checkOutDate: string): boolean {
   const checkOutTime = new Date(checkOutDate);
@@ -43,7 +50,10 @@ function processHotelData(hotelSnapshot: any, result: any) {
 
   result.deliveryOverview = hotelData.delivery || [];
   result.takeawayOverview = hotelData.takeaway || [];
-  result.hotelOverview.todayCheckIn = hotelData.reservation || [];
+  result.hotelOverview.todayCheckIn = (hotelData.reservation || []).filter(
+    (reservation: any) =>
+      reservation?.checkIn && isTodayCheckIn(reservation.checkIn)
+  );
   result.hotelOverview.ongoing = live?.rooms || [];
   result.hotelOverview.status = live?.roomsData?.status || {};
 
@@ -391,4 +401,40 @@ export const calculateFinalAmount = (item: any) => {
     diningTotal + servicesTotal + bookingTotal + checklistTotal;
   // console.log("Combined Final Amount:", combinedFinalAmount);
   return combinedFinalAmount;
+};
+
+// Function to fetch images from Firebase Storage for a specific reservation
+export const fetchCheckInImages = async (
+  reservationId: string
+): Promise<string[]> => {
+  try {
+    if (!reservationId) {
+      console.warn("No reservation ID provided");
+      return [];
+    }
+
+    // Reference to the checkin folder for this reservation
+    const storageRef = ref(storage, `checkin/${reservationId}`);
+
+    // List all files in the folder
+    const result = await listAll(storageRef);
+
+    if (result.items.length === 0) {
+      return [];
+    }
+
+    // Get download URLs for all images
+    const urlPromises = result.items.map((imageRef) =>
+      getDownloadURL(imageRef)
+    );
+    const urls = await Promise.all(urlPromises);
+
+    return urls;
+  } catch (error) {
+    console.error(
+      `Error fetching check-in images for reservation ${reservationId}:`,
+      error
+    );
+    return [];
+  }
 };
