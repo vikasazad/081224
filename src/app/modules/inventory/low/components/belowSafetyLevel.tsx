@@ -94,7 +94,7 @@ export default function BelowSafetyLevel({ data }: any) {
 
   const handleSaveEdit = async (
     editedItem: any,
-    transactionType: string | undefined,
+    transactionType: TransactionType,
     previousQuantity: number,
   ) => {
     console.log("EDITED", editedItem, transactionType, previousQuantity);
@@ -105,7 +105,7 @@ export default function BelowSafetyLevel({ data }: any) {
       category: editedItem.category,
       previousQuantity: previousQuantity,
       quantity: editedItem.quantity,
-      transactionType: transactionType as TransactionType,
+      transactionType: transactionType,
       dateTime: new Date().toString(),
       supplierCustomer: editedItem.supplier,
     };
