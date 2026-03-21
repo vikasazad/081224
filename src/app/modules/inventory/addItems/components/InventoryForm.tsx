@@ -141,7 +141,7 @@ export function InventoryForm({
 
   useEffect(() => {
     const supplier = data?.suppliers.find(
-      (s: any) => s.name === selectedSupplier
+      (s: any) => s.name === selectedSupplier,
     );
     if (supplier) {
       setSupplierGstOptions(supplier.gstNumber);
@@ -241,13 +241,13 @@ export function InventoryForm({
                           aria-expanded={skuOpen}
                           className={cn(
                             "w-full justify-between",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                         >
                           {field.value
                             ? data?.sku.find(
-                              (sku: any) => sku.value === field.value
-                            )?.label
+                                (sku: any) => sku.value === field.value,
+                              )?.label
                             : "Select SKU"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -273,7 +273,7 @@ export function InventoryForm({
                                     "mr-2 h-4 w-4",
                                     sku.value === field.value
                                       ? "opacity-100"
-                                      : "opacity-0"
+                                      : "opacity-0",
                                   )}
                                 />
                                 {`${sku.value}: ${sku.label}`}
@@ -318,13 +318,14 @@ export function InventoryForm({
                           aria-expanded={categoryOpen}
                           className={cn(
                             "w-full justify-between",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                         >
                           {field.value
                             ? data?.categories.find(
-                              (category: any) => category.name === field.value
-                            )?.name
+                                (category: any) =>
+                                  category.name === field.value,
+                              )?.name
                             : "Select category"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -350,7 +351,7 @@ export function InventoryForm({
                                     "mr-2 h-4 w-4",
                                     category.name === field.value
                                       ? "opacity-100"
-                                      : "opacity-0"
+                                      : "opacity-0",
                                   )}
                                 />
                                 {category.name}
@@ -592,7 +593,7 @@ export function InventoryForm({
                           variant={"outline"}
                           className={cn(
                             "w-[240px] pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                         >
                           {field.value ? (
@@ -666,7 +667,10 @@ export function InventoryForm({
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isAddingSupplier}>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" className="ml-2" disabled={isAddingSupplier}>
               Submit
             </Button>
           </form>
