@@ -100,6 +100,7 @@ export function InventoryForm({
   data,
   session,
   onSubmit: onSubmitProp,
+  onCancel,
   newSku,
 }: any) {
   // console.log("DATA", data);
@@ -170,8 +171,8 @@ export function InventoryForm({
         Number(values.quantity) === 0
           ? "Out of Stock"
           : Number(values.quantity) <= Number(values.reorderLevel)
-          ? "Low Stock"
-          : "In Stock",
+            ? "Low Stock"
+            : "In Stock",
       reorderLevel: values.reorderLevel,
       updatedBy: session?.user?.role || "undefined",
       date: values.date.toString(), // Format date as YYYY-MM-DD
@@ -245,8 +246,8 @@ export function InventoryForm({
                         >
                           {field.value
                             ? data?.sku.find(
-                                (sku: any) => sku.value === field.value
-                              )?.label
+                              (sku: any) => sku.value === field.value
+                            )?.label
                             : "Select SKU"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -322,8 +323,8 @@ export function InventoryForm({
                         >
                           {field.value
                             ? data?.categories.find(
-                                (category: any) => category.name === field.value
-                              )?.name
+                              (category: any) => category.name === field.value
+                            )?.name
                             : "Select category"}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>

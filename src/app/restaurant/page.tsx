@@ -9,9 +9,9 @@ import {
 import Restaurant from "../modules/restaurant/restaurant/components/Restaurant";
 import History from "../modules/restaurant/history/components/History";
 import Tranasactions from "../modules/restaurant/transaction/components/Transactions";
-import TableQR from "../modules/restaurant/QR/components/TableQR";
 import { auth } from "@/auth";
 import Settings from "../modules/restaurant/releaseTable/components/Settings";
+import TableQR from "../modules/restaurant/QR/components/TableQR";
 
 export default async function Dashboard() {
   const session = await auth();

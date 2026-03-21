@@ -1,5 +1,11 @@
 import { db } from "@/config/db/firebase";
 import { arrayUnion, doc, getDoc, updateDoc } from "firebase/firestore";
+import { generateTransactionId } from "./idGenerator";
+// import {
+//   onStockTransaction,
+//   updateLastStockOutDate,
+// } from "../intelligence/utils/triggers";
+import type { Supplier, Transaction } from "@/types/inventory";
 
 export async function saveInventoryItem(inventoryData: any) {
   try {
@@ -50,7 +56,7 @@ export async function saveDeletedItem(inventoryData: any) {
   return false;
 }
 
-export async function saveNewSky(sku: any) {
+export async function saveNewSku(sku: any) {
   try {
     const docRef = doc(db, "vikumar.azad@gmail.com", "inventory");
 
@@ -114,7 +120,7 @@ export async function saveDeletedCategory(inventoryData: any) {
   return false;
 }
 
-export async function addNewSupplier(supplier: any) {
+export async function addNewSupplier(supplier: Supplier) {
   try {
     const docRef = doc(db, "vikumar.azad@gmail.com", "inventory");
 
@@ -123,12 +129,12 @@ export async function addNewSupplier(supplier: any) {
     });
 
     console.log("Data successfully updated and saved to Firestore.");
-    return true;
+    return supplier;
   } catch (error) {
     console.error("ERROR setting offline data:", error);
   }
 
-  return false;
+  return null;
 }
 
 export async function saveEditedSupplier(updatedItems: any) {
@@ -162,21 +168,46 @@ export async function saveDeletedSupplier(supplierData: any) {
   return false;
 }
 
-export async function addNewTransaction(transaction: any) {
+export async function addNewTransaction(
+  transaction: Omit<Transaction, "id"> & { id?: string }
+) {
   try {
     const docRef = doc(db, "vikumar.azad@gmail.com", "inventory");
 
+    // Auto-generate ID if not provided
+    const transactionWithId: Transaction = {
+      ...transaction,
+      id: transaction.id || generateTransactionId(),
+    };
+
     await updateDoc(docRef, {
-      "store.recentTransactions": arrayUnion(transaction),
+      "store.recentTransactions": arrayUnion(transactionWithId),
     });
 
     console.log("Data successfully updated and saved to Firestore.");
-    return true;
+
+    // Trigger SKU intelligence update (fire and forget)
+    // onStockTransaction(transactionWithId).catch((err) =>
+    //   console.error("SKU intelligence update failed:", err)
+    // );
+
+    // Update lastStockOutDate for Stock Out and Sale transactions
+    // if (
+    //   transactionWithId.transactionType === "Stock Out" ||
+    //   transactionWithId.transactionType === "Sale"
+    // ) {
+    //   updateLastStockOutDate(
+    //     transactionWithId.sku,
+    //     transactionWithId.dateTime
+    //   ).catch((err) => console.error("lastStockOutDate update failed:", err));
+    // }
+
+    return transactionWithId;
   } catch (error) {
     console.error("ERROR setting offline data:", error);
   }
 
-  return false;
+  return null;
 }
 
 export async function saveLowStockEditedItem(updatedItem: any) {

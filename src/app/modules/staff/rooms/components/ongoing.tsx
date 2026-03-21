@@ -125,7 +125,7 @@ export default function Ongoing({
   const [categoryItems, setCategoryItems] = useState([]);
   const [selectedCategoryItems, setSelectedCategoryItems] = useState<any[]>([]);
   const [discountSelect, setDiscountSelect] = useState([
-    { type: "", amount: 0, code: "" },
+    { type: "", discount: 0, code: "", amount: 0 },
   ]);
   const [selectedDiscount, setSelectedDiscount] = useState<string>("");
   const [checklistOpen, setChecklistOpen] = useState<number | null>(null);
@@ -190,13 +190,13 @@ export default function Ongoing({
         categorySelect === "Food"
           ? addItems.foodMenuItems
           : categorySelect === "Service"
-          ? addItems.hotelServices
-          : categorySelect === "Issue"
-          ? addItems.hotelRoomIssues
-          : [];
+            ? addItems.hotelServices
+            : categorySelect === "Issue"
+              ? addItems.hotelRoomIssues
+              : [];
 
       const filtered = arr.filter((item: any) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
+        item.name.toLowerCase().includes(search.toLowerCase()),
       );
       setCategoryItems(filtered);
     } else {
@@ -207,18 +207,18 @@ export default function Ongoing({
   const handleCategoryItemSelect = (item: any) => {
     console.log("ITEM", item);
     setSelectedCategoryItems((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item],
     );
   };
 
   const handleAttendantChange = async (
     orderId: string,
     attendant: string,
-    index: number
+    index: number,
   ) => {
     console.log("HERE.....................", orderId, attendant, index);
     const attendantData = availableAttendant.find(
-      (data: any) => data.name === attendant
+      (data: any) => data.name === attendant,
     );
     const token = attendantData?.notificationToken;
     const contact = attendantData?.contact;
@@ -240,7 +240,7 @@ export default function Ongoing({
     } else if (orderId.startsWith("OR:")) {
       // Update dining details and its orders
       const orderIndex = updatedTableData[index].diningDetails.orders.findIndex(
-        (order: any) => order.orderId === orderId
+        (order: any) => order.orderId === orderId,
       );
       if (orderIndex !== -1) {
         updatedTableData[index].diningDetails.attendant = attendant;
@@ -272,7 +272,7 @@ export default function Ongoing({
     } else if (orderId.startsWith("SE:")) {
       // Update services used
       const serviceIndex = updatedTableData[index].servicesUsed.findIndex(
-        (service: any) => service.serviceId === orderId
+        (service: any) => service.serviceId === orderId,
       );
       if (serviceIndex !== -1) {
         updatedTableData[index].servicesUsed[serviceIndex].attendant =
@@ -381,7 +381,7 @@ export default function Ongoing({
           const updatedAttendants = availableAttendant.map((staff: any) =>
             staff.name === assignedAttendant.name
               ? { ...staff, orders: [...staff?.orders, newOrderId] }
-              : staff
+              : staff,
           );
           setavailableAttendant(updatedAttendants);
         }
@@ -416,13 +416,13 @@ export default function Ongoing({
             items,
             totalPrice,
             assignedAttendant.name,
-            assignedAttendant.contact
+            assignedAttendant.contact,
           );
           console.log("RES", res);
           updateOrdersForAttendant(
             assignedAttendant.name,
             newOrderId,
-            assignedAttendant.contact
+            assignedAttendant.contact,
           );
         }
       } else if (items[0]?.startTime || items[0]?.endTime) {
@@ -437,7 +437,7 @@ export default function Ongoing({
           parseFloat(items[0].price),
           parseFloat(items[0].price),
           "services",
-          businessInfo.gstTax
+          businessInfo.gstTax,
         );
         const totalPrice = parseFloat(items[0].price) + gst.gstAmount;
         const newService = {
@@ -485,7 +485,7 @@ export default function Ongoing({
           const updatedAttendants = availableAttendant.map((staff: any) =>
             staff.name === assignedAttendant.name
               ? { ...staff, orders: [...staff.orders, newOrderId] }
-              : staff
+              : staff,
           );
           setavailableAttendant(updatedAttendants);
         }
@@ -506,7 +506,7 @@ export default function Ongoing({
           updateOrdersForAttendant(
             assignedAttendant.name,
             newOrderId,
-            assignedAttendant.contact
+            assignedAttendant.contact,
           );
         }
       } else if (items[0]?.issueSubtype) {
@@ -546,7 +546,7 @@ export default function Ongoing({
           const updatedAttendants = availableAttendant.map((staff: any) =>
             staff.name === assignedAttendant.name
               ? { ...staff, orders: [...staff.orders, newOrderId] }
-              : staff
+              : staff,
           );
           setavailableAttendant(updatedAttendants);
         }
@@ -567,7 +567,7 @@ export default function Ongoing({
           updateOrdersForAttendant(
             assignedAttendant.name,
             newOrderId,
-            assignedAttendant.contact
+            assignedAttendant.contact,
           );
         }
       }
@@ -584,7 +584,7 @@ export default function Ongoing({
   const handleStatusChange = async (
     status: string,
     orderId: string,
-    index: number
+    index: number,
   ) => {
     console.log("roomData", status, orderId, index);
     if (status === "Paid" || status === "Completed") {
@@ -700,7 +700,7 @@ export default function Ongoing({
       }
       closeConfirmationDialog();
     },
-    [confirmationDialog, closeConfirmationDialog]
+    [confirmationDialog, closeConfirmationDialog],
   );
 
   const updateStatus = (status: any, orderId: any, index: any) => {
@@ -736,7 +736,7 @@ export default function Ongoing({
         const orderIndex = updatedRoomData[
           index
         ].diningDetails.orders.findIndex(
-          (order: any) => order.orderId === orderId
+          (order: any) => order.orderId === orderId,
         );
         if (orderIndex !== -1) {
           if (status.toLocaleLowerCase() === "served") {
@@ -784,7 +784,7 @@ export default function Ongoing({
         const orderIndex = updatedRoomData[
           index
         ].diningDetails.orders.findIndex(
-          (order: any) => order.orderId === orderId
+          (order: any) => order.orderId === orderId,
         );
         if (orderIndex !== -1) {
           updatedRoomData[index].diningDetails.orders[orderIndex].status =
@@ -871,7 +871,7 @@ export default function Ongoing({
     // Clone the roomData to make changes
     console.log("DATA", data);
     const user = roomData.find(
-      (item: any) => item.bookingDetails.location === data.location
+      (item: any) => item.bookingDetails.location === data.location,
     );
 
     let index = 0;
@@ -897,7 +897,7 @@ export default function Ongoing({
       await sendTakeReviewMessage(
         `+91${user.bookingDetails.customer.phone}`,
         [user.bookingDetails.customer.name, "HAPPYSTAY"],
-        "https://g.page/r/CYrhaBonlOFpEAE/review"
+        "https://g.page/r/CYrhaBonlOFpEAE/review",
       );
     }
   };
@@ -911,13 +911,13 @@ export default function Ongoing({
       setFinalSubmitData({ item, main, type: "payment_pending" });
     } else {
       const invoice = `INV${Math.floor(
-        1000000 + Math.random() * 9000000
+        1000000 + Math.random() * 9000000,
       ).toString()}`;
       setOpenFinalSubmitConfirmation(true);
       const invoiceObject = await generateInvoiceObject(
         item,
         businessInfo,
-        invoice
+        invoice,
       );
       console.log("invoiceObject", invoiceObject);
       setFinalSubmitData({ item, main, type: "close_table", invoiceObject });
@@ -930,22 +930,21 @@ export default function Ongoing({
     // Generate and upload invoice if invoice object exists
     if (finalSubmitData?.invoiceObject) {
       try {
-        const { processAndUploadInvoice } = await import(
-          "@/lib/firebase/invoice-storage"
-        );
+        const { processAndUploadInvoice } =
+          await import("@/lib/firebase/invoice-storage");
         const downloadURL = await processAndUploadInvoice(
           finalSubmitData?.invoiceObject,
-          "room"
+          "room",
         );
         console.log(
           "Invoice uploaded successfully. Download URL:",
-          downloadURL
+          downloadURL,
         );
         if (downloadURL) {
           await sendFinalMessage(
             `+91${finalSubmitData?.item?.bookingDetails?.customer?.phone}`,
             [finalSubmitData?.item?.bookingDetails?.customer?.name],
-            downloadURL
+            downloadURL,
           );
         }
       } catch (error) {
@@ -955,20 +954,20 @@ export default function Ongoing({
 
     setHistoryRoom(
       finalSubmitData.item,
-      finalSubmitData.item.bookingDetails.roomType
+      finalSubmitData.item.bookingDetails.roomType,
     );
   };
 
   const handleInvoice = async (item: any, main: number) => {
     console.log("clicked", item, main);
     const invoice = `INV${Math.floor(
-      1000000 + Math.random() * 9000000
+      1000000 + Math.random() * 9000000,
     ).toString()}`;
     console.log("invoice", item);
     const invoiceObject = await generateInvoiceObject(
       item,
       businessInfo,
-      invoice
+      invoice,
     );
     console.log("invoiceObject", invoiceObject);
     // const invoice = await generateInvoice(invoiceObject);
@@ -986,28 +985,33 @@ export default function Ongoing({
     }
     setDiscountSelect([
       ...discount,
-      { type: "", amount: 0, code: "Clear Discount" },
+      { type: "", discount: 0, code: "Clear Discount", amount: 0 },
     ]);
     console.log("item", roomNo, main, discount);
     setOpenDiscountDialog({ open: true, location: roomNo });
   };
+  console.log("discountSelect", discountSelect);
 
   const handleAddDiscount = async (
     selectedDiscount: string,
-    location: string
+    location: string,
   ) => {
+    console.log("here1");
     if (!selectedDiscount) return;
     if (selectedDiscount === "Clear Discount") {
       console.log("clear discount", selectedDiscount);
       await removeDiscount(location);
     } else {
+      console.log("here2");
       const discount = discountSelect.find(
-        (item) => item.code === selectedDiscount
+        (item) => item.code === selectedDiscount,
       );
+      console.log("discount", discount);
       if (discount) {
         const room = roomData.find(
-          (item: any) => item.bookingDetails.location === location
+          (item: any) => item.bookingDetails.location === location,
         );
+        console.log("room", room);
         if (!room) return;
         const data = await addDiscount(discount, room);
         console.log("data", data);
@@ -1060,7 +1064,7 @@ export default function Ongoing({
                                 onClick={() =>
                                   handleDiscount(
                                     item.bookingDetails.location,
-                                    main
+                                    main,
                                   )
                                 }
                               >
@@ -1081,7 +1085,7 @@ export default function Ongoing({
                                       className={cn(
                                         "flex items-center gap-1 px-2 py-1 border rounded-md",
                                         item.checklist?.flag &&
-                                          "opacity-50 cursor-not-allowed"
+                                          "opacity-50 cursor-not-allowed",
                                       )}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -1112,7 +1116,7 @@ export default function Ongoing({
                                         <SelectTrigger>
                                           <SelectValue placeholder="Select category" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent container={null}>
                                           <SelectItem value="Food">
                                             Food
                                           </SelectItem>
@@ -1171,7 +1175,8 @@ export default function Ongoing({
                                                             onChange={(e) => {
                                                               item.count =
                                                                 parseInt(
-                                                                  e.target.value
+                                                                  e.target
+                                                                    .value,
                                                                 ) || 1;
                                                             }}
                                                           />
@@ -1206,7 +1211,7 @@ export default function Ongoing({
                                                     <TableCell>
                                                       <Checkbox
                                                         checked={selectedCategoryItems.includes(
-                                                          item
+                                                          item,
                                                         )}
                                                         onCheckedChange={() => {
                                                           if (
@@ -1218,13 +1223,13 @@ export default function Ongoing({
                                                             }
                                                           }
                                                           handleCategoryItemSelect(
-                                                            item
+                                                            item,
                                                           );
                                                         }}
                                                       />
                                                     </TableCell>
                                                   </TableRow>
-                                                )
+                                                ),
                                               )}
                                             </TableBody>
                                           </Table>
@@ -1246,7 +1251,7 @@ export default function Ongoing({
                                         onClick={() => {
                                           handleAdd(
                                             selectedCategoryItems,
-                                            main
+                                            main,
                                           );
                                         }}
                                         disabled={
@@ -1299,7 +1304,7 @@ export default function Ongoing({
                                           handleAttendantChange(
                                             bookingDetails.bookingId,
                                             value,
-                                            main
+                                            main,
                                           )
                                         }
                                       >
@@ -1319,7 +1324,7 @@ export default function Ongoing({
                                               >
                                                 {attendant.name}
                                               </SelectItem>
-                                            )
+                                            ),
                                           )}
                                         </SelectContent>
                                       </Select>
@@ -1350,13 +1355,13 @@ export default function Ongoing({
                                                 handleStatusChange(
                                                   stat,
                                                   bookingDetails.bookingId,
-                                                  main
+                                                  main,
                                                 )
                                               }
                                             >
                                               {stat}
                                             </DropdownMenuItem>
-                                          )
+                                          ),
                                         )}
                                       </DropdownMenuContent>
                                     </DropdownMenu>
@@ -1373,20 +1378,20 @@ export default function Ongoing({
                                             <Clock className="mr-2" size={14} />
                                             <span>
                                               {new Date(
-                                                bookingDetails.checkIn
+                                                bookingDetails.checkIn,
                                               ).toLocaleDateString(
-                                                "en-GB"
+                                                "en-GB",
                                               )}{" "}
                                               -{" "}
                                               {new Date(
-                                                bookingDetails.checkOut
+                                                bookingDetails.checkOut,
                                               ).toLocaleDateString("en-GB")}
                                             </span>
                                           </div>
                                           <div className="flex items-center text-muted-foreground">
                                             <span className="font-normal">
                                               {bookingDetails.inclusions.join(
-                                                " , "
+                                                " , ",
                                               )}
                                             </span>
                                           </div>
@@ -1417,10 +1422,10 @@ export default function Ongoing({
                                               </span>
                                             </div>
                                             <span className="text-green-600 font-semibold">
-                                              - ₹{discount.discount}
+                                              - ₹{discount.amount}
                                             </span>
                                           </div>
-                                        )
+                                        ),
                                       )}
                                     <div className="flex justify-between items-center">
                                       <div>
@@ -1489,11 +1494,11 @@ export default function Ongoing({
 
                           {(() => {
                             const filteredRequests = Object.values(
-                              webhook
+                              webhook,
                             ).filter(
                               (assignment: any) =>
                                 assignment.roomNumber ===
-                                item.bookingDetails?.location
+                                item.bookingDetails?.location,
                             );
 
                             if (filteredRequests.length === 0) return null;
@@ -1518,7 +1523,7 @@ export default function Ongoing({
                                             <span className="text-xs text-slate-500">
                                               {format(
                                                 new Date(assignment.timestamp),
-                                                "HH:mm (d MMM)"
+                                                "HH:mm (d MMM)",
                                               )}
                                             </span>
                                             <Badge
@@ -1533,7 +1538,7 @@ export default function Ongoing({
                                                 handleAttendantChange(
                                                   assignment.orderId,
                                                   value,
-                                                  main
+                                                  main,
                                                 )
                                               }
                                             >
@@ -1553,7 +1558,7 @@ export default function Ongoing({
                                                     >
                                                       {attendant.name}
                                                     </SelectItem>
-                                                  )
+                                                  ),
                                                 )}
                                               </SelectContent>
                                             </Select>
@@ -1568,7 +1573,7 @@ export default function Ongoing({
                                           </div>
                                         </div>
                                       </div>
-                                    )
+                                    ),
                                   )}
                                 </div>
                                 <Separator />
@@ -1590,7 +1595,7 @@ export default function Ongoing({
                                         handleAttendantChange(
                                           order.orderId,
                                           value,
-                                          main
+                                          main,
                                         )
                                       }
                                     >
@@ -1608,7 +1613,7 @@ export default function Ongoing({
                                             >
                                               {attendant.name}
                                             </SelectItem>
-                                          )
+                                          ),
                                         )}
                                       </SelectContent>
                                     </Select>
@@ -1635,13 +1640,13 @@ export default function Ongoing({
                                               handleStatusChange(
                                                 stat,
                                                 order.orderId,
-                                                main
+                                                main,
                                               )
                                             }
                                           >
                                             {stat}
                                           </DropdownMenuItem>
-                                        )
+                                        ),
                                       )}
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -1695,7 +1700,7 @@ export default function Ongoing({
                                             - ₹{discount.discount}
                                           </span>
                                         </div>
-                                      )
+                                      ),
                                     )}
                                   <div className="flex justify-between items-center">
                                     <div>
@@ -1755,7 +1760,7 @@ export default function Ongoing({
 
                                 <Separator />
                               </div>
-                            )
+                            ),
                           )}
 
                           {Object.values(item.servicesUsed).map(
@@ -1777,7 +1782,7 @@ export default function Ongoing({
                                         handleAttendantChange(
                                           service.serviceId,
                                           value,
-                                          main
+                                          main,
                                         )
                                       }
                                       disabled={service.status === "Cancelled"}
@@ -1796,7 +1801,7 @@ export default function Ongoing({
                                             >
                                               {attendant.name}
                                             </SelectItem>
-                                          )
+                                          ),
                                         )}
                                       </SelectContent>
                                     </Select>
@@ -1825,13 +1830,13 @@ export default function Ongoing({
                                               handleStatusChange(
                                                 stat,
                                                 service.serviceId,
-                                                main
+                                                main,
                                               )
                                             }
                                           >
                                             {stat}
                                           </DropdownMenuItem>
-                                        )
+                                        ),
                                       )}
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -1923,7 +1928,7 @@ export default function Ongoing({
                                   </div>
                                 </div>
                               </div>
-                            )
+                            ),
                           )}
 
                           {Object.values(item.issuesReported).map(
@@ -1944,7 +1949,7 @@ export default function Ongoing({
                                         handleAttendantChange(
                                           issue.issueId,
                                           value,
-                                          main
+                                          main,
                                         )
                                       }
                                       disabled={issue.status === "Cancelled"}
@@ -1963,7 +1968,7 @@ export default function Ongoing({
                                             >
                                               {attendant.name}
                                             </SelectItem>
-                                          )
+                                          ),
                                         )}
                                       </SelectContent>
                                     </Select>
@@ -1990,13 +1995,13 @@ export default function Ongoing({
                                               handleStatusChange(
                                                 stat,
                                                 issue.issueId,
-                                                main
+                                                main,
                                               )
                                             }
                                           >
                                             {stat}
                                           </DropdownMenuItem>
-                                        )
+                                        ),
                                       )}
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -2020,7 +2025,7 @@ export default function Ongoing({
                                           <Badge variant="outline">Paid</Badge>
                                           <span>
                                             {new Date(
-                                              issue.resolutionTime
+                                              issue.resolutionTime,
                                             ).toLocaleTimeString([], {
                                               hour: "2-digit",
                                               minute: "2-digit",
@@ -2030,7 +2035,7 @@ export default function Ongoing({
                                       ) : (
                                         <span className="text-sm text-slate-500">
                                           {new Date(
-                                            issue.reportTime
+                                            issue.reportTime,
                                           ).toLocaleTimeString([], {
                                             hour: "2-digit",
                                             minute: "2-digit",
@@ -2050,7 +2055,7 @@ export default function Ongoing({
                                   </div>
                                 </div>
                               </div>
-                            )
+                            ),
                           )}
 
                           {item.checklist?.selectedItems?.length > 0 && (
@@ -2081,7 +2086,7 @@ export default function Ongoing({
                                         handleStatusChange(
                                           "Paid",
                                           "checklist",
-                                          main
+                                          main,
                                         )
                                       }
                                     >
@@ -2115,7 +2120,7 @@ export default function Ongoing({
                                           ₹{Number(itm.price)}
                                         </span>
                                       </div>
-                                    )
+                                    ),
                                   )}
                                 </div>
                                 <Separator />
@@ -2184,7 +2189,7 @@ export default function Ongoing({
                                   <span className="mx-1 pb-1" key={i}>
                                     - {el}
                                   </span>
-                                )
+                                ),
                               )}
                               <span className="mx-1 pb-1">
                                 - {item.checklist?.note}
@@ -2411,10 +2416,10 @@ export default function Ongoing({
               <SelectTrigger>
                 <SelectValue placeholder="Select discount type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent container={null}>
                 {discountSelect.map((item, index) => (
                   <SelectItem value={item.code} key={index}>
-                    {item.code} - {item.amount}
+                    {`${item.code}  ${item.type === "" ? "" : item.type === "percentage" ? `- ${item.discount}%` : `- ₹${item.discount}`}`}
                   </SelectItem>
                 ))}
               </SelectContent>

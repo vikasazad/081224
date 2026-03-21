@@ -19,3 +19,19 @@ export async function getInventoryData() {
     return { inventory: null };
   }
 }
+export async function getPurchaseOrdersData() {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  const docRef = doc(db, user, "inventory");
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    return { purchaseOrders: docSnap.data().store?.purchaseOrders };
+  } else {
+    return { purchaseOrders: null };
+  }
+}

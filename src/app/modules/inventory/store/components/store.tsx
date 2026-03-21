@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Package,
   PackageCheck,
@@ -16,8 +17,16 @@ import {
   PlusCircle,
   Users,
   FolderPlus,
+  ClipboardList,
+  // HeartPulse,
+  // Clock,
+  // ClipboardCheck,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+// import {
+//   getExpiringSoonItems,
+//   getSlowMovingItems,
+// } from "../../stock-health/utils/stockHealthApi";
 
 import {
   Dialog,
@@ -37,6 +46,31 @@ const Store = ({ data }: any) => {
   console.log(data);
   const router = useRouter();
   const { data: session } = useSession();
+
+  // Calculate stock health metrics
+  const stockHealthMetrics = useMemo(() => {
+    // const items = data?.items || [];
+    const purchaseOrders = data?.purchaseOrders || [];
+    const stockCounts = data?.stockCounts || [];
+
+    // const expiringSoon = getExpiringSoonItems(items, 7);
+    // const slowMoving = getSlowMovingItems(items, 30);
+    const pendingPOs = purchaseOrders.filter(
+      (po: any) => po.status === "pending-approval"
+    );
+    const pendingCounts = stockCounts.filter(
+      (sc: any) => sc.status === "pending-approval"
+    );
+
+    return {
+      // expiringSoonCount: expiringSoon.length,
+      // slowMovingCount: slowMoving.length,
+      pendingPOCount: pendingPOs.length,
+      pendingCountsCount: pendingCounts.length,
+      totalPOs: purchaseOrders.length,
+      totalCounts: stockCounts.length,
+    };
+  }, [data]);
 
   function MetricCard({
     title,
@@ -253,48 +287,153 @@ const Store = ({ data }: any) => {
     <div className="flex flex-col lg:flex-row gap-6">
       {/* Left Column - Metrics and Quick Actions */}
       <div className="flex-1 space-y-6">
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+        {/* Metrics Cards - Row 1: Core Inventory */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <MetricCard
             title="Total Stock"
-            value={data?.items?.length}
+            value={data?.items?.length?.toString() || "0"}
             icon={<Package className="h-4 w-4" />}
             onClick={() => router.push("/inventory/total")}
           />
           <MetricCard
             title="Low Stock"
-            value={data?.items
-              ?.filter((item: any) => item.quantity < item.reorderLevel / 2)
-              .length.toString()}
+            value={
+              data?.items
+                ?.filter((item: any) => item.quantity < item.reorderLevel / 2)
+                .length.toString() || "0"
+            }
             icon={<AlertTriangle className="h-4 w-4" />}
             onClick={() => router.push("/inventory/low")}
           />
           <MetricCard
             title="Reorder Level"
-            value={data?.items
-              ?.filter((item: any) => item.quantity <= item.reorderLevel)
-              .length.toString()}
+            value={
+              data?.items
+                ?.filter((item: any) => item.quantity <= item.reorderLevel)
+                .length.toString() || "0"
+            }
             icon={<PackageCheck className="h-4 w-4" />}
             onClick={() => router.push("/inventory/reorder")}
           />
           <MetricCard
-            title="Recent Transactions"
-            value={data?.recentTransactions?.length}
+            title="Transactions"
+            value={data?.recentTransactions?.length?.toString() || "0"}
             icon={<RefreshCcw className="h-4 w-4" />}
             onClick={() => router.push("/inventory/transactions")}
           />
           <MetricCard
             title="Categories"
-            value={data?.categories?.length}
+            value={data?.categories?.length?.toString() || "0"}
             icon={<FolderPlus className="h-4 w-4" />}
             onClick={() => router.push("/inventory/categories")}
           />
           <MetricCard
             title="Suppliers"
-            value={data?.suppliers?.length}
+            value={data?.suppliers?.length?.toString() || "0"}
             icon={<Users className="h-4 w-4" />}
             onClick={() => router.push("/inventory/suppliers")}
           />
+        </div>
+
+        {/* Metrics Cards - Row 2: Enhanced Features */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => router.push("/inventory/po")}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Purchase Orders
+              </CardTitle>
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stockHealthMetrics.totalPOs}
+              </div>
+              {stockHealthMetrics.pendingPOCount > 0 && (
+                <Badge variant="destructive" className="mt-1">
+                  {stockHealthMetrics.pendingPOCount} pending approval
+                </Badge>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* <Card
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => router.push("/inventory/stock-health")}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Stock Health
+              </CardTitle>
+              <HeartPulse className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                {stockHealthMetrics.expiringSoonCount > 0 && (
+                  <Badge variant="destructive">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {stockHealthMetrics.expiringSoonCount} expiring
+                  </Badge>
+                )}
+                {stockHealthMetrics.slowMovingCount > 0 && (
+                  <Badge variant="secondary">
+                    {stockHealthMetrics.slowMovingCount} slow
+                  </Badge>
+                )}
+                {stockHealthMetrics.expiringSoonCount === 0 &&
+                  stockHealthMetrics.slowMovingCount === 0 && (
+                    <span className="text-sm text-green-600">All healthy</span>
+                  )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => router.push("/inventory/stock-count")}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Stock Counts
+              </CardTitle>
+              <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stockHealthMetrics.totalCounts}
+              </div>
+              {stockHealthMetrics.pendingCountsCount > 0 && (
+                <Badge variant="destructive" className="mt-1">
+                  {stockHealthMetrics.pendingCountsCount} pending approval
+                </Badge>
+              )}
+            </CardContent>
+          </Card> */}
+
+          {/* <Card
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => router.push("/inventory/po/reorder-list")}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Daily Reorder List
+              </CardTitle>
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {data?.items?.filter(
+                  (item: any) => item.quantity <= item.reorderLevel
+                ).length || 0}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                items need reordering
+              </p>
+            </CardContent>
+          </Card> */}
+         
         </div>
 
         {/* Quick Action Cards */}

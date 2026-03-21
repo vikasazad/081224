@@ -114,6 +114,10 @@ export default auth((req) => {
     return; // Let it go through without auth or redirects
   }
 
+  if (nextUrl.pathname.startsWith("/api/webhooks/razorpay")) {
+    return; // Bypass auth for Razorpay webhooks
+  }
+
   const user = req.auth?.user;
   const isLoggedIn = !!req.auth;
   const newUser = user?.newUser;

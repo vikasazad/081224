@@ -79,18 +79,35 @@ export async function getQRData() {
 
   if (docSnap.exists()) {
     const data = docSnap.data().tables;
+    console.log("data", data);
 
     // Extract all table numbers
-    let tableNumbers: string[] = [];
-
+    let tableNumbers: { tableNo: string; capacity: number }[] = [];
+    console.log("tableNumbers", tableNumbers.length);
     data.forEach((category: any) => {
       Object.keys(category).forEach((key) => {
         const tableCategory = category[key];
+        console.log("tableCategory", key);
         if (Array.isArray(tableCategory)) {
           tableCategory.forEach((table: any) => {
             if (table.tableNumber) {
-              tableNumbers = tableNumbers.concat(table.tableNumber);
-              tableNumbers.sort();
+              const capacity =
+                key === "twoseater" ? 2 : key === "fourseater" ? 4 : 6;
+
+              // Handle tableNumber as array or single value
+              if (Array.isArray(table.tableNumber)) {
+                table.tableNumber.forEach((num: string) => {
+                  tableNumbers.push({
+                    tableNo: num,
+                    capacity: capacity,
+                  });
+                });
+              } else {
+                tableNumbers.push({
+                  tableNo: String(table.tableNumber),
+                  capacity: capacity,
+                });
+              }
             }
           });
         }
@@ -102,7 +119,6 @@ export async function getQRData() {
     return [];
   }
 }
-
 export async function getLiveTableData() {
   const session = await auth();
   const user = session?.user?.email;

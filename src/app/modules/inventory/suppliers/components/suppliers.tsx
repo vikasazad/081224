@@ -64,7 +64,7 @@ export default function Suppliers({ data }: any) {
   // Filter and search logic
   const filteredSuppliers = React.useMemo(() => {
     return suppliers.filter(
-      (supplier) =>
+      (supplier: any) =>
         supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         supplier.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         supplier.gstNumber.toLowerCase().includes(searchQuery.toLowerCase())

@@ -770,11 +770,13 @@ export default function Occupied({
       }
     }
     const type =
-      finalSubmitData.item.diningDetails.capicity === "2"
+      String(finalSubmitData.item.diningDetails.capacity) === "2"
         ? "twoseater"
-        : finalSubmitData.item.diningDetails.capicity === "4"
+        : String(finalSubmitData.item.diningDetails.capacity) === "4"
         ? "fourseater"
         : "sixseater";
+
+    // console.log("===================", type);
     await setHistory(finalSubmitData.item, type);
   };
 

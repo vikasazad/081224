@@ -18,6 +18,8 @@ import {
   sendStaffAssignmentRequest,
   sendWhatsAppTextMessage,
 } from "./whatsapp-staff-manager";
+import { generatePaymentLink, getPaymentLinkStatus } from "@/lib/razorpay";
+import { sendEventPaymentCompletedMessage } from "../../events/utils/eventsApi";
 interface StaffMember {
   name: string;
   contact: string;
@@ -28,7 +30,7 @@ interface StaffMember {
 export const generateInvoiceObject = async (
   roomData: any,
   businessInfo: any,
-  invoice: string
+  invoice: string,
 ) => {
   let booking,
     customer,
@@ -257,7 +259,7 @@ export const generateInvoiceObject = async (
 export const generateInvoiceObjectRestaurant = async (
   tableData: any,
   businessInfo: any,
-  invoice: string
+  invoice: string,
 ) => {
   let customer, diningOrders;
 
@@ -374,7 +376,7 @@ export const generateInvoiceObjectRestaurant = async (
 export const calculateOrderTotal = async (order: any) => {
   const itemsTotal = order.reduce(
     (total: number, item: any) => total + parseFloat(item.price),
-    0
+    0,
   );
 
   return itemsTotal;
@@ -448,7 +450,7 @@ export async function getRoomData() {
               };
               data.foodMenuItems.push(obj);
             });
-          })
+          }),
         );
       }
 
@@ -481,7 +483,7 @@ export async function getRoomData() {
               };
               data.hotelServices.push(obj);
             });
-          })
+          }),
         );
       }
 
@@ -524,7 +526,7 @@ export async function getTableData() {
               };
               data.foodMenuItems.push(obj);
             });
-          })
+          }),
         );
       }
 
@@ -714,13 +716,13 @@ export async function setOfflineRoom(tableData: any) {
   return false;
 }
 function assignAttendantSequentially(
-  availableStaff: StaffMember[]
+  availableStaff: StaffMember[],
 ): StaffMember | null {
   if (availableStaff.length === 0) return null;
 
   // Sort staff by number of current orders (ascending)
   const sortedStaff = [...availableStaff].sort(
-    (a, b) => (a.orders?.length || 0) - (b.orders?.length || 0)
+    (a, b) => (a.orders?.length || 0) - (b.orders?.length || 0),
   );
 
   // Return the staff with the least number of orders
@@ -759,7 +761,7 @@ export async function getOnlineStaff(staffType: string) {
         (staffMember: any) =>
           staffMember.status === "online" &&
           staffMember.role === staffType &&
-          staffMember.active !== false // Check that staff is active (true or undefined)
+          staffMember.active !== false, // Check that staff is active (true or undefined)
       )
       .map((staffMember: any) => ({
         name: staffMember.name,
@@ -779,7 +781,7 @@ export async function getOnlineStaff(staffType: string) {
 export async function updateOrdersForAttendant(
   attendantName: string,
   orderId: string,
-  contact?: string
+  contact?: string,
 ) {
   const session = await auth();
   const user = session?.user?.email;
@@ -811,7 +813,7 @@ export async function updateOrdersForAttendant(
     // Find the new attendant by name
     const newAttendantIndex = staff.findIndex(
       (staffMember: any) =>
-        staffMember.name === attendantName && staffMember.role === "concierge"
+        staffMember.name === attendantName && staffMember.role === "concierge",
     );
 
     if (newAttendantIndex === -1) {
@@ -823,7 +825,7 @@ export async function updateOrdersForAttendant(
     const previousAttendantIndex = staff.findIndex(
       (staffMember: any) =>
         staffMember.role === "concierge" &&
-        staffMember.orders?.includes(orderId)
+        staffMember.orders?.includes(orderId),
     );
 
     // Modify the staff array
@@ -851,7 +853,7 @@ export async function updateOrdersForAttendant(
     if (orderId.startsWith("BOK") && contact) {
       await sendWhatsAppTextMessage(
         contact,
-        `Booking ${orderId} assigned to you, Please reachout to reception to get the room details.`
+        `Booking ${orderId} assigned to you, Please reachout to reception to get the room details.`,
       );
     } else if (
       (orderId.startsWith("OR") || orderId.startsWith("RES")) &&
@@ -859,22 +861,22 @@ export async function updateOrdersForAttendant(
     ) {
       await sendWhatsAppTextMessage(
         contact,
-        `Order ${orderId} assigned to you, Please reachout to kitchen to get the order delivered.`
+        `Order ${orderId} assigned to you, Please reachout to kitchen to get the order delivered.`,
       );
     } else if (orderId.startsWith("IS") && contact) {
       await sendWhatsAppTextMessage(
         contact,
-        `Issue ${orderId} assigned to you. Please reachout to reception to get the issue resolved.`
+        `Issue ${orderId} assigned to you. Please reachout to reception to get the issue resolved.`,
       );
     } else if (orderId.startsWith("SE") && contact) {
       await sendWhatsAppTextMessage(
         contact,
-        `Service ${orderId} assigned to you, Please reachout to reception to get the service delivered.`
+        `Service ${orderId} assigned to you, Please reachout to reception to get the service delivered.`,
       );
     } else if (orderId.startsWith("REQ:") && contact) {
       await sendWhatsAppTextMessage(
         contact,
-        `Request ${orderId} assigned to you, Please reachout to reception to get the request delivered.`
+        `Request ${orderId} assigned to you, Please reachout to reception to get the request delivered.`,
       );
     }
 
@@ -908,7 +910,7 @@ export async function removeRoomByNumber(roomNo: string, roomType: string) {
 
     // Filter out the room with the specified roomNo in the specified roomType
     const updatedRoomTypeArray = tableDetails[roomType].filter(
-      (room: any) => room.roomNo !== roomNo
+      (room: any) => room.roomNo !== roomNo,
     );
 
     // Update the tableDetails with the filtered array for the specified roomType
@@ -946,7 +948,7 @@ export async function setAttendent(tableData: any) {
       // Find the index of the table with matching location
       const tableIndex = existingTables.findIndex(
         (table: any) =>
-          table.diningDetails.location === tableData[0].diningDetails.location
+          table.diningDetails.location === tableData[0].diningDetails.location,
       );
 
       // If a matching table is found, replace it with the new table data
@@ -980,7 +982,7 @@ export async function setAttendent(tableData: any) {
 export async function updateRequestsForAttendant(
   orderId: string,
   attendantName: string,
-  attendantContact: string
+  attendantContact: string,
 ) {
   const session = await auth();
   const user = session?.user?.email;
@@ -1015,7 +1017,7 @@ export async function updateRequestsForAttendant(
     });
 
     console.log(
-      `Successfully updated attendant for ${orderId}: ${attendantName}`
+      `Successfully updated attendant for ${orderId}: ${attendantName}`,
     );
     return true;
   } catch (error) {
@@ -1179,6 +1181,8 @@ export async function saveRoomData(roomInfo: any) {
       return false;
     }
 
+    const _discount = roomInfo.discount?.code ? roomInfo.discount : [];
+
     const _roomInfo = {
       bookingDetails: {
         customer: {
@@ -1203,7 +1207,7 @@ export async function saveRoomData(roomInfo: any) {
         noOfRoom: roomInfo.numberOfRooms,
         inclusions: roomInfo.inclusions || "",
         nights: roomInfo.nights,
-        images: roomInfo.images,
+        images: roomInfo.images, // these are the images of the room not guest images
         specialRequirements: roomInfo.specialRequirements || "",
         payment: {
           paymentStatus: "paid",
@@ -1223,14 +1227,7 @@ export async function saveRoomData(roomInfo: any) {
             sgstAmount: roomInfo.sgstAmount || "",
             sgstPercentage: roomInfo.sgstPercentage || "",
           },
-          discount: [
-            {
-              type: roomInfo.discount?.type || "",
-              amount: roomInfo.discount?.amount || "",
-              code: roomInfo.discount?.code || "",
-              discount: roomInfo.discount?.discount || 0,
-            },
-          ],
+          discount: _discount,
         },
       },
       diningDetails: {},
@@ -1259,23 +1256,16 @@ export async function saveRoomData(roomInfo: any) {
               sgstAmount: roomInfo.sgstAmount || "",
               sgstPercentage: roomInfo.sgstPercentage || "",
             },
-            discount: [
-              {
-                type: roomInfo.discount?.type || "",
-                amount: roomInfo.discount?.amount || "",
-                code: roomInfo.discount?.code || "",
-                discount: roomInfo.discount?.discount || 0,
-              },
-            ],
+            discount: _discount,
           },
         },
       ],
     };
 
     const sanitizedFormat = JSON.parse(
-      JSON.stringify(_roomInfo, (key, value) =>
-        value === undefined ? null : value
-      )
+      JSON.stringify(_roomInfo, (_, value) =>
+        value === undefined ? null : value,
+      ),
     );
 
     const docRef = doc(db, user, "hotel");
@@ -1297,7 +1287,7 @@ export async function saveRoomData(roomInfo: any) {
           roomInfo.roomNo,
           roomInfo.phone,
           "concierge",
-          "18"
+          "18",
         );
         await sendWhatsAppMessage(`91${roomInfo.phone}`, roomInfo.name, [
           _bookingId,
@@ -1320,7 +1310,7 @@ export async function saveRoomData(roomInfo: any) {
           _bookingId,
           roomInfo.name,
           roomInfo.roomNo,
-          "room"
+          "room",
         );
         // await sendNotification(
         //   _attendant.notificationToken,
@@ -1330,21 +1320,273 @@ export async function saveRoomData(roomInfo: any) {
       }
 
       console.log("Room data updated successfully");
-      return { success: true, data: _attendant };
+      return true;
     } else {
       console.error("Document does not exist");
-      return { success: false, data: null };
+      return false;
     }
   } catch (error) {
     console.error("Error while saving room data:", error);
-    return { success: false, data: null };
+    return false;
+  }
+}
+
+export async function removeReservationById(reservationId: string) {
+  const session = await auth();
+  const user = session?.user?.email;
+
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const reservations = docSnap.data()?.reservation || [];
+
+      // Filter out the reservation with the matching bookingId
+      const updatedReservations = reservations.filter(
+        (reservation: any) => reservation.bookingId !== reservationId,
+      );
+
+      // Update the document with the filtered reservations
+      await updateDoc(docRef, {
+        reservation: updatedReservations,
+      });
+
+      console.log(`Reservation ${reservationId} removed successfully`);
+      return true;
+    } else {
+      console.error("Hotel document does not exist");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error removing reservation:", error);
+    return false;
+  }
+}
+
+export async function reservationToBooking(checkInData: any) {
+  try {
+    const session = await auth();
+    const user = session?.user?.email;
+
+    if (!user) {
+      console.error("User email is undefined");
+      return false;
+    }
+
+    const { bookingData, phone, guests, verifiedAt } = checkInData;
+
+    // Step 1: Get available room by category
+    const roomData: any = await getRoomByCategory(bookingData.roomCategory);
+    if (!roomData) {
+      console.error(
+        "No available room found for category:",
+        bookingData.roomCategory,
+      );
+      return false;
+    }
+
+    // Step 2: Generate booking ID and get concierge
+    const _bookingId = generateOrderId("BOK", roomData.roomNo);
+    const _attendant = await getOnlineStaff("concierge");
+
+    if (!_attendant) {
+      console.error("No concierge available");
+      return false;
+    }
+
+    // Step 3: Build booking object (mapping check-in data to booking format)
+    const _roomInfo = {
+      bookingDetails: {
+        customer: {
+          name: bookingData.name,
+          email: bookingData.email || "",
+          phone: phone,
+          address: "",
+          notificationToken: "",
+          guests: guests, // Store guest details with ID proof URLs
+        },
+        location: roomData.roomNo,
+        roomType: roomData.roomType,
+        aggregator: "Reservation",
+        aggregatorLogo: "",
+        bookingId: _bookingId,
+        reservationId: bookingData.bookingId, // Keep reference to original reservation
+        status: "occupied",
+        attendant: _attendant.name,
+        attendantToken: _attendant.notificationToken || "",
+        bookingDate: new Date().toISOString(),
+        checkIn: bookingData.checkIn,
+        checkOut: bookingData.checkOut,
+        noOfGuests: guests.length,
+        noOfRoom: bookingData.numberOfRooms || 1,
+        inclusions: roomData.inclusions || [],
+        nights: bookingData.nights,
+        images: roomData.images,
+        specialRequirements: "",
+        verifiedAt: verifiedAt,
+        payment: {
+          paymentStatus: bookingData.payment?.paymentStatus || "paid",
+          mode: bookingData.payment?.mode || "online",
+          paymentId: bookingData.payment?.paymentId || "",
+          referenceId: bookingData.payment?.referenceId || "",
+          timeOfTransaction:
+            bookingData.payment?.timeOfTransaction || new Date().toISOString(),
+          price: bookingData.payment?.price || roomData.price,
+          priceAfterDiscount: bookingData.payment?.priceAfterDiscount || "",
+          paymentType: bookingData.payment?.paymentType || "single",
+          subtotal:
+            bookingData.payment?.subtotal ||
+            bookingData.payment?.price ||
+            roomData.price,
+          totalPrice: bookingData.payment?.totalPrice || 0,
+          gst: {
+            gstAmount: bookingData.payment?.gst?.gstAmount || 0,
+            gstPercentage: bookingData.payment?.gst?.gstPercentage || 0,
+            cgstAmount: bookingData.payment?.gst?.cgstAmount || 0,
+            cgstPercentage: bookingData.payment?.gst?.cgstPercentage || 0,
+            sgstAmount: bookingData.payment?.gst?.sgstAmount || 0,
+            sgstPercentage: bookingData.payment?.gst?.sgstPercentage || 0,
+          },
+          discount: bookingData.payment?.discount || [
+            {
+              type: "",
+              amount: "",
+              code: "",
+              discount: 0,
+            },
+          ],
+        },
+      },
+      diningDetails: {},
+      servicesUsed: [],
+      issuesReported: {},
+      transctions: [
+        {
+          location: roomData.roomNo,
+          against: _bookingId,
+          attendant: _attendant.name,
+          bookingId: _bookingId,
+          reservationId: bookingData.bookingId,
+          payment: {
+            paymentStatus: bookingData.payment?.paymentStatus || "paid",
+            mode: bookingData.payment?.mode || "online",
+            paymentId: bookingData.payment?.paymentId || "",
+            referenceId: bookingData.payment?.referenceId || "",
+            timeOfTransaction:
+              bookingData.payment?.timeOfTransaction ||
+              new Date().toISOString(),
+            price: bookingData.payment?.price || roomData.price,
+            priceAfterDiscount: bookingData.payment?.priceAfterDiscount || "",
+            paymentType: bookingData.payment?.paymentType || "single",
+            subtotal:
+              bookingData.payment?.subtotal ||
+              bookingData.payment?.price ||
+              roomData.price,
+            totalPrice: bookingData.payment?.totalPrice || 0,
+            gst: {
+              gstAmount: bookingData.payment?.gst?.gstAmount || 0,
+              gstPercentage: bookingData.payment?.gst?.gstPercentage || 0,
+              cgstAmount: bookingData.payment?.gst?.cgstAmount || 0,
+              cgstPercentage: bookingData.payment?.gst?.cgstPercentage || 0,
+              sgstAmount: bookingData.payment?.gst?.sgstAmount || 0,
+              sgstPercentage: bookingData.payment?.gst?.sgstPercentage || 0,
+            },
+            discount: bookingData.payment?.discount || [
+              {
+                type: "",
+                amount: "",
+                code: "",
+                discount: 0,
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    // Sanitize the format to replace undefined with null
+    const sanitizedFormat = JSON.parse(
+      JSON.stringify(_roomInfo, (_, value) =>
+        value === undefined ? null : value,
+      ),
+    );
+
+    // Step 4: Database operations
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data().live.rooms;
+      const updatedRooms = [sanitizedFormat, ...data];
+
+      // Add booking to live.rooms
+      await updateDoc(docRef, {
+        "live.rooms": updatedRooms,
+      });
+
+      // Remove room from available rooms
+      await removeRoomByNumber(roomData.roomNo, roomData.roomType);
+
+      // Step 5: Notifications
+      // Generate short URL for concierge service
+      const shortUrl = await shortenURL(
+        user,
+        roomData.roomNo,
+        phone,
+        "concierge",
+        String(bookingData.payment?.gst?.gstPercentage || 18),
+      );
+
+      // Send WhatsApp message to guest
+      await sendWhatsAppMessage(`91${phone}`, bookingData.name, [
+        _bookingId,
+        roomData.roomNo,
+        new Date(bookingData.checkIn).toLocaleDateString(),
+        new Date(bookingData.checkOut).toLocaleDateString(),
+        String(bookingData.nights),
+        String(bookingData.payment?.price || roomData.price),
+        String(bookingData.payment?.totalPrice || roomData.price),
+        "0",
+        bookingData.business?.phone || "123-456-7890",
+        bookingData.business?.phone || "987-654-3210",
+        shortUrl,
+      ]);
+
+      // Send staff assignment request
+      await sendStaffAssignmentRequest(
+        _attendant.name,
+        _attendant.contact,
+        _bookingId,
+        bookingData.name,
+        roomData.roomNo,
+        "room",
+      );
+
+      // Step 6: Remove reservation from database after successful booking
+      await removeReservationById(bookingData.bookingId);
+
+      console.log("Reservation converted to booking successfully");
+      return true;
+    } else {
+      console.error("Hotel document does not exist");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error converting reservation to booking:", error);
+    return false;
   }
 }
 
 export async function sendWhatsAppMessage(
   phoneNumber: string,
   name: string,
-  variables: string[]
+  variables: string[],
 ) {
   try {
     // Format phone number - remove any special characters and ensure proper format
@@ -1381,7 +1623,7 @@ export async function sendWhatsAppMessage(
             ],
           },
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -1407,7 +1649,7 @@ export async function sendInvoiceWhatsapp(
   name: string,
   bookingId: string,
   date: string,
-  businessName: string
+  businessName: string,
 ) {
   try {
     // Format phone number - remove any special characters and ensure proper format
@@ -1417,7 +1659,7 @@ export async function sendInvoiceWhatsapp(
       name,
       date,
       businessName,
-      invoiceURL
+      invoiceURL,
     );
     const formattedPhone = `91${phoneNumber}`;
 
@@ -1462,7 +1704,7 @@ export async function sendInvoiceWhatsapp(
             ],
           },
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -1485,7 +1727,7 @@ export async function sendInvoiceWhatsapp(
 export async function sendCheckOutWhatsAppMessage(
   phoneNumber: string,
   name: string,
-  variables: string[]
+  variables: string[],
 ) {
   try {
     // Format phone number - remove any special characters and ensure proper format
@@ -1522,7 +1764,7 @@ export async function sendCheckOutWhatsAppMessage(
             ],
           },
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -1577,7 +1819,7 @@ export async function sendTestWhatsAppMessage(phoneNumber: string) {
             },
           },
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -1602,7 +1844,7 @@ async function shortenURL(
   roomNo: string,
   phone: string,
   tag: string,
-  gstPercentage: string
+  gstPercentage: string,
 ) {
   const encodedSecretKey = new TextEncoder().encode("Vikas@1234");
   const payload = {
@@ -1618,7 +1860,7 @@ async function shortenURL(
   const longUrl = `${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}${newToken}`;
 
   const response = await fetch(
-    `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`
+    `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`,
   );
   const shortUrl = await response.text();
 
@@ -1632,7 +1874,7 @@ export async function addKitchenOrder(
   items: any[],
   price: number,
   attendantName: string,
-  attendantContact: string
+  attendantContact: string,
 ) {
   try {
     const session = await auth();
@@ -1700,7 +1942,7 @@ export async function addKitchenOrder(
 export async function sendTakeReviewMessage(
   phoneNumber: string,
   variables: string[],
-  url: string
+  url: string,
 ) {
   try {
     // Format phone number - remove any special characters and ensure proper format
@@ -1745,7 +1987,7 @@ export async function sendTakeReviewMessage(
             ],
           },
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -1768,7 +2010,7 @@ export async function sendTakeReviewMessage(
 export async function sendFinalMessage(
   phoneNumber: string,
   variables: string[],
-  invoiceURL: string
+  invoiceURL: string,
 ) {
   try {
     // Format phone number - remove any special characters and ensure proper format
@@ -1813,7 +2055,7 @@ export async function sendFinalMessage(
             ],
           },
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -1853,7 +2095,7 @@ async function calculateTax(
   pricePerNight: number,
   subtotalAmount: number,
   taxType: string,
-  taxDetails: any
+  taxDetails: any,
 ) {
   const taxTypeData = taxDetails[taxType];
   if (!taxTypeData) {
@@ -1872,7 +2114,7 @@ async function calculateTax(
         key.includes("below") ||
         key.includes("above") ||
         key.includes("under") ||
-        key.includes("over")
+        key.includes("over"),
     );
 
     if (priceKeys.length === 0) {
@@ -1920,7 +2162,7 @@ async function calculateTax(
 
   if (gstPercentage === 0) {
     throw new Error(
-      `Could not determine tax rate for ${taxType} with price/night: ${pricePerNight}`
+      `Could not determine tax rate for ${taxType} with price/night: ${pricePerNight}`,
     );
   }
 
@@ -1941,7 +2183,267 @@ async function calculateTax(
   };
 }
 
-export async function addDiscount(discount: any, table: any) {
+export async function addDiscount(discount: any, room: any) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  try {
+    const docRef = doc(db, user, "hotel");
+    const gstRef = doc(db, user, "info");
+    const gstSnap = await getDoc(gstRef);
+    if (!gstSnap.exists()) return false;
+    const gstTax = gstSnap.data().business?.gstTax;
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data().live.rooms;
+      // Find the table that matches
+      const roomIndex = data.findIndex(
+        (item: any) =>
+          item.bookingDetails.location === room.bookingDetails.location,
+      );
+
+      if (roomIndex === -1) {
+        console.error("room not found");
+        return false;
+      }
+
+      // Calculate discount
+      let calculatedDiscount = 0;
+      if (discount.type === "percentage") {
+        const percentageAmount = parseFloat(discount.discount);
+        calculatedDiscount = Math.round(
+          room.bookingDetails.payment.subtotal * (percentageAmount / 100),
+        );
+      } else {
+        calculatedDiscount = Math.round(discount.discount);
+      }
+
+      // Calculate tax for the updated subtotal
+      const taxDetails = await calculateTax(
+        room.bookingDetails.payment.price,
+        Math.round(room.bookingDetails.payment.subtotal - calculatedDiscount),
+        "room",
+        gstTax,
+      );
+
+      // Create updated table object
+      const updatedTable = {
+        ...data[roomIndex],
+        bookingDetails: {
+          ...data[roomIndex].bookingDetails,
+          payment: {
+            ...data[roomIndex].bookingDetails.payment,
+            priceAfterDiscount:
+              Math.round(
+                room.bookingDetails.payment.subtotal - calculatedDiscount,
+              ) || "",
+            paymentType: "single",
+            subtotal: room.bookingDetails.payment.subtotal - calculatedDiscount,
+            totalPrice: Math.round(
+              room.bookingDetails.payment.subtotal -
+                calculatedDiscount +
+                taxDetails.gstAmount,
+            ),
+            gst: {
+              gstAmount: taxDetails.gstAmount || "",
+              gstPercentage: taxDetails.gstPercentage || "",
+              cgstAmount: taxDetails.cgstAmount || "",
+              cgstPercentage: taxDetails.cgstPercentage || "",
+              sgstAmount: taxDetails.sgstAmount || "",
+              sgstPercentage: taxDetails.sgstPercentage || "",
+            },
+            discount: [
+              ...data[roomIndex].bookingDetails.payment.discount,
+              { ...discount, amount: String(calculatedDiscount) },
+            ],
+          },
+        },
+        transctions: data[roomIndex].transctions.map((transaction: any) => {
+          if (
+            transaction.bookingId === data[roomIndex].bookingDetails.bookingId
+          ) {
+            return {
+              ...transaction,
+              payment: {
+                ...transaction.payment,
+                priceAfterDiscount:
+                  Math.round(
+                    room.bookingDetails.payment.subtotal - calculatedDiscount,
+                  ) || "",
+                subtotal:
+                  room.bookingDetails.payment.subtotal - calculatedDiscount,
+                totalPrice: Math.round(
+                  room.bookingDetails.payment.subtotal -
+                    calculatedDiscount +
+                    taxDetails.gstAmount,
+                ),
+                gst: {
+                  gstAmount: taxDetails.gstAmount || "",
+                  gstPercentage: taxDetails.gstPercentage || "",
+                  cgstAmount: taxDetails.cgstAmount || "",
+                  cgstPercentage: taxDetails.cgstPercentage || "",
+                  sgstAmount: taxDetails.sgstAmount || "",
+                  sgstPercentage: taxDetails.sgstPercentage || "",
+                },
+                discount: [
+                  ...transaction.payment.discount,
+                  { ...discount, amount: String(calculatedDiscount) },
+                ],
+              },
+            };
+          }
+          return transaction;
+        }),
+      };
+
+      // Create updated data array with the modified table
+      const updatedData = [...data];
+      updatedData[roomIndex] = updatedTable;
+      await updateDoc(docRef, { "live.rooms": updatedData });
+      return true;
+      // return updatedData;
+    }
+  } catch (error) {
+    console.error("Error adding discount:", error);
+    return false;
+  }
+}
+
+export async function removeDiscount(location: string) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  try {
+    const docRef = doc(db, user, "hotel");
+    const gstRef = doc(db, user, "info");
+    const gstSnap = await getDoc(gstRef);
+    if (!gstSnap.exists()) return false;
+    const gstTax = gstSnap.data().business?.gstTax;
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data().live.rooms;
+      // Find the room that matches
+      const roomIndex = data.findIndex(
+        (item: any) => item.bookingDetails.location === location,
+      );
+
+      if (roomIndex === -1) {
+        console.error("room not found");
+        return false;
+      }
+
+      const table = data[roomIndex];
+
+      // Check if there are any discounts to remove
+      if (
+        !table.bookingDetails.payment.discount ||
+        table.bookingDetails.payment.discount.length === 0
+      ) {
+        console.error("No discounts to remove");
+        return false;
+      }
+
+      // Remove the last discount
+      const updatedDiscounts = table.bookingDetails.payment.discount.slice(
+        0,
+        -1,
+      );
+
+      // Calculate the total discount amount from remaining discounts
+      let totalRemainingDiscount = 0;
+      updatedDiscounts.forEach((discount: any) => {
+        if (discount.type === "percentage") {
+          const percentageAmount = parseFloat(discount.amount);
+          totalRemainingDiscount += Math.round(
+            table.bookingDetails.payment.subtotal * (percentageAmount / 100),
+          );
+        } else {
+          totalRemainingDiscount += Math.round(discount.amount);
+        }
+      });
+
+      // Calculate new subtotal after removing the last discount
+      const newSubtotal =
+        table.bookingDetails.payment.price - totalRemainingDiscount;
+
+      // Calculate tax for the updated subtotal
+      const taxDetails = await calculateTax(
+        table.bookingDetails.payment.price,
+        Math.round(newSubtotal),
+        "room",
+        gstTax,
+      );
+
+      // Create updated room object
+      const updatedTable = {
+        ...table,
+        bookingDetails: {
+          ...table.bookingDetails,
+          payment: {
+            ...table.bookingDetails.payment,
+            priceAfterDiscount:
+              totalRemainingDiscount > 0 ? Math.round(newSubtotal) : "",
+            subtotal: newSubtotal,
+            totalPrice: Math.round(newSubtotal + taxDetails.gstAmount),
+            gst: {
+              gstAmount: taxDetails.gstAmount || "",
+              gstPercentage: taxDetails.gstPercentage || "",
+              cgstAmount: taxDetails.cgstAmount || "",
+              cgstPercentage: taxDetails.cgstPercentage || "",
+              sgstAmount: taxDetails.sgstAmount || "",
+              sgstPercentage: taxDetails.sgstPercentage || "",
+            },
+            discount: updatedDiscounts,
+          },
+        },
+        transctions: table.transctions.map((transaction: any) => {
+          if (transaction.bookingId === table.bookingDetails.bookingId) {
+            return {
+              ...transaction,
+              payment: {
+                ...transaction.payment,
+                priceAfterDiscount:
+                  totalRemainingDiscount > 0 ? Math.round(newSubtotal) : "",
+                subtotal: newSubtotal,
+                totalPrice: Math.round(newSubtotal + taxDetails.gstAmount),
+                gst: {
+                  gstAmount: taxDetails.gstAmount || "",
+                  gstPercentage: taxDetails.gstPercentage || "",
+                  cgstAmount: taxDetails.cgstAmount || "",
+                  cgstPercentage: taxDetails.cgstPercentage || "",
+                  sgstAmount: taxDetails.sgstAmount || "",
+                  sgstPercentage: taxDetails.sgstPercentage || "",
+                },
+                discount: updatedDiscounts,
+              },
+            };
+          }
+          return transaction;
+        }),
+      };
+
+      // Create updated data array with the modified table
+      const updatedData = [...data];
+      updatedData[roomIndex] = updatedTable;
+      await updateDoc(docRef, { "live.rooms": updatedData });
+      return true;
+
+      // return updatedData;
+    }
+  } catch (error) {
+    console.error("Error removing discount:", error);
+    return false;
+  }
+}
+export async function addDiscount1(discount: any, table: any) {
   const session = await auth();
   const user = session?.user?.email;
   if (!user) {
@@ -1960,7 +2462,7 @@ export async function addDiscount(discount: any, table: any) {
       // Find the table that matches
       const tableIndex = data.findIndex(
         (item: any) =>
-          item.diningDetails.location === table.diningDetails.location
+          item.diningDetails.location === table.diningDetails.location,
       );
 
       if (tableIndex === -1) {
@@ -1973,7 +2475,7 @@ export async function addDiscount(discount: any, table: any) {
       if (discount.type === "percentage") {
         const percentageAmount = parseFloat(discount.amount);
         calculatedDiscount = Math.round(
-          table.diningDetails.payment.subtotal * (percentageAmount / 100)
+          table.diningDetails.payment.subtotal * (percentageAmount / 100),
         );
       } else {
         calculatedDiscount = Math.round(discount.amount);
@@ -1984,7 +2486,7 @@ export async function addDiscount(discount: any, table: any) {
         table.diningDetails.payment.price,
         Math.round(table.diningDetails.payment.subtotal - calculatedDiscount),
         "dining",
-        gstTax
+        gstTax,
       );
 
       // Create updated table object
@@ -1996,14 +2498,14 @@ export async function addDiscount(discount: any, table: any) {
             ...data[tableIndex].diningDetails.payment,
             priceAfterDiscount:
               Math.round(
-                table.diningDetails.payment.subtotal - calculatedDiscount
+                table.diningDetails.payment.subtotal - calculatedDiscount,
               ) || "",
             paymentType: "single",
             subtotal: table.diningDetails.payment.subtotal - calculatedDiscount,
             totalPrice: Math.round(
               table.diningDetails.payment.subtotal -
                 calculatedDiscount +
-                taxDetails.gstAmount
+                taxDetails.gstAmount,
             ),
             gst: {
               gstAmount: taxDetails.gstAmount || "",
@@ -2015,7 +2517,7 @@ export async function addDiscount(discount: any, table: any) {
             },
             discount: [
               ...data[tableIndex].diningDetails.payment.discount,
-              { ...discount, discount: calculatedDiscount },
+              { ...discount, amount: String(calculatedDiscount) },
             ],
           },
         },
@@ -2029,14 +2531,14 @@ export async function addDiscount(discount: any, table: any) {
                 ...transaction.payment,
                 priceAfterDiscount:
                   Math.round(
-                    table.diningDetails.payment.subtotal - calculatedDiscount
+                    table.diningDetails.payment.subtotal - calculatedDiscount,
                   ) || "",
                 subtotal:
                   table.diningDetails.payment.subtotal - calculatedDiscount,
                 totalPrice: Math.round(
                   table.diningDetails.payment.subtotal -
                     calculatedDiscount +
-                    taxDetails.gstAmount
+                    taxDetails.gstAmount,
                 ),
                 gst: {
                   gstAmount: taxDetails.gstAmount || "",
@@ -2048,7 +2550,7 @@ export async function addDiscount(discount: any, table: any) {
                 },
                 discount: [
                   ...transaction.payment.discount,
-                  { ...discount, discount: calculatedDiscount },
+                  { ...discount, amount: String(calculatedDiscount) },
                 ],
               },
             };
@@ -2070,7 +2572,7 @@ export async function addDiscount(discount: any, table: any) {
   }
 }
 
-export async function removeDiscount(location: string) {
+export async function removeDiscount1(location: string) {
   const session = await auth();
   const user = session?.user?.email;
   if (!user) {
@@ -2090,7 +2592,7 @@ export async function removeDiscount(location: string) {
       const data = docSnap.data().live.tables;
       // Find the room that matches
       const tableIndex = data.findIndex(
-        (item: any) => item.diningDetails.location === location
+        (item: any) => item.diningDetails.location === location,
       );
 
       if (tableIndex === -1) {
@@ -2112,7 +2614,7 @@ export async function removeDiscount(location: string) {
       // Remove the last discount
       const updatedDiscounts = table.diningDetails.payment.discount.slice(
         0,
-        -1
+        -1,
       );
 
       // Calculate the total discount amount from remaining discounts
@@ -2121,7 +2623,7 @@ export async function removeDiscount(location: string) {
         if (discount.type === "percentage") {
           const percentageAmount = parseFloat(discount.amount);
           totalRemainingDiscount += Math.round(
-            table.diningDetails.payment.subtotal * (percentageAmount / 100)
+            table.diningDetails.payment.subtotal * (percentageAmount / 100),
           );
         } else {
           totalRemainingDiscount += Math.round(discount.amount);
@@ -2137,7 +2639,7 @@ export async function removeDiscount(location: string) {
         table.diningDetails.payment.price,
         Math.round(newSubtotal),
         "restaurant",
-        gstTax
+        gstTax,
       );
 
       // Create updated room object
@@ -2204,7 +2706,7 @@ export async function removeDiscount(location: string) {
 
 export async function completeTakeawayOrder(
   orderId: string,
-  customerPhone: string
+  customerPhone: string,
 ) {
   const session = await auth();
   const user = session?.user?.email;
@@ -2219,7 +2721,7 @@ export async function completeTakeawayOrder(
     if (takeawayData.exists()) {
       const data = takeawayData.data()?.takeaway[customerPhone][orderId];
       const length = Object.keys(
-        takeawayData.data()?.takeaway[customerPhone]
+        takeawayData.data()?.takeaway[customerPhone],
       ).length;
 
       await updateDoc(takeawayRef, {
@@ -2253,6 +2755,29 @@ export async function completeTakeawayOrder(
   // ]);
 }
 
+export async function getRoomByCategory(category: string) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data().live?.roomsData?.roomDetail[category];
+      if (data.length > 0) {
+        return data[0];
+      }
+      return false;
+    }
+  } catch (error) {
+    console.error("Error fetching room by category:", error);
+    return false;
+  }
+}
+
 export async function addReservation(reservationData: any) {
   const session = await auth();
   const user = session?.user?.email;
@@ -2265,15 +2790,119 @@ export async function addReservation(reservationData: any) {
     console.error("Reservation data is undefined");
     return false;
   }
+  const gst: any = await calculateTax(
+    reservationData.roomPrice,
+    reservationData.roomPrice,
+    "dining",
+    reservationData.businessInfo.gstTax,
+  );
+  const totalAmount = reservationData.roomPrice + gst.gstAmount;
+
+  // Generate referenceId for payment tracking
+  const referenceId = `PAY_${Date.now()}`;
+
+  const reservation = {
+    bookingId: reservationData.bookingId,
+    email: reservationData.email,
+    phone: reservationData.phone,
+    name: reservationData.name,
+    roomCategory: reservationData.roomCategory,
+    guests: reservationData.guests,
+    checkIn: reservationData.checkIn,
+    checkOut: reservationData.checkOut,
+    nights: reservationData.nights,
+    numberOfRooms: reservationData.numberOfRooms,
+    createdAt: new Date().toISOString(),
+    status: "pending",
+    business: {
+      name: reservationData.businessInfo.businessName,
+      phone: reservationData.businessInfo.phone,
+      website: reservationData.businessInfo.website,
+    },
+    payment: {
+      paymentStatus: "pending",
+      mode: reservationData.paymentMode,
+      paymentId: "",
+      referenceId: referenceId,
+      timeOfTransaction: "",
+      price: reservationData.roomPrice,
+      priceAfterDiscount: "",
+      paymentType: "single",
+      subtotal: reservationData.roomPrice,
+      totalPrice: totalAmount,
+      gst: gst,
+      discount: [
+        {
+          type: "",
+          amount: "",
+          code: "",
+          discount: 0,
+        },
+      ],
+    },
+    transctions: [
+      {
+        location: reservationData.roomCategory,
+        against: reservationData.bookingId,
+        attendant: "",
+        bookingId: reservationData.bookingId,
+        payment: {
+          paymentStatus: "pending",
+          mode: reservationData.paymentMode,
+          paymentId: "",
+          referenceId: referenceId,
+          timeOfTransaction: "",
+          price: reservationData.roomPrice,
+          priceAfterDiscount: "",
+          paymentType: "single",
+          subtotal: reservationData.roomPrice,
+          totalPrice: totalAmount,
+          gst: gst,
+          discount: [
+            {
+              type: "",
+              amount: "",
+              code: "",
+              discount: 0,
+            },
+          ],
+        },
+      },
+    ],
+  };
 
   try {
     const docRef = doc(db, user, "hotel");
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       await updateDoc(docRef, {
-        reservation: arrayUnion(reservationData),
+        reservation: arrayUnion(reservation),
       });
-      return true;
+      const paymentLink = await generatePaymentLink(totalAmount, {
+        description:
+          "Reservation Payment for booking id: " + reservationData.bookingId,
+        customerName: reservationData.name,
+        customerContact: `91${reservationData.phone}`,
+        customerEmail: reservationData.email,
+        businessEmail: reservationData.businessInfo.email,
+        paymentFor: "hotel",
+        referenceId: referenceId,
+        expireInDays: 1,
+      });
+      await sendReservationPaymentLink(`91${reservationData.phone}`, [
+        reservationData.name,
+        reservationData.businessInfo.businessName,
+        reservationData.bookingId,
+        reservationData.roomCategory,
+        new Date(reservationData.checkIn).toLocaleDateString("en-GB"),
+        new Date(reservationData.checkOut).toLocaleDateString("en-GB"),
+        reservationData.guests.length,
+        totalAmount,
+        paymentLink.short_url,
+        reservationData.businessInfo.phone,
+        reservationData.businessInfo.phone,
+      ]);
+      return reservation;
     }
   } catch (error) {
     console.error("Error adding reservation:", error);
@@ -2283,7 +2912,7 @@ export async function addReservation(reservationData: any) {
 
 export async function getReservationsInRange(
   startDate: string,
-  endDate: string
+  endDate: string,
 ) {
   const session = await auth();
   const user = session?.user?.email;
@@ -2315,7 +2944,7 @@ export async function getReservationsInRange(
 
           // Include reservations where check-in falls within the selected range
           return checkInDate >= start && checkInDate <= end;
-        }
+        },
       );
 
       return filteredReservations;
@@ -2325,5 +2954,342 @@ export async function getReservationsInRange(
   } catch (error) {
     console.error("Error fetching reservations:", error);
     return null;
+  }
+}
+
+export async function checkRoomAvailability(
+  startDate: string,
+  endDate: string,
+  roomCategory: string,
+  totalRooms: number,
+  vacantRoomsNeeded: number,
+): Promise<{
+  available: boolean;
+  maxOccupied: number;
+  minVacant: number;
+} | null> {
+  const session = await auth();
+  const user = session?.user?.email;
+
+  if (!user) {
+    console.error("User email is undefined");
+    return null;
+  }
+
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const allReservations = data.reservation || [];
+
+      // Normalize dates to start and end of day
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      // Filter reservations for the specific room category that overlap with the date range
+      const categoryReservations = allReservations.filter(
+        (reservation: any) => {
+          if (reservation.roomCategory !== roomCategory) return false;
+
+          const checkIn = new Date(reservation.checkIn);
+          checkIn.setHours(0, 0, 0, 0);
+
+          const checkOut = new Date(reservation.checkOut);
+          checkOut.setHours(23, 59, 59, 999);
+
+          // Check if reservation overlaps with the requested date range
+          // Overlap occurs when: reservation starts before range ends AND reservation ends after range starts
+          return checkIn <= end && checkOut >= start;
+        },
+      );
+
+      // Check each day in the range to find the maximum occupancy
+      let maxOccupied = 0;
+      const currentDate = new Date(start);
+
+      while (currentDate <= end) {
+        let occupiedOnDay = 0;
+
+        for (const reservation of categoryReservations) {
+          const checkIn = new Date(reservation.checkIn);
+          checkIn.setHours(0, 0, 0, 0);
+
+          const checkOut = new Date(reservation.checkOut);
+          checkOut.setHours(0, 0, 0, 0);
+
+          // Room is occupied if current date is between check-in (inclusive) and check-out (exclusive)
+          if (currentDate >= checkIn && currentDate < checkOut) {
+            occupiedOnDay++;
+          }
+        }
+
+        if (occupiedOnDay > maxOccupied) {
+          maxOccupied = occupiedOnDay;
+        }
+
+        // Move to next day
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      const minVacant = totalRooms - maxOccupied;
+      const available = minVacant >= vacantRoomsNeeded;
+
+      return {
+        available,
+        maxOccupied,
+        minVacant,
+      };
+    }
+
+    return { available: true, maxOccupied: 0, minVacant: totalRooms };
+  } catch (error) {
+    console.error("Error checking room availability:", error);
+    return null;
+  }
+}
+
+export async function getRoomDetails() {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  const docRef = doc(db, user, "hotel");
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data()?.rooms;
+      if (data) {
+        const roomDetail = Object.values(data).map((room: any) => {
+          return {
+            category: room.roomType,
+            price: room.price,
+            rooms: room.totalRooms,
+          };
+        });
+        return roomDetail;
+      }
+
+      return false;
+    }
+    return false;
+  } catch (error) {
+    console.error("Error fetching room details:", error);
+    return false;
+  }
+}
+
+export async function getBusinessInfo() {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  const docRef = doc(db, user, "info");
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    return data.business || {};
+  }
+  return false;
+}
+export async function sendReservationPaymentLink(
+  phoneNumber: string,
+  variables: string[],
+) {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    // console.log("phoneNumber", phoneNumber, variables);
+    const formattedPhone = phoneNumber.replace(/\D/g, "");
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: "reservation_payment",
+            language: { code: "en_US" },
+            components: [
+              {
+                type: "body",
+                parameters: variables.map((value) => ({
+                  type: "text",
+                  text: String(value),
+                })),
+              },
+            ],
+          },
+        }),
+      },
+    );
+
+    const data = await response.json();
+    console.log("WhatsApp API Response:", data); // Add logging for debugging
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to send message");
+    }
+
+    return { success: true, message: "Message sent successfully!", data };
+  } catch (error: any) {
+    console.error("WhatsApp API Error:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
+  }
+}
+export async function sendReservationPaymentCompletedMessage(
+  phoneNumber: string,
+  variables: string[],
+) {
+  try {
+    // Format phone number - remove any special characters and ensure proper format
+    // console.log("phoneNumber", phoneNumber, variables);
+    const formattedPhone = phoneNumber.replace(/\D/g, "");
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/616505061545755/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_WHATSAPP_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: "reservation",
+            language: { code: "en_US" },
+            components: [
+              {
+                type: "body",
+                parameters: variables.map((value) => ({
+                  type: "text",
+                  text: String(value),
+                })),
+              },
+            ],
+          },
+        }),
+      },
+    );
+
+    const data = await response.json();
+    console.log("WhatsApp API Response:", data); // Add logging for debugging
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to send message");
+    }
+
+    return { success: true, message: "Message sent successfully!", data };
+  } catch (error: any) {
+    console.error("WhatsApp API Error:", error);
+    return {
+      success: false,
+      message: error.message || "Unknown error occurred",
+    };
+  }
+}
+
+export async function generatePaymentLinkAPI(price: number) {
+  const link = await generatePaymentLink(price, {
+    description: "Reservation Payment",
+    customerName: "Jane",
+    customerContact: "+918851280284",
+    customerEmail: "jane@example.com",
+    expireInDays: 3,
+  });
+  return link;
+}
+export async function getPaymentLinkStatusAPI(paymentLinkId: string) {
+  const status = await getPaymentLinkStatus(paymentLinkId);
+  return status;
+}
+
+export async function updateReservationPaymentStatus(details: any) {
+  // console.log("details", details);
+
+  try {
+    const docRef = doc(db, details.businessEmail, details.paymentFor);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      console.error("Document does not exist");
+      return false;
+    }
+
+    const docType = details.paymentFor === "hotel" ? "reservation" : "events";
+    const data = docSnap.data()?.[docType];
+    const index = data.findIndex(
+      (reservation: any) =>
+        reservation.payment?.referenceId === details.referenceId,
+    );
+    const transactionIndex = data[index].transctions.findIndex(
+      (transaction: any) =>
+        transaction.payment.referenceId === details.referenceId,
+    );
+
+    if (index == -1 || transactionIndex == -1) {
+      console.log("Reservation not found");
+      return false;
+    }
+    data[index].status = "paid";
+    data[index].payment.paymentStatus = "paid";
+    data[index].payment.paymentId = details.paymentLinkId;
+    data[index].payment.timeOfTransaction = new Date().toISOString();
+    data[index].transctions[transactionIndex].payment.paymentStatus = "paid";
+    data[index].transctions[transactionIndex].payment.timeOfTransaction =
+      new Date().toISOString();
+    data[index].transctions[transactionIndex].payment.paymentId =
+      details.paymentLinkId;
+
+    await updateDoc(docRef, {
+      [docType]: data,
+    });
+    if (details.paymentFor === "hotel") {
+      await sendReservationPaymentCompletedMessage(details.contact, [
+        data[index].business.name,
+        data[index].name,
+        data[index].bookingId,
+        data[index].roomCategory,
+        new Date(data[index].checkIn).toLocaleDateString("en-GB"),
+        new Date(data[index].checkOut).toLocaleDateString("en-GB"),
+        data[index].guests.length,
+        data[index].payment.price,
+        data[index].payment.totalPrice,
+        data[index].business.website,
+        data[index].business.phone,
+      ]);
+    } else {
+      await sendEventPaymentCompletedMessage(details.contact, [
+        data[index].name,
+        data[index].payment.price,
+        new Date(data[index].startDate).toLocaleDateString("en-GB"),
+        data[index].eventType,
+        data[index].payment.paymentId,
+        data[index].relationshipManager.contact,
+      ]);
+    }
+    return true;
+  } catch (error) {
+    console.error("Error updating reservation payment status:", error);
+    return false;
   }
 }

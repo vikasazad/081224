@@ -392,8 +392,8 @@ const WalkIn = () => {
         priceAfterDiscount: coupon?.type ? guestDetails?.subtotal : "",
       };
       console.log("roomInfo:", roomInfo);
-      const res: any = await saveRoomData(roomInfo);
-      if (res?.success) {
+      const res = await saveRoomData(roomInfo);
+      if (res) {
         router.push("/staff");
       } else {
         toast.error("Failed to save room data");

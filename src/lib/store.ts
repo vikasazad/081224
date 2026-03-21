@@ -8,6 +8,7 @@ import activeFooterItemReducer from "./features/activeFooterCategory";
 import walkinReducer from "./features/walkinSlice";
 import invoiceReducer from "./features/invoiceSlice";
 import deliveryAlertReducer from "./features/deliveryAlertSlice";
+import checkInReducer from "./features/checkInSlice";
 
 // Create a custom storage that works with SSR
 const createNoopStorage = () => {
@@ -46,6 +47,7 @@ const rootReducer = combineReducers({
   walkin: walkinReducer,
   invoiceData: persistReducer(authPersistConfig, invoiceReducer),
   deliveryAlertData: deliveryAlertReducer,
+  checkInData: checkInReducer,
   // firebaseManagementData: firebaseManagementDataReducer,
   //     // firestoreMultipleData: firestoreMultipleDataReducer,
   //     // firebaseData: firebaseDataReducer,

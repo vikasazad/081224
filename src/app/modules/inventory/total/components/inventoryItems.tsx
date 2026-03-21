@@ -46,7 +46,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import type { EditInventoryItem, InventoryItem } from "@/types/inventory";
+import type {
+  EditInventoryItem,
+  InventoryItem,
+  Transaction,
+  TransactionType,
+} from "@/types/inventory";
 import { EditItemDialog } from "@/app/modules/inventory/total/components/edit-item-dialog";
 import { DeleteAlertDialog } from "@/app/modules/inventory/total/components/delete-alert-dialog";
 import { useRouter } from "next/navigation";
@@ -60,7 +65,7 @@ import {
   saveDeletedItem,
   saveEditedItem,
   saveInventoryItem,
-  saveNewSky,
+  saveNewSku,
 } from "../../utils/inventoryAPI";
 
 export default function InventoryItems({ data }: any) {
@@ -94,7 +99,7 @@ export default function InventoryItems({ data }: any) {
     name: "",
     description: "",
   });
-
+  // console.log("isEditDialogOpen", isEditDialogOpen);
   // Filter and search logic
   const filteredItems = useMemo(() => {
     return items.filter((item: any) => {
@@ -171,9 +176,10 @@ export default function InventoryItems({ data }: any) {
 
   const handleSaveItem = async (
     formData: EditInventoryItem,
-    transactionType: string | undefined,
+    transactionType: TransactionType,
     previousQuantity: number
   ) => {
+    console.log("EDITED ITEM", formData);
     if (editingItem) {
       try {
         // Update existing item
@@ -197,7 +203,7 @@ export default function InventoryItems({ data }: any) {
         // Here you can handle the transactionType as needed
         // console.log("ITEMS", formData);
         // console.log("Transaction Type:", transactionType, previousQuantity);
-        const transactionItem = {
+        const transactionItem: Transaction = {
           id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
           name: formData.name,
           sku: formData.sku,
@@ -214,7 +220,7 @@ export default function InventoryItems({ data }: any) {
         if (transactionType) await addNewTransaction(transactionItem);
 
         if (isNewSku) {
-          await saveNewSky(isNewSku);
+          await saveNewSku(isNewSku);
           setIsNewSku(null);
         }
 
@@ -233,7 +239,7 @@ export default function InventoryItems({ data }: any) {
       ...item,
       name: `${item.name} (Copy)`,
       sku: `${item.sku}-COPY`,
-      quantity: "0",
+      quantity: 0,
       status: "Out of Stock",
       lastUpdated: new Date().toString(),
       updatedBy: session?.user?.role || "undefined",
@@ -249,7 +255,7 @@ export default function InventoryItems({ data }: any) {
   const handleAddFormSubmit = async (formData: any) => {
     // Add the new item to the beginning of the items array
     try {
-      const transactionItem = {
+      const transactionItem: Transaction = {
         id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
         name: formData.name,
         sku: formData.sku,
@@ -264,7 +270,7 @@ export default function InventoryItems({ data }: any) {
       if (transactionItem) await addNewTransaction(transactionItem);
       const result = await saveInventoryItem(formData);
       if (isNewSku) {
-        await saveNewSky(isNewSku);
+        await saveNewSku(isNewSku);
         setIsNewSku(null);
       }
       console.log("Item saved successfully:", result);
@@ -581,6 +587,7 @@ export default function InventoryItems({ data }: any) {
       </Dialog>
 
       <EditItemDialog
+        key={editingItem?.sku || 'new-item'}
         item={editingItem}
         open={isEditDialogOpen}
         sku={data?.sku}

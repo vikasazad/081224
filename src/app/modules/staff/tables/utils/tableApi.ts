@@ -309,7 +309,7 @@ export async function setRooms(roomData: any) {
   return false;
 }
 export async function setHistory(tableData: any, tableType: string) {
-  console.log(tableType);
+  console.log('tableType', tableType);
   try {
     const docRef = doc(db, "vikumar.azad@gmail.com", "restaurant");
     const docStaffRef = doc(db, "vikumar.azad@gmail.com", "info");

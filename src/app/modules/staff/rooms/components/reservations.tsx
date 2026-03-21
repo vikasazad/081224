@@ -5,7 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { toast } from "sonner";
-import { getReservationsInRange } from "../../utils/staffData";
+import {
+  generatePaymentLinkAPI,
+  getPaymentLinkStatusAPI,
+  getReservationsInRange,
+} from "../../utils/staffData";
 import {
   CalendarIcon,
   Search,
@@ -22,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
+import { generatePaymentLink } from "@/lib/razorpay";
 
 interface Guest {
   id: string;
@@ -125,6 +130,15 @@ const Reservations = () => {
 
   const groupedReservations = groupReservationsByDate();
 
+  // const PaymentLink = async () => {
+  //   const link = await generatePaymentLinkAPI(500);
+  //   console.log(link);
+  // };
+  // const GetPaymentLinkStatus = async () => {
+  //   const link = await getPaymentLinkStatusAPI("plink_S3mYj3hj115krz");
+  //   console.log(link);
+  // };
+
   return (
     <div className="space-y-4">
       <div className=" mx-auto">
@@ -139,6 +153,12 @@ const Reservations = () => {
             >
               New Reservation
             </Button>
+            {/* <Button variant="default" size="sm" onClick={PaymentLink}>
+              Test link
+            </Button>
+            <Button variant="default" size="sm" onClick={GetPaymentLinkStatus}>
+              Get Status
+            </Button> */}
           </div>
 
           {/* Date Range Selection */}
