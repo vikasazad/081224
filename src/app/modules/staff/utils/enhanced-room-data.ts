@@ -46,7 +46,7 @@ export async function getOnlineConcierge() {
     const onlineStaff = info
       .filter(
         (staffMember: any) =>
-          staffMember.status === "online" && staffMember.role === "concierge"
+          staffMember.status === "online" && staffMember.role === "concierge",
       )
       .map((staffMember: any) => ({
         name: staffMember.name,
@@ -64,13 +64,13 @@ export async function getOnlineConcierge() {
 }
 
 function assignAttendantSequentially(
-  availableStaff: StaffMember[]
+  availableStaff: StaffMember[],
 ): StaffMember | null {
   if (availableStaff.length === 0) return null;
 
   // Sort staff by number of current orders (ascending)
   const sortedStaff = [...availableStaff].sort(
-    (a, b) => a.orders.length - b.orders.length
+    (a, b) => a.orders.length - b.orders.length,
   );
 
   // Return the staff with the least number of orders
@@ -79,7 +79,7 @@ function assignAttendantSequentially(
 
 export async function updateOrdersForAttendant(
   attendantName: string,
-  orderId: string
+  orderId: string,
 ) {
   const session = await auth();
   const user = session?.user?.email;
@@ -108,7 +108,7 @@ export async function updateOrdersForAttendant(
     // Find the new attendant by name
     const newAttendantIndex = staff.findIndex(
       (staffMember: any) =>
-        staffMember.name === attendantName && staffMember.role === "concierge"
+        staffMember.name === attendantName && staffMember.role === "concierge",
     );
 
     if (newAttendantIndex === -1) {
@@ -120,7 +120,7 @@ export async function updateOrdersForAttendant(
     const previousAttendantIndex = staff.findIndex(
       (staffMember: any) =>
         staffMember.role === "concierge" &&
-        staffMember.orders?.includes(orderId)
+        staffMember.orders?.includes(orderId),
     );
 
     // Modify the staff array
@@ -174,7 +174,7 @@ export async function removeRoomByNumber(roomNo: string, roomType: string) {
 
     // Filter out the room with the specified roomNo in the specified roomType
     const updatedRoomTypeArray = tableDetails[roomType].filter(
-      (room: any) => room.roomNo !== roomNo
+      (room: any) => room.roomNo !== roomNo,
     );
 
     // Update the tableDetails with the filtered array for the specified roomType
@@ -201,7 +201,7 @@ async function shortenURL(
   roomNo: string,
   phone: string,
   tag: string,
-  gstPercentage: string
+  gstPercentage: string,
 ) {
   const encodedSecretKey = new TextEncoder().encode("Vikas@1234");
   const payload = {
@@ -217,7 +217,7 @@ async function shortenURL(
   const longUrl = `${process.env.NEXT_PUBLIC_BASE_URL_FOR_CONCIERGE}${newToken}`;
 
   const response = await fetch(
-    `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`
+    `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`,
   );
   const shortUrl = await response.text();
 
@@ -228,7 +228,7 @@ async function shortenURL(
 export async function sendWhatsAppMessage(
   phoneNumber: string,
   name: string,
-  variables: string[]
+  variables: string[],
 ) {
   try {
     console.log("phoneNumber", phoneNumber, name, variables);
@@ -264,7 +264,7 @@ export async function sendWhatsAppMessage(
             ],
           },
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -385,9 +385,9 @@ export async function saveRoomDataWithWhatsApp(roomInfo: any) {
     };
 
     const sanitizedFormat = JSON.parse(
-      JSON.stringify(_roomInfo, (key, value) =>
-        value === undefined ? null : value
-      )
+      JSON.stringify(_roomInfo, (_, value) =>
+        value === undefined ? null : value,
+      ),
     );
 
     const docRef = doc(db, user, "hotel");
@@ -411,7 +411,7 @@ export async function saveRoomDataWithWhatsApp(roomInfo: any) {
           roomInfo.roomNo,
           roomInfo.phone,
           "concierge",
-          "18"
+          "18",
         );
 
         await sendWhatsAppMessage(`91${roomInfo.phone}`, roomInfo.name, [
@@ -434,7 +434,7 @@ export async function saveRoomDataWithWhatsApp(roomInfo: any) {
           _bookingId,
           roomInfo.name,
           roomInfo.roomNo,
-          "room"
+          "room",
         );
       }
 
