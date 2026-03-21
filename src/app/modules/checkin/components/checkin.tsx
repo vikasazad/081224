@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
 import StatusChip from "@/components/ui/StatusChip";
@@ -9,7 +9,6 @@ import {
   Coffee,
   Users,
   Wifi,
-  ImageIcon,
   X,
   Upload,
   Camera,
@@ -83,8 +82,6 @@ const Checkin = ({ bookingId }: CheckinProps) => {
     getCheckInData(state, bookingId),
   );
   console.log(bookingData);
-  const [images, setImages] = useState<string[]>([]);
-  const [loadingImages, setLoadingImages] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // ID Proof Upload States
@@ -93,8 +90,6 @@ const Checkin = ({ bookingId }: CheckinProps) => {
     guestId: string;
     side: "front" | "back";
   } | null>(null);
-  const fileInputRefs = useRef<Record<string, HTMLInputElement>>({});
-
   // OTP Verification States
   const [showOtpDialog, setShowOtpDialog] = useState(false);
   const [guestPhone, setGuestPhone] = useState<string>("");
@@ -653,41 +648,6 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                           </div>
                         </div>
                       </div>
-
-                      {(loadingImages || images.length > 0) && (
-                        <>
-                          <Separator className="my-2" />
-                          <div className="space-y-3">
-                            <h3 className="text-sm font-medium flex items-center gap-2">
-                              <ImageIcon size={16} />
-                              Check-in Images
-                            </h3>
-                            {loadingImages ? (
-                              <div className="text-sm text-muted-foreground">
-                                Loading images...
-                              </div>
-                            ) : images.length > 0 ? (
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                {images.map((imageUrl, index) => (
-                                  <div
-                                    key={index}
-                                    onClick={() => handleImageClick(imageUrl)}
-                                    className="relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary transition-colors cursor-pointer"
-                                  >
-                                    <Image
-                                      src={imageUrl}
-                                      alt={`Check-in image ${index + 1}`}
-                                      fill
-                                      className="object-cover"
-                                      sizes="(max-width: 768px) 50vw, 33vw"
-                                    />
-                                  </div>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        </>
-                      )}
 
                       {/* ID Proof Upload Section */}
                       <>
