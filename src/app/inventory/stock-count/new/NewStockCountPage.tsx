@@ -44,11 +44,10 @@ export default function NewStockCountPage({ data }: NewStockCountPageProps) {
   const handleCreate = async () => {
     setIsCreating(true);
     try {
-      const countedBy =
-        session?.user?.name || session?.user?.email || "Unknown";
+      const countedBy = session?.user?.email || "Unknown";
       const newCount = await createStockCount(
         countedBy,
-        category === "all" ? undefined : category
+        category === "all" ? undefined : category,
       );
 
       if (newCount) {
