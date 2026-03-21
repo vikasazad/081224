@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { addNewTransaction } from "../../utils/inventoryAPI";
 import { saveLowStockEditedItem } from "../../utils/inventoryAPI";
 import { EditItemDialog } from "../../total/components/edit-item-dialog";
+import { Transaction, TransactionType } from "@/types/inventory";
 
 // const ITEMS_PER_PAGE = 5;
 
@@ -40,7 +41,7 @@ export default function ReorderLevel({ data }: any) {
   const [items, setItems] = React.useState<any[]>(
     data?.items
       ?.filter((item: any) => item.quantity <= item.reorderLevel)
-      .reverse()
+      .reverse(),
   );
   const [searchQuery, setSearchQuery] = React.useState("");
   const [categoryFilter, setCategoryFilter] = React.useState("all");
@@ -59,7 +60,7 @@ export default function ReorderLevel({ data }: any) {
         (item) =>
           (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.supplier.toLowerCase().includes(searchQuery.toLowerCase())) &&
-          (categoryFilter === "all" || item.category === categoryFilter)
+          (categoryFilter === "all" || item.category === categoryFilter),
       );
   }, [items, searchQuery, categoryFilter]);
 
@@ -91,11 +92,11 @@ export default function ReorderLevel({ data }: any) {
 
   const handleSaveEdit = async (
     editedItem: any,
-    transactionType: string | undefined,
-    previousQuantity: number
+    transactionType: TransactionType,
+    previousQuantity: number,
   ) => {
     console.log("EDITED", editedItem, transactionType, previousQuantity);
-    const transactionItem = {
+    const transactionItem: Transaction = {
       id: `TXN-${Math.floor(1000 + Math.random() * 9000)}`,
       name: editedItem.name,
       sku: editedItem.sku,
@@ -109,7 +110,7 @@ export default function ReorderLevel({ data }: any) {
     await saveLowStockEditedItem(editedItem);
     if (transactionType) await addNewTransaction(transactionItem);
     setItems(
-      items.map((item) => (item.name === editedItem.name ? editedItem : item))
+      items.map((item) => (item.name === editedItem.name ? editedItem : item)),
     );
   };
 
