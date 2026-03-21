@@ -1017,6 +1017,15 @@ const Checkin = ({ bookingId }: CheckinProps) => {
               <p className="text-sm text-muted-foreground">
                 Booking ID: {bookingId}
               </p>
+              <Button
+                variant="outline"
+                className="hidden"
+                onClick={() =>
+                  handleImageClick("https://via.placeholder.com/150")
+                }
+              >
+                View Image
+              </Button>
             </div>
           </div>
         )}
