@@ -168,9 +168,7 @@ export async function saveDeletedSupplier(supplierData: any) {
   return false;
 }
 
-export async function addNewTransaction(
-  transaction: Omit<Transaction, "id"> & { id?: string }
-) {
+export async function addNewTransaction(transaction: Transaction) {
   try {
     const docRef = doc(db, "vikumar.azad@gmail.com", "inventory");
 
@@ -224,7 +222,7 @@ export async function saveLowStockEditedItem(updatedItem: any) {
 
     // Find and update the item in the suppliers array
     items = items.map((item: any) =>
-      item.name === updatedItem.name ? { ...item, ...updatedItem } : item
+      item.name === updatedItem.name ? { ...item, ...updatedItem } : item,
     );
 
     // Save the updated array back to Firestore
