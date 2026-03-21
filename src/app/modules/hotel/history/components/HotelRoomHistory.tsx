@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, Users, DollarSign, Clock, Settings } from "lucide-react";
+import { ChevronDown, Users, Clock, Settings } from "lucide-react";
 import { format } from "date-fns";
 
 const HotelRoomHistory = ({ data }: any) => {
@@ -9,7 +9,7 @@ const HotelRoomHistory = ({ data }: any) => {
   const [isExpanded, setIsExpanded] = useState<Set<string>>(new Set());
   const [expandedOrder, setExpandedOrder] = useState<Set<string>>(new Set());
   const [expandedService, setExpandedService] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   const OrderDetailsTable = ({
@@ -187,7 +187,7 @@ const HotelRoomHistory = ({ data }: any) => {
                       <p className="text-sm text-gray-500">
                         {formatDateRange(
                           data.data?.bookingDetails?.checkIn,
-                          data.data?.bookingDetails?.checkOut
+                          data.data?.bookingDetails?.checkOut,
                         )}
                       </p>
                     </div>
@@ -240,7 +240,7 @@ const HotelRoomHistory = ({ data }: any) => {
                       <span>
                         {Array.isArray(data.data?.bookingDetails?.inclusions)
                           ? data.data?.bookingDetails?.inclusions.join(", ")
-                          : data.data?.bookingDetails?.inclusions ?? "N/A"}
+                          : (data.data?.bookingDetails?.inclusions ?? "N/A")}
                       </span>
                     </div>
                     {data.data?.bookingDetails?.specialRequirements && (
@@ -296,7 +296,7 @@ const HotelRoomHistory = ({ data }: any) => {
                           </div>
                         )}
                       </div>
-                    )
+                    ),
                   )}
 
                   {/* Services Section */}
@@ -362,7 +362,7 @@ const HotelRoomHistory = ({ data }: any) => {
                                 {
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                }
+                                },
                               )}
                             </p>
                           </div>
@@ -371,7 +371,7 @@ const HotelRoomHistory = ({ data }: any) => {
                           </Badge>
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               )}

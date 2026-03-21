@@ -1,12 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+
 import StatusChip from "@/components/ui/StatusChip";
 import {
   Calendar,
@@ -24,7 +19,6 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { fetchCheckInImages } from "@/app/modules/staff/utils/clientside";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { convertToWebP } from "@/app/modules/hotel/hotel/utils/hotelApi";
@@ -86,7 +80,7 @@ interface CheckinProps {
 
 const Checkin = ({ bookingId }: CheckinProps) => {
   const bookingData = useSelector((state: RootState) =>
-    getCheckInData(state, bookingId)
+    getCheckInData(state, bookingId),
   );
   console.log(bookingData);
   const [images, setImages] = useState<string[]>([]);
@@ -239,14 +233,14 @@ const Checkin = ({ bookingId }: CheckinProps) => {
   const handleImageUpload = async (
     guestId: string,
     side: "front" | "back",
-    file: File
+    file: File,
   ) => {
     try {
       // Set uploading state
       setGuestIdProofs((prev) => {
         const updatedProofs = [...prev];
         const guestIndex = updatedProofs.findIndex(
-          (g) => g.guestId === guestId
+          (g) => g.guestId === guestId,
         );
         if (guestIndex !== -1) {
           updatedProofs[guestIndex] = {
@@ -270,7 +264,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
       setGuestIdProofs((prev) => {
         const updatedProofs = [...prev];
         const guestIndex = updatedProofs.findIndex(
-          (g) => g.guestId === guestId
+          (g) => g.guestId === guestId,
         );
         if (guestIndex !== -1) {
           // Revoke old blob URL if exists (only blob URLs, not Firebase URLs)
@@ -309,7 +303,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
       setGuestIdProofs((prev) => {
         const updatedProofs = [...prev];
         const guestIndex = updatedProofs.findIndex(
-          (g) => g.guestId === guestId
+          (g) => g.guestId === guestId,
         );
         if (guestIndex !== -1) {
           updatedProofs[guestIndex] = {
@@ -339,7 +333,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
       setGuestIdProofs((prev) => {
         const updatedProofs = [...prev];
         const guestIndex = updatedProofs.findIndex(
-          (g) => g.guestId === guestId
+          (g) => g.guestId === guestId,
         );
         if (guestIndex !== -1) {
           updatedProofs[guestIndex] = {
@@ -367,7 +361,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
   const handleFileInputChange = (
     guestId: string,
     side: "front" | "back",
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -454,7 +448,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
               storage,
               `checkIn/${bookingId.replaceAll("%3A", ":")}/${
                 guest.guestId
-              }/${fileName}`
+              }/${fileName}`,
             );
             await uploadBytes(storageRef, guest.files.front);
             uploadedImages.front = await getDownloadURL(storageRef);
@@ -470,7 +464,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
               storage,
               `checkIn/${bookingId.replaceAll("%3A", ":")}/${
                 guest.guestId
-              }/${fileName}`
+              }/${fileName}`,
             );
             await uploadBytes(storageRef, guest.files.back);
             uploadedImages.back = await getDownloadURL(storageRef);
@@ -494,7 +488,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
             frontIdUrl: uploadedImages.front,
             backIdUrl: uploadedImages.back,
           };
-        })
+        }),
       );
 
       // Prepare final check-in data
@@ -603,7 +597,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                           <div>
                             <p className="font-medium">
                               {new Date(bookingData.checkIn).toLocaleDateString(
-                                "en-GB"
+                                "en-GB",
                               )}
                             </p>
                           </div>
@@ -617,7 +611,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                           <div>
                             <p className="font-medium">
                               {new Date(
-                                bookingData.checkOut
+                                bookingData.checkOut,
                               ).toLocaleDateString("en-GB")}
                             </p>
                           </div>
@@ -719,7 +713,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                     onValueChange={(value) =>
                                       handleIdProofTypeChange(
                                         guest.guestId,
-                                        value
+                                        value,
                                       )
                                     }
                                   >
@@ -732,7 +726,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                           <SelectItem key={key} value={key}>
                                             {value.label}
                                           </SelectItem>
-                                        )
+                                        ),
                                       )}
                                     </SelectContent>
                                   </Select>
@@ -759,7 +753,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                             onClick={() =>
                                               handleDeleteImage(
                                                 guest.guestId,
-                                                "front"
+                                                "front",
                                               )
                                             }
                                             className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
@@ -781,7 +775,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                                 onClick={() => {
                                                   const input =
                                                     document.createElement(
-                                                      "input"
+                                                      "input",
                                                     );
                                                   input.type = "file";
                                                   input.accept = "image/*";
@@ -789,7 +783,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                                     handleFileInputChange(
                                                       guest.guestId,
                                                       "front",
-                                                      e as any
+                                                      e as any,
                                                     );
                                                   input.click();
                                                 }}
@@ -808,7 +802,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                                 onClick={() => {
                                                   const input =
                                                     document.createElement(
-                                                      "input"
+                                                      "input",
                                                     );
                                                   input.type = "file";
                                                   input.accept = "image/*";
@@ -817,7 +811,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                                     handleFileInputChange(
                                                       guest.guestId,
                                                       "front",
-                                                      e as any
+                                                      e as any,
                                                     );
                                                   input.click();
                                                 }}
@@ -897,7 +891,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                               onClick={() =>
                                                 handleDeleteImage(
                                                   guest.guestId,
-                                                  "back"
+                                                  "back",
                                                 )
                                               }
                                               className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
@@ -919,7 +913,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                                   onClick={() => {
                                                     const input =
                                                       document.createElement(
-                                                        "input"
+                                                        "input",
                                                       );
                                                     input.type = "file";
                                                     input.accept = "image/*";
@@ -927,7 +921,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                                       handleFileInputChange(
                                                         guest.guestId,
                                                         "back",
-                                                        e as any
+                                                        e as any,
                                                       );
                                                     input.click();
                                                   }}
@@ -948,7 +942,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                                   onClick={() => {
                                                     const input =
                                                       document.createElement(
-                                                        "input"
+                                                        "input",
                                                       );
                                                     input.type = "file";
                                                     input.accept = "image/*";
@@ -958,7 +952,7 @@ const Checkin = ({ bookingId }: CheckinProps) => {
                                                       handleFileInputChange(
                                                         guest.guestId,
                                                         "back",
-                                                        e as any
+                                                        e as any,
                                                       );
                                                     input.click();
                                                   }}

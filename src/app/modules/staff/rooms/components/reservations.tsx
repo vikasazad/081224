@@ -5,11 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { toast } from "sonner";
-import {
-  generatePaymentLinkAPI,
-  getPaymentLinkStatusAPI,
-  getReservationsInRange,
-} from "../../utils/staffData";
+import { getReservationsInRange } from "../../utils/staffData";
 import {
   CalendarIcon,
   Search,
@@ -26,7 +22,6 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { generatePaymentLink } from "@/lib/razorpay";
 
 interface Guest {
   id: string;
@@ -81,7 +76,7 @@ const Reservations = () => {
     try {
       const result = await getReservationsInRange(
         startDate.toISOString(),
-        endDate.toISOString()
+        endDate.toISOString(),
       );
 
       if (result === null) {
@@ -116,7 +111,7 @@ const Reservations = () => {
           year: "numeric",
           month: "long",
           day: "numeric",
-        }
+        },
       );
 
       if (!grouped[dateKey]) {
@@ -176,7 +171,7 @@ const Reservations = () => {
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !startDate && "text-muted-foreground"
+                          !startDate && "text-muted-foreground",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -212,7 +207,7 @@ const Reservations = () => {
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !endDate && "text-muted-foreground"
+                          !endDate && "text-muted-foreground",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -283,7 +278,7 @@ const Reservations = () => {
               Object.entries(groupedReservations)
                 .sort(
                   ([dateA], [dateB]) =>
-                    new Date(dateA).getTime() - new Date(dateB).getTime()
+                    new Date(dateA).getTime() - new Date(dateB).getTime(),
                 )
                 .map(([date, dateReservations]) => (
                   <div
@@ -387,7 +382,7 @@ const Reservations = () => {
                                 </p>
                                 <p className="text-sm text-gray-600">
                                   {new Date(
-                                    reservation.checkOut
+                                    reservation.checkOut,
                                   ).toLocaleDateString("en-US", {
                                     month: "short",
                                     day: "numeric",

@@ -16,7 +16,6 @@ import { Icons } from "@/components/icons";
 import {
   addReservation,
   checkRoomAvailability,
-  updateReservationPaymentStatus,
 } from "../../staff/utils/staffData";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, XCircle } from "lucide-react";
@@ -81,7 +80,7 @@ const NewReservation = ({ details, businessInfo }: ReservationProps) => {
   // Get selected room details
   const getSelectedRoomDetails = () => {
     return details?.find(
-      (room: RoomDetail) => room.category === reservationDetails.roomCategory
+      (room: RoomDetail) => room.category === reservationDetails.roomCategory,
     );
   };
 
@@ -106,7 +105,7 @@ const NewReservation = ({ details, businessInfo }: ReservationProps) => {
         reservationDetails.checkOut.toISOString(),
         reservationDetails.roomCategory,
         selectedRoom.rooms,
-        parseInt(reservationDetails.numberOfRooms)
+        parseInt(reservationDetails.numberOfRooms),
       );
 
       if (result) {
@@ -114,11 +113,11 @@ const NewReservation = ({ details, businessInfo }: ReservationProps) => {
         if (result.available) {
           setStep(2);
           toast.success(
-            `${result.minVacant} room(s) available in ${reservationDetails.roomCategory} category`
+            `${result.minVacant} room(s) available in ${reservationDetails.roomCategory} category`,
           );
         } else {
           toast.error(
-            `Only ${result.minVacant} room(s) available. You requested ${reservationDetails.numberOfRooms}.`
+            `Only ${result.minVacant} room(s) available. You requested ${reservationDetails.numberOfRooms}.`,
           );
         }
       } else {

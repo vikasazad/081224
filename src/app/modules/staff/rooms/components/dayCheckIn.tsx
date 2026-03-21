@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Accordion,
@@ -14,43 +14,43 @@ import {
   Coffee,
   Users,
   Wifi,
-  ImageIcon,
-  X,
-  Upload,
-  Camera,
-  Image as ImageLucide,
-  Trash2,
-  Loader2,
+  // ImageIcon,
+  // X,
+  // Upload,
+  // Camera,
+  // Image as ImageLucide,
+  // Trash2,
+  // Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { fetchCheckInImages } from "@/app/modules/staff/utils/clientside";
-import Image from "next/image";
+// import { fetchCheckInImages } from "@/app/modules/staff/utils/clientside";
+// import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { storage } from "@/config/db/firebase";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject,
-} from "firebase/storage";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { authPhoneOtp, resendOtp, verifyOtp } from "@/lib/auth/handleOtp";
-import { toast } from "sonner";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+// import { storage } from "@/config/db/firebase";
+// import {
+//   ref,
+//   uploadBytes,
+//   getDownloadURL,
+//   deleteObject,
+// } from "firebase/storage";
+// import { Input } from "@/components/ui/input";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogHeader,
+//   DialogTitle,
+// } from "@/components/ui/dialog";
+// import { authPhoneOtp, resendOtp, verifyOtp } from "@/lib/auth/handleOtp";
+// import { toast } from "sonner";
 import { setCheckInData } from "@/lib/features/checkInSlice";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
@@ -111,7 +111,7 @@ const DayCheckIn = ({ data }: { data: any; status: string }) => {
                             <div>
                               <p className="font-medium">
                                 {new Date(item.checkIn).toLocaleDateString(
-                                  "en-GB"
+                                  "en-GB",
                                 )}
                               </p>
                             </div>
@@ -125,7 +125,7 @@ const DayCheckIn = ({ data }: { data: any; status: string }) => {
                             <div>
                               <p className="font-medium">
                                 {new Date(item.checkOut).toLocaleDateString(
-                                  "en-GB"
+                                  "en-GB",
                                 )}
                               </p>
                             </div>

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, TrendingDown, TrendingUp } from "lucide-react";
-import type { StockCount, StockCountItem } from "@/types/inventory";
+import type { StockCount } from "@/types/inventory";
 
 interface VarianceReportProps {
   stockCount: StockCount;
@@ -36,7 +36,7 @@ const reasonCodeLabels: Record<string, string> = {
 export function VarianceReport({ stockCount }: VarianceReportProps) {
   // Filter items with variances
   const varianceItems = stockCount.items.filter(
-    (item) => item.actualQty !== null && item.variance !== 0
+    (item) => item.actualQty !== null && item.variance !== 0,
   );
 
   // Calculate totals
@@ -51,7 +51,7 @@ export function VarianceReport({ stockCount }: VarianceReportProps) {
   const netVarianceValue = totalOverage - totalShortage;
 
   const requiresApprovalCount = varianceItems.filter(
-    (item) => item.requiresApproval
+    (item) => item.requiresApproval,
   ).length;
 
   if (varianceItems.length === 0) {
@@ -63,7 +63,10 @@ export function VarianceReport({ stockCount }: VarianceReportProps) {
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <Badge variant="outline" className="bg-green-50 text-green-700 text-lg py-2 px-4">
+            <Badge
+              variant="outline"
+              className="bg-green-50 text-green-700 text-lg py-2 px-4"
+            >
               All items match system quantities
             </Badge>
           </div>
@@ -80,8 +83,8 @@ export function VarianceReport({ stockCount }: VarianceReportProps) {
           Variance Report - {stockCount.id}
         </CardTitle>
         <CardDescription>
-          {varianceItems.length} item{varianceItems.length !== 1 ? "s" : ""} with
-          variances
+          {varianceItems.length} item{varianceItems.length !== 1 ? "s" : ""}{" "}
+          with variances
           {requiresApprovalCount > 0 && (
             <Badge variant="destructive" className="ml-2">
               {requiresApprovalCount} require approval
@@ -149,9 +152,13 @@ export function VarianceReport({ stockCount }: VarianceReportProps) {
               {varianceItems.map((item) => (
                 <TableRow
                   key={item.sku}
-                  className={item.variance < 0 ? "bg-red-50/50" : "bg-yellow-50/50"}
+                  className={
+                    item.variance < 0 ? "bg-red-50/50" : "bg-yellow-50/50"
+                  }
                 >
-                  <TableCell className="font-mono text-sm">{item.sku}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {item.sku}
+                  </TableCell>
                   <TableCell className="font-medium">{item.itemName}</TableCell>
                   <TableCell className="text-right">{item.systemQty}</TableCell>
                   <TableCell className="text-right">{item.actualQty}</TableCell>
@@ -168,7 +175,8 @@ export function VarianceReport({ stockCount }: VarianceReportProps) {
                       item.variance < 0 ? "text-red-600" : "text-green-600"
                     }`}
                   >
-                    {item.variance < 0 ? "-" : "+"}₹{item.varianceValue.toFixed(2)}
+                    {item.variance < 0 ? "-" : "+"}₹
+                    {item.varianceValue.toFixed(2)}
                   </TableCell>
                   <TableCell>
                     {item.reasonCode
