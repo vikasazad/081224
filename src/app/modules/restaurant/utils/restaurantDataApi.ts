@@ -82,7 +82,7 @@ export async function getQRData() {
     console.log("data", data);
 
     // Extract all table numbers
-    let tableNumbers: { tableNo: string; capacity: number }[] = [];
+    const tableNumbers: { tableNo: string; capacity: number }[] = [];
     console.log("tableNumbers", tableNumbers.length);
     data.forEach((category: any) => {
       Object.keys(category).forEach((key) => {
@@ -139,8 +139,8 @@ export async function getLiveTableData() {
             category?.diningDetails?.capicity === "2"
               ? "twoseater"
               : category?.diningDetails?.capicity === "4"
-              ? "fourseater"
-              : "sixseater",
+                ? "fourseater"
+                : "sixseater",
         });
       });
       return tableNumbers;
@@ -168,8 +168,8 @@ export async function handleTableRemoval(table: any) {
       table.capacity === "twoseater"
         ? "2"
         : table.capacity === "fourseater"
-        ? "4"
-        : "6",
+          ? "4"
+          : "6",
     cleaning: {
       lastCleaned: "",
       cleanedBy: "",
@@ -202,7 +202,7 @@ export async function saveMenuData(menuData: any, categoryName: string) {
     if (docSnap.exists()) {
       const data = docSnap.data().menu;
       const category = data.categories.findIndex(
-        (category: any) => category.name === categoryName
+        (category: any) => category.name === categoryName,
       );
       data.categories[category].menuItems = menuData;
       // return data;
@@ -219,7 +219,7 @@ export async function saveMenuData(menuData: any, categoryName: string) {
 export async function createNewMenuCategory(
   categoryName: string,
   categoryLogo: any,
-  menuItems: any[]
+  menuItems: any[],
 ) {
   const session = await auth();
   const user = session?.user?.email;
@@ -291,7 +291,7 @@ export async function deleteMenuCategories(categoryNames: string[]) {
 
       // Filter out the categories to be deleted
       data.categories = data.categories.filter(
-        (category: any) => !categoryNames.includes(category.name)
+        (category: any) => !categoryNames.includes(category.name),
       );
 
       // Update the document
@@ -304,7 +304,7 @@ export async function deleteMenuCategories(categoryNames: string[]) {
       categoryNames.map(async (c) => {
         const { items } = await listAll(ref(storage, `menu/${c}`));
         await Promise.all(items.map(deleteObject));
-      })
+      }),
     );
     return true;
   } catch (error) {

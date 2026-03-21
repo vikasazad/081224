@@ -60,13 +60,13 @@ interface POCreateStep2Props {
     sku: string,
     supplierId: string,
     field: keyof POItem,
-    value: number | string
+    value: number | string,
   ) => void;
   onReassignItem: (
     sku: string,
     supplierId: string,
     newSupplierId: string,
-    newSupplierName: string
+    newSupplierName: string,
   ) => void;
   onReorderItems: (newOrder: string[]) => void; // newOrder is array of composite ids "sku-supplierId"
   onAddItems: (items: POItem[]) => void; // New: Add items to PO
@@ -288,7 +288,7 @@ export function POCreateStep2({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // Group items by supplier (same item can appear in multiple groups if from different suppliers)
@@ -342,7 +342,7 @@ export function POCreateStep2({
           draggedItem.sku,
           draggedItem.supplier.name,
           supplier.name,
-          supplier.name
+          supplier.name,
         );
       }
       return;
@@ -364,7 +364,7 @@ export function POCreateStep2({
         draggedItem.sku,
         draggedItem.supplier.name,
         targetItem.supplier.name,
-        targetItem.supplier.name
+        targetItem.supplier.name,
       );
       return;
     }
@@ -467,7 +467,7 @@ export function POCreateStep2({
                     .filter(([, items]) => items.length > 0)
                     .map(([supplierKey, supplierItems]) => {
                       const supplier = suppliers.find(
-                        (s) => s.name === supplierKey
+                        (s) => s.name === supplierKey,
                       );
                       const supplierName = supplier?.name || supplierKey;
                       const isPriority =
@@ -512,7 +512,7 @@ export function POCreateStep2({
                               <tbody>
                                 <SortableContext
                                   items={supplierItems.map((item) =>
-                                    poLineId(item)
+                                    poLineId(item),
                                   )}
                                   strategy={verticalListSortingStrategy}
                                 >
@@ -525,7 +525,7 @@ export function POCreateStep2({
                                           item.sku,
                                           item.supplier.name,
                                           "quantity",
-                                          qty
+                                          qty,
                                         )
                                       }
                                       onUpdatePrice={(price) =>
@@ -533,7 +533,7 @@ export function POCreateStep2({
                                           item.sku,
                                           item.supplier.name,
                                           "unitPrice",
-                                          price
+                                          price,
                                         )
                                       }
                                     />
@@ -736,7 +736,7 @@ export function POCreateStep2({
         <DialogContent className="max-w-4xl">
           <DialogTitle>Add New Supplier</DialogTitle>
           <DialogDescription>
-            Enter the supplier's information below
+            Enter the supplier&apos;s information below
           </DialogDescription>
           <SupplierForm
             onSave={handleSupplierSave}
@@ -750,7 +750,7 @@ export function POCreateStep2({
         <DialogContent className="max-w-4xl h-[90vh]">
           <DialogTitle>Add Items to Order</DialogTitle>
           <DialogDescription>
-            Add inventory items for {newSupplierData?.name}
+            Add inventory items for {newSupplierData?.name || ""}
           </DialogDescription>
           <AddItemsToSupplierForm
             inventoryItems={items}
