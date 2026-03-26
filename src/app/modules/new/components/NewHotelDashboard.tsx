@@ -52,8 +52,6 @@ import {
 } from "../data/allrooms";
 import {
   RoomCategory,
-  RoomListItem,
-  RoomFilterTab,
   RoomActivity,
   ActivityStatus,
   PaymentStatus,
@@ -68,11 +66,11 @@ const categoryTabs = [
   { id: "economy", label: "Economy" },
 ];
 
-const filterTabs = [
-  { id: "all", label: "All Rooms" },
-  { id: "occupied", label: "Occupied" },
-  { id: "cleaning", label: "Cleaning" },
-];
+// const filterTabs = [
+//   { id: "all", label: "All Rooms" },
+//   { id: "occupied", label: "Occupied" },
+//   { id: "cleaning", label: "Cleaning" },
+// ];
 
 const tierLabels: Record<string, string> = {
   premium: "Premium Tier",
@@ -96,26 +94,26 @@ const getCategoryIcon = (iconName: string) => {
   }
 };
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "available":
-      return "bg-emerald-100 text-emerald-700";
-    case "booked":
-      return "bg-red-100 text-red-700";
-    case "occupied":
-      return "bg-amber-100 text-amber-700";
-    case "reserved":
-      return "bg-red-100 text-red-700";
-    case "in_preparation":
-      return "bg-blue-100 text-blue-700";
-    case "cleaning":
-      return "bg-purple-100 text-purple-700";
-    case "maintenance":
-      return "bg-gray-100 text-gray-700";
-    default:
-      return "bg-gray-100 text-gray-700";
-  }
-};
+// const getStatusColor = (status: string) => {
+//   switch (status) {
+//     case "available":
+//       return "bg-emerald-100 text-emerald-700";
+//     case "booked":
+//       return "bg-red-100 text-red-700";
+//     case "occupied":
+//       return "bg-amber-100 text-amber-700";
+//     case "reserved":
+//       return "bg-red-100 text-red-700";
+//     case "in_preparation":
+//       return "bg-blue-100 text-blue-700";
+//     case "cleaning":
+//       return "bg-purple-100 text-purple-700";
+//     case "maintenance":
+//       return "bg-gray-100 text-gray-700";
+//     default:
+//       return "bg-gray-100 text-gray-700";
+//   }
+// };
 
 const formatStatus = (status: string) => {
   return status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
@@ -411,7 +409,6 @@ const ActivityRow = ({
 const NewHotelDashboard = () => {
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("all");
-  const [activeFilter, setActiveFilter] = useState<RoomFilterTab>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState({
     startDate: "",
@@ -424,17 +421,10 @@ const NewHotelDashboard = () => {
 
   const filteredRooms = React.useMemo(() => {
     let rooms = getRoomsByCategory(activeCategory);
-    if (activeFilter !== "all") {
-      rooms = rooms.filter((room) => room.status === activeFilter);
-    }
     return rooms;
-  }, [activeCategory, activeFilter]);
+  }, [activeCategory]);
 
   const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
-  const paginatedRooms = filteredRooms.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
 
   const handleCategoryClick = (categoryId: string) => {
     if (categoryId !== "all") {
