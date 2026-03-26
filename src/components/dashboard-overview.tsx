@@ -66,7 +66,7 @@ const DashboardOverview = ({
     const result: any = {};
 
     for (const [categoryName, subCategories] of Object.entries(data).filter(
-      ([key]) => key !== "days"
+      ([key]) => key !== "days",
     )) {
       // Cast subCategories as an object so we can access its keys
       const subCategoriesTyped = subCategories as Record<string, any>;
@@ -76,16 +76,16 @@ const DashboardOverview = ({
 
       // Finding the length of daily earnings based on any subcategory that isn't bookings
       const earningsSubCategory = Object.keys(subCategoriesTyped).find(
-        (key) => !key.includes("Bookings")
+        (key) => !key.includes("Bookings"),
       );
       if (!earningsSubCategory) continue;
 
       const dailyEarnings = Array(
-        subCategoriesTyped[earningsSubCategory].length
+        subCategoriesTyped[earningsSubCategory].length,
       ).fill(0);
 
       for (const [subCategoryName, values] of Object.entries(
-        subCategoriesTyped
+        subCategoriesTyped,
       )) {
         const valuesTyped = values as number[]; // Cast values to a number array
 
@@ -93,13 +93,13 @@ const DashboardOverview = ({
         if (subCategoryName.includes("Bookings")) {
           const bookingsSum = valuesTyped.reduce(
             (sum, value) => sum + value,
-            0
+            0,
           );
           totalBookings += bookingsSum;
         } else {
           const earningsSum = valuesTyped.reduce(
             (sum, value) => sum + value,
-            0
+            0,
           );
           overallTotalEarnings += earningsSum;
 
@@ -126,7 +126,7 @@ const DashboardOverview = ({
       // Store the results for this category
       result[`overallTotalEarnings${categoryName}`] = overallTotalEarnings;
       result[`effectivePercentage${categoryName}`] = parseFloat(
-        effectivePercentage.toFixed(2)
+        effectivePercentage.toFixed(2),
       );
       result[`isPositive${categoryName}`] = isPositive;
       result[`totalBooking${categoryName}`] = totalBookings;

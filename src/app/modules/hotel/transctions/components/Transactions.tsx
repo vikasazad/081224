@@ -48,8 +48,8 @@ const Transactions = ({ data, room }: { data: any; room: any }) => {
 
   const onRoomSelect = (roomNo: string, type: string) => {
     console.log(roomNo, type);
-    const _data = room?.history;
-    const info = _data[type].find(
+    const _data = room?.history || {};
+    const info = _data[type]?.find(
       (el: any) => el.bookingDetails.location === roomNo
     );
     console.log(info);
