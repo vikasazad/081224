@@ -275,15 +275,15 @@ const formatBookingSource = (source?: BookingSource): string => {
   if (!source) return "—";
   const sourceLabels: Record<BookingSource, string> = {
     "booking.com": "Booking.com",
-    "agoda": "Agoda",
-    "mmt": "MMT",
-    "goibibo": "Goibibo",
-    "website": "Website",
-    "phone": "Phone",
-    "agent": "Agent",
-    "walk_in": "Walk-in",
-    "expedia": "Expedia",
-    "airbnb": "Airbnb",
+    agoda: "Agoda",
+    mmt: "MMT",
+    goibibo: "Goibibo",
+    website: "Website",
+    phone: "Phone",
+    agent: "Agent",
+    walk_in: "Walk-in",
+    expedia: "Expedia",
+    airbnb: "Airbnb",
   };
   return sourceLabels[source] || source;
 };
@@ -420,7 +420,7 @@ const NewHotelDashboard = () => {
   const { categories } = allRoomsData;
 
   const filteredRooms = React.useMemo(() => {
-    let rooms = getRoomsByCategory(activeCategory);
+    const rooms = getRoomsByCategory(activeCategory);
     return rooms;
   }, [activeCategory]);
 
