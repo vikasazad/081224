@@ -1,4 +1,4 @@
-import { RoomStatus } from './allrooms';
+import { RoomStatus } from "./allrooms";
 
 export interface CategoryInfo {
   id: string;
@@ -31,7 +31,12 @@ export interface RoomCategoryData {
   rooms: RoomCardItem[];
 }
 
-export type CategoryTab = 'all' | 'deluxe-suite' | 'standard' | 'penthouse' | 'economy';
+export type CategoryTab =
+  | "all"
+  | "deluxe"
+  | "standard"
+  | "penthouse"
+  | "economy";
 
 export interface DailyPerformance {
   day: string;
@@ -41,7 +46,7 @@ export interface DailyPerformance {
   issues: number;
 }
 
-export type NoteType = 'housekeeping' | 'concierge' | 'maintenance' | 'general';
+export type NoteType = "housekeeping" | "concierge" | "maintenance" | "general";
 
 export interface StaffNote {
   id: string;
@@ -51,13 +56,32 @@ export interface StaffNote {
   author?: string;
 }
 
-export type StayStatus = 'confirmed' | 'arriving_soon' | 'checked_in' | 'pending';
+export type StayStatus =
+  | "confirmed"
+  | "arriving_soon"
+  | "checked_in"
+  | "pending";
 
-export type PaymentStatus = 'paid' | 'pending' | 'partial' | 'refunded';
+export type PaymentStatus = "paid" | "pending" | "partial" | "refunded";
 
-export type PaymentMode = 'credit_card' | 'debit_card' | 'upi' | 'net_banking' | 'cash';
+export type PaymentMode =
+  | "credit_card"
+  | "debit_card"
+  | "upi"
+  | "net_banking"
+  | "cash";
 
-export type BookingSource = 'booking.com' | 'agoda' | 'mmt' | 'goibibo' | 'website' | 'phone' | 'agent' | 'walk_in' | 'expedia' | 'airbnb';
+export type BookingSource =
+  | "booking.com"
+  | "agoda"
+  | "mmt"
+  | "goibibo"
+  | "website"
+  | "phone"
+  | "agent"
+  | "walk_in"
+  | "expedia"
+  | "airbnb";
 
 export interface UpcomingStay {
   id: string;

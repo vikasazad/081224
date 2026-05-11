@@ -60,7 +60,7 @@ import {
 
 const categoryTabs = [
   { id: "all", label: "All Rooms" },
-  { id: "deluxe-suite", label: "Deluxe Suite" },
+  { id: "deluxe", label: "Deluxe" },
   { id: "standard", label: "Standard" },
   { id: "penthouse", label: "Penthouse" },
   { id: "economy", label: "Economy" },

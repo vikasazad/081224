@@ -27,6 +27,21 @@ interface StaffMember {
   orders: string[];
 }
 
+export async function getAllRoomsDetails() {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  const docRef = doc(db, user, "hotel");
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return docSnap.data().rooms;
+  }
+  return false;
+}
+
 export const generateInvoiceObject = async (
   roomData: any,
   businessInfo: any,
@@ -1146,6 +1161,24 @@ export async function updateRequestsForAttendant(
 //   }
 // }
 
+export async function getLiveRooms() {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+  const docRef = doc(db, user, "hotel");
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return {
+      rooms: docSnap.data().live.rooms,
+      status: docSnap.data().live.roomsData.status,
+    };
+  }
+  return false;
+}
+
 export async function findCoupon(couponCode: string) {
   const session = await auth();
   const user = session?.user?.email;
@@ -1327,258 +1360,6 @@ export async function saveRoomData(roomInfo: any) {
     }
   } catch (error) {
     console.error("Error while saving room data:", error);
-    return false;
-  }
-}
-
-export async function removeReservationById(reservationId: string) {
-  const session = await auth();
-  const user = session?.user?.email;
-
-  if (!user) {
-    console.error("User email is undefined");
-    return false;
-  }
-
-  try {
-    const docRef = doc(db, user, "hotel");
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      const reservations = docSnap.data()?.reservation || [];
-
-      // Filter out the reservation with the matching bookingId
-      const updatedReservations = reservations.filter(
-        (reservation: any) => reservation.bookingId !== reservationId,
-      );
-
-      // Update the document with the filtered reservations
-      await updateDoc(docRef, {
-        reservation: updatedReservations,
-      });
-
-      console.log(`Reservation ${reservationId} removed successfully`);
-      return true;
-    } else {
-      console.error("Hotel document does not exist");
-      return false;
-    }
-  } catch (error) {
-    console.error("Error removing reservation:", error);
-    return false;
-  }
-}
-
-export async function reservationToBooking(checkInData: any) {
-  try {
-    const session = await auth();
-    const user = session?.user?.email;
-
-    if (!user) {
-      console.error("User email is undefined");
-      return false;
-    }
-
-    const { bookingData, phone, guests, verifiedAt } = checkInData;
-
-    // Step 1: Get available room by category
-    const roomData: any = await getRoomByCategory(bookingData.roomCategory);
-    if (!roomData) {
-      console.error(
-        "No available room found for category:",
-        bookingData.roomCategory,
-      );
-      return false;
-    }
-
-    // Step 2: Generate booking ID and get concierge
-    const _bookingId = generateOrderId("BOK", roomData.roomNo);
-    const _attendant = await getOnlineStaff("concierge");
-
-    if (!_attendant) {
-      console.error("No concierge available");
-      return false;
-    }
-
-    // Step 3: Build booking object (mapping check-in data to booking format)
-    const _roomInfo = {
-      bookingDetails: {
-        customer: {
-          name: bookingData.name,
-          email: bookingData.email || "",
-          phone: phone,
-          address: "",
-          notificationToken: "",
-          guests: guests, // Store guest details with ID proof URLs
-        },
-        location: roomData.roomNo,
-        roomType: roomData.roomType,
-        aggregator: "Reservation",
-        aggregatorLogo: "",
-        bookingId: _bookingId,
-        reservationId: bookingData.bookingId, // Keep reference to original reservation
-        status: "occupied",
-        attendant: _attendant.name,
-        attendantToken: _attendant.notificationToken || "",
-        bookingDate: new Date().toISOString(),
-        checkIn: bookingData.checkIn,
-        checkOut: bookingData.checkOut,
-        noOfGuests: guests.length,
-        noOfRoom: bookingData.numberOfRooms || 1,
-        inclusions: roomData.inclusions || [],
-        nights: bookingData.nights,
-        images: roomData.images,
-        specialRequirements: "",
-        verifiedAt: verifiedAt,
-        payment: {
-          paymentStatus: bookingData.payment?.paymentStatus || "paid",
-          mode: bookingData.payment?.mode || "online",
-          paymentId: bookingData.payment?.paymentId || "",
-          referenceId: bookingData.payment?.referenceId || "",
-          timeOfTransaction:
-            bookingData.payment?.timeOfTransaction || new Date().toISOString(),
-          price: bookingData.payment?.price || roomData.price,
-          priceAfterDiscount: bookingData.payment?.priceAfterDiscount || "",
-          paymentType: bookingData.payment?.paymentType || "single",
-          subtotal:
-            bookingData.payment?.subtotal ||
-            bookingData.payment?.price ||
-            roomData.price,
-          totalPrice: bookingData.payment?.totalPrice || 0,
-          gst: {
-            gstAmount: bookingData.payment?.gst?.gstAmount || 0,
-            gstPercentage: bookingData.payment?.gst?.gstPercentage || 0,
-            cgstAmount: bookingData.payment?.gst?.cgstAmount || 0,
-            cgstPercentage: bookingData.payment?.gst?.cgstPercentage || 0,
-            sgstAmount: bookingData.payment?.gst?.sgstAmount || 0,
-            sgstPercentage: bookingData.payment?.gst?.sgstPercentage || 0,
-          },
-          discount: bookingData.payment?.discount || [
-            {
-              type: "",
-              amount: "",
-              code: "",
-              discount: 0,
-            },
-          ],
-        },
-      },
-      diningDetails: {},
-      servicesUsed: [],
-      issuesReported: {},
-      transctions: [
-        {
-          location: roomData.roomNo,
-          against: _bookingId,
-          attendant: _attendant.name,
-          bookingId: _bookingId,
-          reservationId: bookingData.bookingId,
-          payment: {
-            paymentStatus: bookingData.payment?.paymentStatus || "paid",
-            mode: bookingData.payment?.mode || "online",
-            paymentId: bookingData.payment?.paymentId || "",
-            referenceId: bookingData.payment?.referenceId || "",
-            timeOfTransaction:
-              bookingData.payment?.timeOfTransaction ||
-              new Date().toISOString(),
-            price: bookingData.payment?.price || roomData.price,
-            priceAfterDiscount: bookingData.payment?.priceAfterDiscount || "",
-            paymentType: bookingData.payment?.paymentType || "single",
-            subtotal:
-              bookingData.payment?.subtotal ||
-              bookingData.payment?.price ||
-              roomData.price,
-            totalPrice: bookingData.payment?.totalPrice || 0,
-            gst: {
-              gstAmount: bookingData.payment?.gst?.gstAmount || 0,
-              gstPercentage: bookingData.payment?.gst?.gstPercentage || 0,
-              cgstAmount: bookingData.payment?.gst?.cgstAmount || 0,
-              cgstPercentage: bookingData.payment?.gst?.cgstPercentage || 0,
-              sgstAmount: bookingData.payment?.gst?.sgstAmount || 0,
-              sgstPercentage: bookingData.payment?.gst?.sgstPercentage || 0,
-            },
-            discount: bookingData.payment?.discount || [
-              {
-                type: "",
-                amount: "",
-                code: "",
-                discount: 0,
-              },
-            ],
-          },
-        },
-      ],
-    };
-
-    // Sanitize the format to replace undefined with null
-    const sanitizedFormat = JSON.parse(
-      JSON.stringify(_roomInfo, (_, value) =>
-        value === undefined ? null : value,
-      ),
-    );
-
-    // Step 4: Database operations
-    const docRef = doc(db, user, "hotel");
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      const data = docSnap.data().live.rooms;
-      const updatedRooms = [sanitizedFormat, ...data];
-
-      // Add booking to live.rooms
-      await updateDoc(docRef, {
-        "live.rooms": updatedRooms,
-      });
-
-      // Remove room from available rooms
-      await removeRoomByNumber(roomData.roomNo, roomData.roomType);
-
-      // Step 5: Notifications
-      // Generate short URL for concierge service
-      const shortUrl = await shortenURL(
-        user,
-        roomData.roomNo,
-        phone,
-        "concierge",
-        String(bookingData.payment?.gst?.gstPercentage || 18),
-      );
-
-      // Send WhatsApp message to guest
-      await sendWhatsAppMessage(`91${phone}`, bookingData.name, [
-        _bookingId,
-        roomData.roomNo,
-        new Date(bookingData.checkIn).toLocaleDateString(),
-        new Date(bookingData.checkOut).toLocaleDateString(),
-        String(bookingData.nights),
-        String(bookingData.payment?.price || roomData.price),
-        String(bookingData.payment?.totalPrice || roomData.price),
-        "0",
-        bookingData.business?.phone || "123-456-7890",
-        bookingData.business?.phone || "987-654-3210",
-        shortUrl,
-      ]);
-
-      // Send staff assignment request
-      await sendStaffAssignmentRequest(
-        _attendant.name,
-        _attendant.contact,
-        _bookingId,
-        bookingData.name,
-        roomData.roomNo,
-        "room",
-      );
-
-      // Step 6: Remove reservation from database after successful booking
-      await removeReservationById(bookingData.bookingId);
-
-      console.log("Reservation converted to booking successfully");
-      return true;
-    } else {
-      console.error("Hotel document does not exist");
-      return false;
-    }
-  } catch (error) {
-    console.error("Error converting reservation to booking:", error);
     return false;
   }
 }
@@ -2778,6 +2559,455 @@ export async function getRoomByCategory(category: string) {
   }
 }
 
+export async function removeReservationById(reservationId: string) {
+  const session = await auth();
+  const user = session?.user?.email;
+
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const reservations = docSnap.data()?.reservation || [];
+
+      // Filter out the reservation with the matching bookingId
+      const updatedReservations = reservations.filter(
+        (reservation: any) => reservation.bookingId !== reservationId,
+      );
+
+      // Update the document with the filtered reservations
+      await updateDoc(docRef, {
+        reservation: updatedReservations,
+      });
+
+      console.log(`Reservation ${reservationId} removed successfully`);
+      return true;
+    } else {
+      console.error("Hotel document does not exist");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error removing reservation:", error);
+    return false;
+  }
+}
+
+export async function reservationToBooking(checkInData: any) {
+  try {
+    const session = await auth();
+    const user = session?.user?.email;
+
+    if (!user) {
+      console.error("User email is undefined");
+      return false;
+    }
+
+    const { bookingData, phone, guests, verifiedAt } = checkInData;
+
+    // Step 1: Get available room by category
+    const roomData: any = await getRoomByCategory(bookingData.roomCategory);
+    if (!roomData) {
+      console.error(
+        "No available room found for category:",
+        bookingData.roomCategory,
+      );
+      return false;
+    }
+
+    // Step 2: Generate booking ID and get concierge
+    const _bookingId = generateOrderId("BOK", roomData.roomNo);
+    const _attendant = await getOnlineStaff("concierge");
+
+    if (!_attendant) {
+      console.error("No concierge available");
+      return false;
+    }
+
+    // Step 3: Build booking object (mapping check-in data to booking format)
+    const _roomInfo = {
+      bookingDetails: {
+        customer: {
+          name: bookingData.name,
+          email: bookingData.email || "",
+          phone: phone,
+          address: "",
+          notificationToken: "",
+          guests: guests, // Store guest details with ID proof URLs
+        },
+        location: roomData.roomNo,
+        roomType: roomData.roomType,
+        aggregator: "Reservation",
+        aggregatorLogo: "",
+        bookingId: _bookingId,
+        reservationId: bookingData.bookingId, // Keep reference to original reservation
+        status: "occupied",
+        attendant: _attendant.name,
+        attendantToken: _attendant.notificationToken || "",
+        bookingDate: new Date().toISOString(),
+        checkIn: bookingData.checkIn,
+        checkOut: bookingData.checkOut,
+        noOfGuests: guests.length,
+        noOfRoom: bookingData.numberOfRooms || 1,
+        inclusions: roomData.inclusions || [],
+        nights: bookingData.nights,
+        images: roomData.images,
+        specialRequirements: "",
+        verifiedAt: verifiedAt,
+        payment: {
+          paymentStatus: bookingData.payment?.paymentStatus || "paid",
+          mode: bookingData.payment?.mode || "online",
+          paymentId: bookingData.payment?.paymentId || "",
+          referenceId: bookingData.payment?.referenceId || "",
+          timeOfTransaction:
+            bookingData.payment?.timeOfTransaction || new Date().toISOString(),
+          price: bookingData.payment?.price || roomData.price,
+          priceAfterDiscount: bookingData.payment?.priceAfterDiscount || "",
+          paymentType: bookingData.payment?.paymentType || "single",
+          subtotal:
+            bookingData.payment?.subtotal ||
+            bookingData.payment?.price ||
+            roomData.price,
+          totalPrice: bookingData.payment?.totalPrice || 0,
+          gst: {
+            gstAmount: bookingData.payment?.gst?.gstAmount || 0,
+            gstPercentage: bookingData.payment?.gst?.gstPercentage || 0,
+            cgstAmount: bookingData.payment?.gst?.cgstAmount || 0,
+            cgstPercentage: bookingData.payment?.gst?.cgstPercentage || 0,
+            sgstAmount: bookingData.payment?.gst?.sgstAmount || 0,
+            sgstPercentage: bookingData.payment?.gst?.sgstPercentage || 0,
+          },
+          discount: bookingData.payment?.discount || [
+            {
+              type: "",
+              amount: "",
+              code: "",
+              discount: 0,
+            },
+          ],
+        },
+      },
+      diningDetails: {},
+      servicesUsed: [],
+      issuesReported: {},
+      transctions: [
+        {
+          location: roomData.roomNo,
+          against: _bookingId,
+          attendant: _attendant.name,
+          bookingId: _bookingId,
+          reservationId: bookingData.bookingId,
+          payment: {
+            paymentStatus: bookingData.payment?.paymentStatus || "paid",
+            mode: bookingData.payment?.mode || "online",
+            paymentId: bookingData.payment?.paymentId || "",
+            referenceId: bookingData.payment?.referenceId || "",
+            timeOfTransaction:
+              bookingData.payment?.timeOfTransaction ||
+              new Date().toISOString(),
+            price: bookingData.payment?.price || roomData.price,
+            priceAfterDiscount: bookingData.payment?.priceAfterDiscount || "",
+            paymentType: bookingData.payment?.paymentType || "single",
+            subtotal:
+              bookingData.payment?.subtotal ||
+              bookingData.payment?.price ||
+              roomData.price,
+            totalPrice: bookingData.payment?.totalPrice || 0,
+            gst: {
+              gstAmount: bookingData.payment?.gst?.gstAmount || 0,
+              gstPercentage: bookingData.payment?.gst?.gstPercentage || 0,
+              cgstAmount: bookingData.payment?.gst?.cgstAmount || 0,
+              cgstPercentage: bookingData.payment?.gst?.cgstPercentage || 0,
+              sgstAmount: bookingData.payment?.gst?.sgstAmount || 0,
+              sgstPercentage: bookingData.payment?.gst?.sgstPercentage || 0,
+            },
+            discount: bookingData.payment?.discount || [
+              {
+                type: "",
+                amount: "",
+                code: "",
+                discount: 0,
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    // Sanitize the format to replace undefined with null
+    const sanitizedFormat = JSON.parse(
+      JSON.stringify(_roomInfo, (_, value) =>
+        value === undefined ? null : value,
+      ),
+    );
+
+    // Step 4: Database operations
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data().live.rooms;
+      const updatedRooms = [sanitizedFormat, ...data];
+
+      // Add booking to live.rooms
+      await updateDoc(docRef, {
+        "live.rooms": updatedRooms,
+      });
+
+      // Remove room from available rooms
+      await removeRoomByNumber(roomData.roomNo, roomData.roomType);
+
+      // Step 5: Notifications
+      // Generate short URL for concierge service
+      const shortUrl = await shortenURL(
+        user,
+        roomData.roomNo,
+        phone,
+        "concierge",
+        String(bookingData.payment?.gst?.gstPercentage || 18),
+      );
+
+      // Send WhatsApp message to guest
+      await sendWhatsAppMessage(`91${phone}`, bookingData.name, [
+        _bookingId,
+        roomData.roomNo,
+        new Date(bookingData.checkIn).toLocaleDateString(),
+        new Date(bookingData.checkOut).toLocaleDateString(),
+        String(bookingData.nights),
+        String(bookingData.payment?.price || roomData.price),
+        String(bookingData.payment?.totalPrice || roomData.price),
+        "0",
+        bookingData.business?.phone || "123-456-7890",
+        bookingData.business?.phone || "987-654-3210",
+        shortUrl,
+      ]);
+
+      // Send staff assignment request
+      await sendStaffAssignmentRequest(
+        _attendant.name,
+        _attendant.contact,
+        _bookingId,
+        bookingData.name,
+        roomData.roomNo,
+        "room",
+      );
+
+      // Step 6: Remove reservation from database after successful booking
+      await removeReservationById(bookingData.bookingId);
+
+      console.log("Reservation converted to booking successfully");
+      return true;
+    } else {
+      console.error("Hotel document does not exist");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error converting reservation to booking:", error);
+    return false;
+  }
+}
+export async function newReservationToBooking(checkInData: any) {
+  try {
+    const session = await auth();
+    const user = session?.user?.email;
+
+    if (!user) {
+      console.error("User email is undefined");
+      return false;
+    }
+
+    const { bookingData, phone, guests, verifiedAt } = checkInData;
+
+    // Step 2: Generate booking ID and get concierge
+    const _bookingId = generateOrderId("BOK", bookingData.roomNo);
+    const _attendant = await getOnlineStaff("concierge");
+
+    if (!_attendant) {
+      console.error("No concierge available");
+      return false;
+    }
+
+    // Step 3: Build booking object (mapping check-in data to booking format)
+    const _roomInfo = {
+      bookingDetails: {
+        customer: {
+          name: bookingData.name,
+          email: bookingData.email || "",
+          phone: phone,
+          address: "",
+          notificationToken: "",
+          guests: guests, // Store guest details with ID proof URLs
+        },
+        location: bookingData.roomNo,
+        roomType: bookingData.roomCategory,
+        aggregator: "Reservation",
+        aggregatorLogo: "",
+        bookingId: _bookingId,
+        reservationId: bookingData.bookingId, // Keep reference to original reservation
+        status: "occupied",
+        attendant: _attendant.name,
+        attendantToken: _attendant.notificationToken || "",
+        attendantContact: _attendant.contact || "",
+        bookingDate: new Date().toISOString(),
+        checkIn: bookingData.checkIn,
+        checkOut: bookingData.checkOut,
+        noOfGuests: guests.length,
+        noOfRoom: bookingData.numberOfRooms || 1,
+        inclusions: bookingData?.inclusions || [],
+        nights: bookingData.nights,
+        images: bookingData?.images || [],
+        specialRequirements: "",
+        verifiedAt: verifiedAt,
+        payment: {
+          paymentStatus: bookingData.payment?.paymentStatus || "paid",
+          mode: bookingData.payment?.mode || "online",
+          paymentId: bookingData.payment?.paymentId || "",
+          referenceId: bookingData.payment?.referenceId || "",
+          timeOfTransaction:
+            bookingData.payment?.timeOfTransaction || new Date().toISOString(),
+          price: bookingData.payment?.price || bookingData.price,
+          priceAfterDiscount: bookingData.payment?.priceAfterDiscount || "",
+          paymentType: bookingData.payment?.paymentType || "single",
+          subtotal:
+            bookingData.payment?.subtotal ||
+            bookingData.payment?.price ||
+            bookingData.price,
+          totalPrice: bookingData.payment?.totalPrice || 0,
+          gst: {
+            gstAmount: bookingData.payment?.gst?.gstAmount || 0,
+            gstPercentage: bookingData.payment?.gst?.gstPercentage || 0,
+            cgstAmount: bookingData.payment?.gst?.cgstAmount || 0,
+            cgstPercentage: bookingData.payment?.gst?.cgstPercentage || 0,
+            sgstAmount: bookingData.payment?.gst?.sgstAmount || 0,
+            sgstPercentage: bookingData.payment?.gst?.sgstPercentage || 0,
+          },
+          discount: bookingData.payment?.discount || [],
+        },
+      },
+      diningDetails: {},
+      servicesUsed: [],
+      issuesReported: {},
+      transctions: [
+        {
+          location: bookingData.roomNo,
+          against: _bookingId,
+          attendant: _attendant.name,
+          bookingId: _bookingId,
+          reservationId: bookingData.bookingId,
+          payment: {
+            paymentStatus: bookingData.payment?.paymentStatus || "paid",
+            mode: bookingData.payment?.mode || "online",
+            paymentId: bookingData.payment?.paymentId || "",
+            referenceId: bookingData.payment?.referenceId || "",
+            timeOfTransaction:
+              bookingData.payment?.timeOfTransaction ||
+              new Date().toISOString(),
+            price: bookingData.payment?.price || bookingData.price,
+            priceAfterDiscount: bookingData.payment?.priceAfterDiscount || "",
+            paymentType: bookingData.payment?.paymentType || "single",
+            subtotal:
+              bookingData.payment?.subtotal ||
+              bookingData.payment?.price ||
+              bookingData.price,
+            totalPrice: bookingData.payment?.totalPrice || 0,
+            gst: {
+              gstAmount: bookingData.payment?.gst?.gstAmount || 0,
+              gstPercentage: bookingData.payment?.gst?.gstPercentage || 0,
+              cgstAmount: bookingData.payment?.gst?.cgstAmount || 0,
+              cgstPercentage: bookingData.payment?.gst?.cgstPercentage || 0,
+              sgstAmount: bookingData.payment?.gst?.sgstAmount || 0,
+              sgstPercentage: bookingData.payment?.gst?.sgstPercentage || 0,
+            },
+            discount: bookingData.payment?.discount || [
+              {
+                type: "",
+                amount: "",
+                code: "",
+                discount: 0,
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    // Sanitize the format to replace undefined with null
+    const sanitizedFormat = JSON.parse(
+      JSON.stringify(_roomInfo, (_, value) =>
+        value === undefined ? null : value,
+      ),
+    );
+
+    // Step 4: Database operations
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data().live.rooms;
+      const updatedRooms = [sanitizedFormat, ...data];
+
+      // Add booking to live.rooms
+      await updateDoc(docRef, {
+        "live.rooms": updatedRooms,
+      });
+
+      // Remove room from available rooms
+      await removeRoomByNumber(bookingData.roomNo, bookingData.roomCategory);
+
+      // Step 5: Notifications
+      // Generate short URL for concierge service
+      const shortUrl = await shortenURL(
+        user,
+        bookingData.roomNo,
+        phone,
+        "concierge",
+        String(bookingData.payment?.gst?.gstPercentage || 18),
+      );
+
+      // Send WhatsApp message to guest
+      await sendWhatsAppMessage(`91${phone}`, bookingData.name, [
+        _bookingId,
+        bookingData.roomNo,
+        new Date(bookingData.checkIn).toLocaleDateString(),
+        new Date(bookingData.checkOut).toLocaleDateString(),
+        String(bookingData.nights),
+        String(bookingData.payment?.price || bookingData.price),
+        String(bookingData.payment?.totalPrice || bookingData.price),
+        "0",
+        bookingData.business?.phone || "123-456-7890",
+        bookingData.business?.phone || "987-654-3210",
+        shortUrl,
+      ]);
+
+      // Send staff assignment request
+      await sendStaffAssignmentRequest(
+        _attendant.name,
+        _attendant.contact,
+        _bookingId,
+        bookingData.name,
+        bookingData.roomNo,
+        "room",
+      );
+
+      // Step 6: Remove reservation from database after successful booking
+      await removeReservationById(bookingData.bookingId);
+
+      console.log("Reservation converted to booking successfully");
+      return true;
+    } else {
+      console.error("Hotel document does not exist");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error converting reservation to booking:", error);
+    return false;
+  }
+}
+
 export async function addReservation(reservationData: any) {
   const session = await auth();
   const user = session?.user?.email;
@@ -2807,6 +3037,7 @@ export async function addReservation(reservationData: any) {
     phone: reservationData.phone,
     name: reservationData.name,
     roomCategory: reservationData.roomCategory,
+    roomNo: reservationData.roomNo ?? "",
     guests: reservationData.guests,
     checkIn: reservationData.checkIn,
     checkOut: reservationData.checkOut,
@@ -2819,6 +3050,8 @@ export async function addReservation(reservationData: any) {
       phone: reservationData.businessInfo.phone,
       website: reservationData.businessInfo.website,
     },
+    inclusions: reservationData.inclusions,
+    images: reservationData.images,
     payment: {
       paymentStatus: "pending",
       mode: reservationData.paymentMode,
@@ -2883,8 +3116,8 @@ export async function addReservation(reservationData: any) {
           "Reservation Payment for booking id: " + reservationData.bookingId,
         customerName: reservationData.name,
         customerContact: `91${reservationData.phone}`,
-        customerEmail: reservationData.email,
-        businessEmail: reservationData.businessInfo.email,
+        customerEmail: reservationData.email || "",
+        businessEmail: reservationData.businessInfo.email || "",
         paymentFor: "hotel",
         referenceId: referenceId,
         expireInDays: 1,
@@ -2906,6 +3139,56 @@ export async function addReservation(reservationData: any) {
     }
   } catch (error) {
     console.error("Error adding reservation:", error);
+    return false;
+  }
+}
+
+export async function updateReservation(reservationData: any) {
+  const session = await auth();
+  const user = session?.user?.email;
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  const bookingId =
+    typeof reservationData?.bookingId === "string"
+      ? reservationData.bookingId.trim()
+      : "";
+  if (!bookingId) {
+    console.error("updateReservation: bookingId is required");
+    return false;
+  }
+
+  try {
+    const docRef = doc(db, user, "hotel");
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      console.error("Hotel document does not exist");
+      return false;
+    }
+
+    const reservations = [...(docSnap.data()?.reservation || [])];
+    const index = reservations.findIndex(
+      (r: any) => r?.bookingId === bookingId,
+    );
+
+    if (index === -1) {
+      console.error("Reservation not found for bookingId:", bookingId);
+      return false;
+    }
+
+    reservations[index] = reservationData;
+
+    await updateDoc(docRef, {
+      reservation: reservations,
+    });
+
+    console.log(`Reservation ${bookingId} updated successfully`);
+    return true;
+  } catch (error) {
+    console.error("Error updating reservation:", error);
     return false;
   }
 }
@@ -3071,6 +3354,8 @@ export async function getRoomDetails() {
             category: room.roomType,
             price: room.price,
             rooms: room.totalRooms,
+            amenities: room.amenities,
+            images: room.images,
           };
         });
         return roomDetail;

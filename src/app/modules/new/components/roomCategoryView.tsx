@@ -57,7 +57,7 @@ import { RoomCategory } from "../types/allrooms";
 
 const categoryTabs = [
   { id: "all", label: "All Rooms" },
-  { id: "deluxe-suite", label: "Deluxe Suite" },
+  { id: "deluxe", label: "Deluxe" },
   { id: "standard", label: "Standard" },
   { id: "penthouse", label: "Penthouse" },
   { id: "economy", label: "Economy" },
@@ -634,8 +634,12 @@ const UpcomingStaysSection = ({
                       {formatBookingSource(stay.bookingSource)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">{stay.checkIn}</TableCell>
-                  <TableCell className="whitespace-nowrap">{stay.checkOut}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {stay.checkIn}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {stay.checkOut}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       className={`${getStayStatusColor(stay.status)} text-xs whitespace-nowrap`}
@@ -800,7 +804,7 @@ const RoomCategoryView = ({ categoryId }: RoomCategoryViewProps) => {
   );
 
   const currentCategoryId =
-    activeCategory === "all" ? "deluxe-suite" : activeCategory;
+    activeCategory === "all" ? "deluxe" : activeCategory;
 
   const categoryData = getCategoryData(currentCategoryId);
   const categoryStats = getCategoryById(currentCategoryId);
@@ -862,7 +866,11 @@ const RoomCategoryView = ({ categoryId }: RoomCategoryViewProps) => {
     setStaffNotes((prev) => [newNote, ...prev]);
   };
 
-  const handleAddNoteForStay = (_stayId: string, guestName: string, note: string) => {
+  const handleAddNoteForStay = (
+    _stayId: string,
+    guestName: string,
+    note: string,
+  ) => {
     const newNote: StaffNote = {
       id: `note-stay-${Date.now()}`,
       type: "concierge",
@@ -930,7 +938,10 @@ const RoomCategoryView = ({ categoryId }: RoomCategoryViewProps) => {
       </div>
 
       {/* Upcoming Stays */}
-      <UpcomingStaysSection stays={upcomingStays} onAddNoteForStay={handleAddNoteForStay} />
+      <UpcomingStaysSection
+        stays={upcomingStays}
+        onAddNoteForStay={handleAddNoteForStay}
+      />
 
       {/* Rooms Table */}
       <RoomsTable rooms={rooms} onViewDashboard={handleViewDashboard} />

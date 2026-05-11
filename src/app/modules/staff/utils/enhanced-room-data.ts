@@ -10,6 +10,7 @@ interface StaffMember {
   phone: string;
   notificationToken: string;
   orders: string[];
+  contact?: string;
 }
 
 function generateOrderId(restaurantCode: string, roomNo: string) {
@@ -56,9 +57,55 @@ export async function getOnlineConcierge() {
       }));
 
     const assignedStaff = assignAttendantSequentially(onlineStaff);
+
     return assignedStaff;
   } catch (error) {
     console.error("Error setting up real-time listener: ", error);
+    return false;
+  }
+}
+
+export async function getAllOnlineConcierge(): Promise<StaffMember[] | false> {
+  const session = await auth();
+  const user = session?.user?.email;
+
+  if (!user) {
+    console.error("User email is undefined");
+    return false;
+  }
+
+  try {
+    const docRef = doc(db, user, "info");
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      console.error("Document not found");
+      return false;
+    }
+
+    const info = docSnap.data().staff;
+
+    if (!info) {
+      console.error("Invalid info object or staff list.");
+      return false;
+    }
+
+    const onlineStaff: StaffMember[] = info
+      .filter(
+        (staffMember: any) =>
+          staffMember.status === "online" && staffMember.role === "concierge",
+      )
+      .map((staffMember: any) => ({
+        name: staffMember.name,
+        phone: staffMember.phone,
+        notificationToken: staffMember.notificationToken,
+        orders: staffMember.orders || [],
+        contact: staffMember.contact,
+      }));
+
+    return onlineStaff;
+  } catch (error) {
+    console.error("Error fetching online concierge staff: ", error);
     return false;
   }
 }

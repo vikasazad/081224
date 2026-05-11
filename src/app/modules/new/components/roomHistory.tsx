@@ -105,7 +105,7 @@ interface RoomHistoryProps {
 
 const RoomHistory = ({ roomId }: RoomHistoryProps) => {
   const router = useRouter();
-  // const [_activeCategory, setActiveCategory] = useState("deluxe-suite");
+  // const [_activeCategory, setActiveCategory] = useState("deluxe");
   const [activeTab, setActiveTab] = useState<"timeline" | "history">("history");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

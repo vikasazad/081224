@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     if (event.event === "payment_link.paid") {
       const paymentLink = event.payload.payment_link.entity;
       const payment = event.payload.payment.entity;
-      // console.log("payment", event.payload);
+      console.log("payment", event.payload);
 
 
       await updateReservationPaymentStatus({

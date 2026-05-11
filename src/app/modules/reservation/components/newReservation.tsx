@@ -242,6 +242,8 @@ const NewReservation = ({ details, businessInfo }: ReservationProps) => {
         businessInfo: businessInfo || {},
       };
 
+      console.log("RESERVATION DATA", JSON.stringify(reservationData));
+
       // Simulate API call delay
       const response = await addReservation(reservationData);
       // console.log("RESPONSE", response);
